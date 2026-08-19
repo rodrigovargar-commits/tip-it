@@ -12,6 +12,12 @@ const registerWorker = asyncHandler(async (req, res) => {
   if (req.user.isWorker) {
     throw new AppError('Ya tienes una cuenta de trabajador', 409);
   }
+  if (req.user.isGuest) {
+    throw new AppError(
+      'Primero completa tu cuenta con contraseña para poder recibir pagos',
+      403
+    );
+  }
 
   const existing = await Worker.findOne({ username: username.toLowerCase() });
   if (existing) {

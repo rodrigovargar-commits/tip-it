@@ -7,9 +7,11 @@ import { useAuth } from '../../context/AuthContext.jsx';
 
 export default function WorkerSetup() {
   const navigate = useNavigate();
-  const { worker, refreshMe } = useAuth();
+  const { worker, user, refreshMe } = useAuth();
   const [form, setForm] = useState({ username: '', bio: '' });
   const [loading, setLoading] = useState(false);
+  const [upgradeForm, setUpgradeForm] = useState({ email: '', password: '' });
+  const [upgrading, setUpgrading] = useState(false);
 
   if (worker) {
     navigate('/worker/dashboard');
@@ -32,6 +34,60 @@ export default function WorkerSetup() {
       setLoading(false);
     }
   };
+
+  const handleUpgradeChange = (e) =>
+    setUpgradeForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+
+  const handleUpgradeSubmit = async (e) => {
+    e.preventDefault();
+    setUpgrading(true);
+    try {
+      await api.post('/users/upgrade', upgradeForm);
+      await refreshMe();
+      toast.success('¡Cuenta protegida con contraseña!');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setUpgrading(false);
+    }
+  };
+
+  if (user?.isGuest) {
+    return (
+      <div className="page-shell justify-center pb-10">
+        <h1 className="text-2xl font-bold">Protege tu cuenta</h1>
+        <p className="mt-1 text-sm text-slate-400">
+          Para recibir pagos necesitas una contraseña — así nadie más que tú puede entrar a tu
+          cuenta y disponer de tu dinero.
+        </p>
+
+        <form onSubmit={handleUpgradeSubmit} className="mt-8 space-y-4">
+          <input
+            type="email"
+            name="email"
+            value={upgradeForm.email}
+            onChange={handleUpgradeChange}
+            placeholder="Email"
+            className="input-field"
+            required
+          />
+          <input
+            type="password"
+            name="password"
+            value={upgradeForm.password}
+            onChange={handleUpgradeChange}
+            placeholder="Contraseña (mín. 8 caracteres)"
+            className="input-field"
+            minLength={8}
+            required
+          />
+          <button type="submit" disabled={upgrading} className="btn-primary w-full">
+            {upgrading ? 'Guardando...' : 'Continuar'}
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="page-shell justify-center pb-10">

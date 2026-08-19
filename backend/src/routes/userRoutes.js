@@ -2,7 +2,7 @@ const express = require('express');
 const { body } = require('express-validator');
 const validate = require('../middleware/validate');
 const { protect } = require('../middleware/auth');
-const { getMe, updateProfile } = require('../controllers/userController');
+const { getMe, updateProfile, upgradeAccount } = require('../controllers/userController');
 
 const router = express.Router();
 
@@ -22,6 +22,19 @@ router.put(
   ],
   validate,
   updateProfile
+);
+
+router.post(
+  '/upgrade',
+  protect,
+  [
+    body('email').isEmail().withMessage('Email inválido').normalizeEmail(),
+    body('password')
+      .isLength({ min: 8 })
+      .withMessage('La contraseña debe tener al menos 8 caracteres'),
+  ],
+  validate,
+  upgradeAccount
 );
 
 module.exports = router;

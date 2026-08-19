@@ -8,6 +8,7 @@ import api, { getErrorMessage } from '../../services/api.js';
 import Spinner from '../../components/Spinner.jsx';
 import StarRating from '../../components/StarRating.jsx';
 import Avatar from '../../components/Avatar.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
 const QUICK_AMOUNTS = [20, 50, 100, 200];
@@ -56,9 +57,12 @@ function PaymentStep({ worker, chargeAmount, onSuccess }) {
 export default function SendTip() {
   const { username } = useParams();
   const navigate = useNavigate();
+  const { user, loading: authLoading, login } = useAuth();
 
   const [worker, setWorker] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [guestForm, setGuestForm] = useState({ name: '', phone: '', email: '' });
+  const [submittingGuest, setSubmittingGuest] = useState(false);
   const [step, setStep] = useState('amount'); // amount -> payment -> rating -> done
   const [mode, setMode] = useState('fixed'); // fixed | percent
   const [amount, setAmount] = useState('');
@@ -135,6 +139,27 @@ export default function SendTip() {
     }
   };
 
+  const handleGuestSubmit = async (e) => {
+    e.preventDefault();
+    if (!guestForm.name.trim() || !guestForm.phone.trim()) {
+      toast.error('Ingresa tu nombre y teléfono');
+      return;
+    }
+    setSubmittingGuest(true);
+    try {
+      const { data } = await api.post('/auth/guest', {
+        name: guestForm.name.trim(),
+        phone: guestForm.phone.trim(),
+        email: guestForm.email.trim() || undefined,
+      });
+      await login(data.token, data.user);
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setSubmittingGuest(false);
+    }
+  };
+
   const handlePaymentSuccess = (piId) => {
     setPaymentIntentId(piId);
     setStep('rating');
@@ -164,7 +189,7 @@ export default function SendTip() {
     }
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Spinner />
@@ -209,7 +234,7 @@ export default function SendTip() {
             ) : null}
           </div>
         </div>
-        {step === 'amount' && (
+        {step === 'amount' && user && (
           <button
             onClick={handleSaveContact}
             disabled={savingContact}
@@ -245,7 +270,52 @@ export default function SendTip() {
         </div>
       )}
 
-      {step === 'amount' && (
+      {step === 'amount' && !user && (
+        <form onSubmit={handleGuestSubmit} className="mt-8 space-y-4">
+          <p className="text-sm text-slate-400">
+            Solo necesitamos tu nombre y teléfono para enviar el pago — no hace falta crear una
+            cuenta.
+          </p>
+          <input
+            value={guestForm.name}
+            onChange={(e) => setGuestForm((f) => ({ ...f, name: e.target.value }))}
+            placeholder="Tu nombre"
+            className="input-field"
+            required
+          />
+          <input
+            type="tel"
+            value={guestForm.phone}
+            onChange={(e) => setGuestForm((f) => ({ ...f, phone: e.target.value }))}
+            placeholder="Tu teléfono"
+            className="input-field"
+            required
+          />
+          <input
+            type="email"
+            value={guestForm.email}
+            onChange={(e) => setGuestForm((f) => ({ ...f, email: e.target.value }))}
+            placeholder="Email (opcional, para tu recibo)"
+            className="input-field"
+          />
+          <p className="text-center text-xs text-slate-500">
+            Al continuar aceptas los{' '}
+            <Link to="/terminos" className="text-brand-400" target="_blank">
+              Términos
+            </Link>{' '}
+            y el{' '}
+            <Link to="/privacidad" className="text-brand-400" target="_blank">
+              Aviso de privacidad
+            </Link>
+            .
+          </p>
+          <button type="submit" disabled={submittingGuest} className="btn-primary w-full">
+            {submittingGuest ? 'Un momento...' : 'Continuar'}
+          </button>
+        </form>
+      )}
+
+      {step === 'amount' && user && (
         <form onSubmit={handleContinue} className="mt-8 space-y-4">
           <div className="flex gap-2 rounded-xl border border-slate-800 bg-slate-900 p-1">
             <button

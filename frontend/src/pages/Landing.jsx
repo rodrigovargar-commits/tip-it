@@ -71,6 +71,16 @@ export default function Landing() {
           </>
         )}
       </div>
+
+      <p className="mt-6 text-center text-xs text-slate-600">
+        <Link to="/terminos" className="hover:text-slate-400">
+          Términos
+        </Link>
+        {' · '}
+        <Link to="/privacidad" className="hover:text-slate-400">
+          Aviso de privacidad
+        </Link>
+      </p>
     </div>
   );
 }

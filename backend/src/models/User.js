@@ -10,9 +10,11 @@ const userSchema = new mongoose.Schema(
       maxlength: 100,
     },
     email: {
+      // Optional for guest accounts (created from the quick-pay flow), required otherwise
       type: String,
-      required: [true, 'El email es obligatorio'],
+      required: [function emailRequired() { return !this.isGuest; }, 'El email es obligatorio'],
       unique: true,
+      sparse: true,
       lowercase: true,
       trim: true,
       match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Email inválido'],
@@ -23,10 +25,16 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
     password: {
+      // Optional for guest accounts: they authenticate by phone via /auth/guest, never by password
       type: String,
-      required: true,
+      required: [function passwordRequired() { return !this.isGuest; }, 'La contraseña es obligatoria'],
       minlength: 8,
       select: false,
+    },
+    isGuest: {
+      // Created from the quick-pay flow (name + phone only, no password/email needed)
+      type: Boolean,
+      default: false,
     },
     // Basic KYC
     document: {
@@ -55,6 +63,8 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+userSchema.index({ phone: 1, isGuest: 1 });
+
 userSchema.pre('save', async function hashPassword(next) {
   if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(12);
@@ -75,6 +85,7 @@ userSchema.methods.toPublicJSON = function toPublicJSON() {
     isWorker: this.isWorker,
     worker: this.worker,
     avatarUrl: this.avatarUrl,
+    isGuest: this.isGuest,
     createdAt: this.createdAt,
   };
 };

@@ -17,7 +17,7 @@ export default function Login() {
     setLoading(true);
     try {
       const { data } = await api.post('/auth/login', form);
-      login(data.token, data.user);
+      await login(data.token, data.user);
       toast.success(`Bienvenido, ${data.user.name.split(' ')[0]}`);
       navigate('/scan');
     } catch (err) {

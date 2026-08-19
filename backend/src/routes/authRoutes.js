@@ -2,7 +2,7 @@ const express = require('express');
 const { body } = require('express-validator');
 const validate = require('../middleware/validate');
 const { authLimiter } = require('../middleware/rateLimiter');
-const { register, login } = require('../controllers/authController');
+const { register, login, guestLogin } = require('../controllers/authController');
 
 const router = express.Router();
 
@@ -30,6 +30,18 @@ router.post(
   ],
   validate,
   login
+);
+
+router.post(
+  '/guest',
+  authLimiter,
+  [
+    body('name').trim().notEmpty().withMessage('El nombre es obligatorio'),
+    body('phone').trim().notEmpty().withMessage('El teléfono es obligatorio'),
+    body('email').optional({ checkFalsy: true }).isEmail().withMessage('Email inválido').normalizeEmail(),
+  ],
+  validate,
+  guestLogin
 );
 
 module.exports = router;

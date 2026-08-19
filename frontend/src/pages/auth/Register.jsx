@@ -37,7 +37,7 @@ export default function Register() {
         phone: form.phone,
         password: form.password,
       });
-      login(data.token, data.user);
+      await login(data.token, data.user);
 
       if (needsUsername) {
         await api.post('/workers/register', { username: form.username });
@@ -132,6 +132,18 @@ export default function Register() {
             />
           </div>
         )}
+
+        <p className="text-center text-xs text-slate-500">
+          Al crear tu cuenta aceptas los{' '}
+          <Link to="/terminos" className="text-brand-400" target="_blank">
+            Términos
+          </Link>{' '}
+          y el{' '}
+          <Link to="/privacidad" className="text-brand-400" target="_blank">
+            Aviso de privacidad
+          </Link>
+          .
+        </p>
 
         <button type="submit" disabled={loading} className="btn-primary w-full">
           {loading ? 'Creando cuenta...' : 'Crear cuenta'}

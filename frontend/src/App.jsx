@@ -11,6 +11,8 @@ import SendTip from './pages/client/SendTip.jsx';
 import History from './pages/History.jsx';
 import Profile from './pages/Profile.jsx';
 import Contacts from './pages/Contacts.jsx';
+import PrivacyPolicy from './pages/PrivacyPolicy.jsx';
+import Terms from './pages/Terms.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import BottomNav from './components/BottomNav.jsx';
 
@@ -21,6 +23,8 @@ export default function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/privacidad" element={<PrivacyPolicy />} />
+        <Route path="/terminos" element={<Terms />} />
 
         <Route
           path="/worker/setup"
@@ -65,14 +69,8 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/tip/:username"
-          element={
-            <ProtectedRoute>
-              <SendTip />
-            </ProtectedRoute>
-          }
-        />
+        {/* No ProtectedRoute: guests can pay with just name + phone, no account required upfront */}
+        <Route path="/tip/:username" element={<SendTip />} />
         <Route
           path="/history"
           element={

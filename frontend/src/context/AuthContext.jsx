@@ -35,11 +35,11 @@ export function AuthProvider({ children }) {
     refreshMe();
   }, [refreshMe]);
 
-  const login = (token, userData) => {
+  const login = async (token, userData) => {
     localStorage.setItem('tipit_token', token);
     localStorage.setItem('tipit_user', JSON.stringify(userData));
     setUser(userData);
-    refreshMe();
+    await refreshMe();
   };
 
   const logout = () => {
