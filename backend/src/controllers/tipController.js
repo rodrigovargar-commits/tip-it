@@ -3,6 +3,7 @@ const AppError = require('../utils/AppError');
 const stripe = require('../config/stripe');
 const Worker = require('../models/Worker');
 const Transaction = require('../models/Transaction');
+const markTransactionSucceeded = require('../utils/markTransactionSucceeded');
 
 const FEE_PERCENT = Number(process.env.PLATFORM_FEE_PERCENT || 8);
 const FEE_FIXED_CENTS = Math.round(Number(process.env.PLATFORM_FEE_FIXED_CENTS || 300));
@@ -96,27 +97,18 @@ const confirm = asyncHandler(async (req, res) => {
 
   const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
-  const wasSucceeded = transaction.status === 'succeeded';
-  transaction.status = paymentIntent.status === 'succeeded' ? 'succeeded' : transaction.status;
   if (rating !== undefined) transaction.rating = rating;
   if (review !== undefined) transaction.review = review;
   await transaction.save();
 
-  if (!wasSucceeded && transaction.status === 'succeeded') {
-    const update = {
-      $inc: {
-        totalReceived: transaction.netAmount,
-        tipCount: 1,
-      },
-    };
-    if (transaction.rating) {
-      update.$inc.ratingSum = transaction.rating;
-      update.$inc.ratingCount = 1;
-    }
-    await Worker.findByIdAndUpdate(transaction.worker, update);
+  if (paymentIntent.status === 'succeeded') {
+    // Stripe's webhook may be racing to mark this same transaction succeeded
+    // right now — the shared helper guarantees only one of them counts it.
+    await markTransactionSucceeded(transaction._id);
   }
 
-  res.json({ success: true, transaction });
+  const fresh = await Transaction.findById(transaction._id);
+  res.json({ success: true, transaction: fresh });
 });
 
 const getHistory = asyncHandler(async (req, res) => {

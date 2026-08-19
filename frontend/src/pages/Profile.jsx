@@ -127,10 +127,19 @@ export default function Profile() {
             className="input-field mt-1"
           />
         </div>
-        <div>
-          <label className="text-xs text-slate-500">Email</label>
-          <input value={user?.email || ''} disabled className="input-field mt-1 opacity-60" />
-        </div>
+        {user?.isGuest ? (
+          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
+            <p className="text-sm text-slate-300">Estás usando una cuenta rápida, sin contraseña.</p>
+            <Link to="/worker/setup" className="mt-1 inline-block text-sm font-semibold text-brand-400">
+              Protégela con contraseña →
+            </Link>
+          </div>
+        ) : (
+          <div>
+            <label className="text-xs text-slate-500">Email</label>
+            <input value={user?.email || ''} disabled className="input-field mt-1 opacity-60" />
+          </div>
+        )}
         <button type="submit" disabled={savingProfile} className="btn-primary w-full">
           {savingProfile ? 'Guardando...' : 'Guardar cambios'}
         </button>

@@ -12,7 +12,6 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const workerRoutes = require('./routes/workerRoutes');
 const tipRoutes = require('./routes/tipRoutes');
-const qrRoutes = require('./routes/qrRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 
 const app = express();
@@ -52,7 +51,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/workers', workerRoutes);
 app.use('/api/tips', tipRoutes);
-app.use('/api/qr', qrRoutes);
 app.use('/api/contacts', contactRoutes);
 
 app.use((req, res) => {

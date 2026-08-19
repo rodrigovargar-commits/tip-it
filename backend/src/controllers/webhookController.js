@@ -1,19 +1,7 @@
 const stripe = require('../config/stripe');
 const Worker = require('../models/Worker');
 const Transaction = require('../models/Transaction');
-
-async function markSucceeded(transaction) {
-  if (transaction.status === 'succeeded') return;
-  transaction.status = 'succeeded';
-  await transaction.save();
-
-  const update = { $inc: { totalReceived: transaction.netAmount, tipCount: 1 } };
-  if (transaction.rating) {
-    update.$inc.ratingSum = transaction.rating;
-    update.$inc.ratingCount = 1;
-  }
-  await Worker.findByIdAndUpdate(transaction.worker, update);
-}
+const markTransactionSucceeded = require('../utils/markTransactionSucceeded');
 
 const handleStripeWebhook = async (req, res) => {
   const signature = req.headers['stripe-signature'];
@@ -31,7 +19,7 @@ const handleStripeWebhook = async (req, res) => {
       case 'payment_intent.succeeded': {
         const pi = event.data.object;
         const transaction = await Transaction.findOne({ stripePaymentIntentId: pi.id });
-        if (transaction) await markSucceeded(transaction);
+        if (transaction) await markTransactionSucceeded(transaction._id);
         break;
       }
       case 'payment_intent.payment_failed': {

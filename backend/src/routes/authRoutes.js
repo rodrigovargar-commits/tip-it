@@ -1,7 +1,7 @@
 const express = require('express');
 const { body } = require('express-validator');
 const validate = require('../middleware/validate');
-const { authLimiter } = require('../middleware/rateLimiter');
+const { authLimiter, guestLimiter } = require('../middleware/rateLimiter');
 const { register, login, guestLogin } = require('../controllers/authController');
 
 const router = express.Router();
@@ -34,7 +34,7 @@ router.post(
 
 router.post(
   '/guest',
-  authLimiter,
+  guestLimiter,
   [
     body('name').trim().notEmpty().withMessage('El nombre es obligatorio'),
     body('phone').trim().notEmpty().withMessage('El teléfono es obligatorio'),
