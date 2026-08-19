@@ -23,6 +23,12 @@ const workerSchema = new mongoose.Schema(
       maxlength: 280,
       default: '',
     },
+    experience: {
+      // Optional freeform "resume" text: where they've worked, years of experience, etc.
+      type: String,
+      maxlength: 600,
+      default: '',
+    },
     qrCode: {
       // Data URL (base64 PNG) of the QR pointing to this worker's public profile
       type: String,

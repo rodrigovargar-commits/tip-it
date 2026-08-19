@@ -1,20 +1,26 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { Camera, LogOut } from 'lucide-react';
 import api, { getErrorMessage } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { fileToResizedDataUrl } from '../utils/image.js';
+import Avatar from '../components/Avatar.jsx';
 
 export default function Profile() {
   const { user, worker, logout, refreshMe } = useAuth();
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
   const [form, setForm] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
     document: user?.document || '',
   });
   const [bio, setBio] = useState(worker?.bio || '');
+  const [experience, setExperience] = useState(worker?.experience || '');
   const [savingProfile, setSavingProfile] = useState(false);
-  const [savingBio, setSavingBio] = useState(false);
+  const [savingWorkerProfile, setSavingWorkerProfile] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
@@ -32,16 +38,38 @@ export default function Profile() {
     }
   };
 
-  const handleSaveBio = async () => {
-    setSavingBio(true);
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Elige un archivo de imagen');
+      return;
+    }
+
+    setUploadingPhoto(true);
     try {
-      await api.put('/workers/profile', { bio });
+      const dataUrl = await fileToResizedDataUrl(file);
+      await api.put('/users/profile', { avatarUrl: dataUrl });
       await refreshMe();
-      toast.success('Bio actualizada');
+      toast.success('Foto actualizada');
     } catch (err) {
       toast.error(getErrorMessage(err));
     } finally {
-      setSavingBio(false);
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleSaveWorkerProfile = async () => {
+    setSavingWorkerProfile(true);
+    try {
+      await api.put('/workers/profile', { bio, experience });
+      await refreshMe();
+      toast.success('Perfil público actualizado');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setSavingWorkerProfile(false);
     }
   };
 
@@ -53,6 +81,32 @@ export default function Profile() {
   return (
     <div className="page-shell">
       <h1 className="text-2xl font-bold">Perfil</h1>
+
+      <div className="mt-6 flex items-center gap-4">
+        <div className="relative">
+          <Avatar src={user?.avatarUrl} name={user?.name} size={72} />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingPhoto}
+            className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-white ring-2 ring-slate-950"
+            aria-label="Cambiar foto"
+          >
+            <Camera size={14} />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handlePhotoChange}
+          />
+        </div>
+        <div>
+          <p className="font-semibold">{user?.name}</p>
+          <p className="text-sm text-slate-500">{uploadingPhoto ? 'Subiendo foto...' : 'Toca el ícono para cambiar tu foto'}</p>
+        </div>
+      </div>
 
       <form onSubmit={handleSaveProfile} className="mt-6 space-y-4">
         <div>
@@ -83,33 +137,56 @@ export default function Profile() {
       </form>
 
       {worker ? (
-        <div className="mt-8 card">
-          <p className="font-semibold">Perfil público de trabajador</p>
-          <p className="text-sm text-slate-500">@{worker.username}</p>
-          <textarea
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            maxLength={280}
-            className="input-field mt-3 h-24 resize-none"
-            placeholder="Bio / descripción de tu trabajo"
-          />
-          <button onClick={handleSaveBio} disabled={savingBio} className="btn-secondary mt-3 w-full">
-            {savingBio ? 'Guardando...' : 'Guardar bio'}
+        <div className="mt-8 card space-y-4">
+          <div>
+            <p className="font-semibold">Perfil público</p>
+            <p className="text-sm text-slate-500">@{worker.username}</p>
+          </div>
+          <div>
+            <label className="text-xs text-slate-500">Bio corta</label>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              maxLength={280}
+              className="input-field mt-1 h-20 resize-none"
+              placeholder="¿A qué te dedicas?"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-slate-500">Experiencia (opcional)</label>
+            <textarea
+              value={experience}
+              onChange={(e) => setExperience(e.target.value)}
+              maxLength={600}
+              className="input-field mt-1 h-24 resize-none"
+              placeholder="Dónde has trabajado, cuánto tiempo llevas, certificaciones... esto se muestra en tu perfil como tu trayectoria."
+            />
+          </div>
+          <button
+            onClick={handleSaveWorkerProfile}
+            disabled={savingWorkerProfile}
+            className="btn-secondary w-full"
+          >
+            {savingWorkerProfile ? 'Guardando...' : 'Guardar perfil público'}
           </button>
         </div>
       ) : (
         <div className="mt-8 card">
-          <p className="font-semibold">¿Recibes propinas?</p>
+          <p className="font-semibold">¿Quieres empezar a recibir pagos?</p>
           <p className="mt-1 text-sm text-slate-400">
-            Crea tu perfil de trabajador y obtén tu QR único.
+            Crea tu perfil público y obtén tu código QR único.
           </p>
           <Link to="/worker/setup" className="btn-primary mt-3 w-full">
-            Convertirme en trabajador
+            Activar mi perfil
           </Link>
         </div>
       )}
 
-      <button onClick={handleLogout} className="btn-secondary mt-8 w-full !border-rose-800 !text-rose-400">
+      <button
+        onClick={handleLogout}
+        className="btn-secondary mt-8 flex w-full items-center justify-center gap-2 !border-rose-800 !text-rose-400"
+      >
+        <LogOut size={16} />
         Cerrar sesión
       </button>
     </div>

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 
 export default function QRDisplay() {
@@ -18,7 +19,7 @@ export default function QRDisplay() {
   const handleShare = async () => {
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Envíame una propina en TIP-IT', url: tipUrl });
+        await navigator.share({ title: 'Envíame un pago en TIP-IT', url: tipUrl });
       } catch {
         // user canceled share
       }
@@ -30,8 +31,9 @@ export default function QRDisplay() {
 
   return (
     <div className="page-shell items-center pb-10 text-center">
-      <Link to="/worker/dashboard" className="self-start text-sm text-slate-400">
-        ← Volver
+      <Link to="/worker/dashboard" className="flex items-center gap-1 self-start text-sm text-slate-400">
+        <ArrowLeft size={16} />
+        Volver
       </Link>
 
       <h1 className="mt-6 text-2xl font-bold">Tu código QR</h1>

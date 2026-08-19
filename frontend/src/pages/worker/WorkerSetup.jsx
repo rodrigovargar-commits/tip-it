@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { ArrowRight } from 'lucide-react';
 import api, { getErrorMessage } from '../../services/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 
@@ -34,9 +35,9 @@ export default function WorkerSetup() {
 
   return (
     <div className="page-shell justify-center pb-10">
-      <h1 className="text-2xl font-bold">Configura tu cuenta de trabajador</h1>
+      <h1 className="text-2xl font-bold">Configura tu perfil</h1>
       <p className="mt-1 text-sm text-slate-400">
-        Elige tu username único. Con él generamos tu QR para recibir propinas.
+        Elige tu username único. Con él generamos tu QR para recibir pagos.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
@@ -66,12 +67,13 @@ export default function WorkerSetup() {
           maxLength={280}
         />
         <button type="submit" disabled={loading} className="btn-primary w-full">
-          {loading ? 'Guardando...' : 'Crear mi perfil de trabajador'}
+          {loading ? 'Guardando...' : 'Crear mi perfil'}
         </button>
       </form>
 
-      <Link to="/scan" className="mt-6 text-center text-sm text-slate-400">
-        Solo quiero enviar propinas por ahora →
+      <Link to="/scan" className="mt-6 flex items-center justify-center gap-1 text-center text-sm text-slate-400">
+        Solo quiero enviar pagos por ahora
+        <ArrowRight size={14} />
       </Link>
     </div>
   );

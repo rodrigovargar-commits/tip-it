@@ -1,3 +1,5 @@
+import { Star } from 'lucide-react';
+
 const statusLabel = {
   succeeded: { text: 'Completada', className: 'bg-emerald-500/15 text-emerald-400' },
   pending: { text: 'Pendiente', className: 'bg-amber-500/15 text-amber-400' },
@@ -28,7 +30,14 @@ export default function TransactionCard({ transaction, perspective }) {
           <p className="mt-2 text-sm italic text-slate-400">“{transaction.comment}”</p>
         ) : null}
         {transaction.rating ? (
-          <p className="mt-1 text-sm text-amber-400">{'★'.repeat(transaction.rating)}</p>
+          <div className="mt-1 flex gap-0.5">
+            {Array.from({ length: transaction.rating }).map((_, i) => (
+              <Star key={i} size={14} fill="#fbbf24" stroke="#fbbf24" />
+            ))}
+          </div>
+        ) : null}
+        {transaction.review ? (
+          <p className="mt-1 text-sm italic text-slate-400">“{transaction.review}”</p>
         ) : null}
       </div>
       <div className="flex flex-col items-end gap-2">

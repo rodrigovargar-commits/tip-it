@@ -2,6 +2,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
 const Worker = require('../models/Worker');
 const User = require('../models/User');
+const Transaction = require('../models/Transaction');
 const stripe = require('../config/stripe');
 const { generateWorkerQR } = require('../utils/generateQR');
 
@@ -43,18 +44,36 @@ const getByUsername = asyncHandler(async (req, res) => {
     throw new AppError('Trabajador no encontrado', 404);
   }
 
+  const reviews = await Transaction.find({
+    worker: worker._id,
+    status: 'succeeded',
+    $or: [{ review: { $ne: '' } }, { rating: { $ne: null } }],
+  })
+    .sort({ createdAt: -1 })
+    .limit(10)
+    .populate('client', 'name')
+    .select('rating review createdAt client');
+
   res.json({
     success: true,
     worker: {
       id: worker._id,
       username: worker.username,
       bio: worker.bio,
+      experience: worker.experience,
       qrCode: worker.qrCode,
       rating: worker.rating,
+      ratingCount: worker.ratingCount,
       tipCount: worker.tipCount,
       name: worker.user?.name,
       avatarUrl: worker.user?.avatarUrl,
       readyForTips: Boolean(worker.stripeOnboardingComplete),
+      reviews: reviews.map((r) => ({
+        rating: r.rating,
+        review: r.review,
+        clientName: r.client?.name?.split(' ')[0] || 'Cliente',
+        createdAt: r.createdAt,
+      })),
     },
   });
 });
@@ -85,6 +104,7 @@ const updateWorkerProfile = asyncHandler(async (req, res) => {
   if (!worker) throw new AppError('Perfil de trabajador no encontrado', 404);
 
   if (req.body.bio !== undefined) worker.bio = req.body.bio;
+  if (req.body.experience !== undefined) worker.experience = req.body.experience;
   await worker.save();
 
   res.json({ success: true, worker });

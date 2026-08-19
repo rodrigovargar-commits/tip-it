@@ -1,12 +1,6 @@
 import { NavLink } from 'react-router-dom';
+import { Home, QrCode, Users, Receipt, CircleUser } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
-
-const icon = {
-  home: '🏠',
-  scan: '📷',
-  history: '🧾',
-  profile: '👤',
-};
 
 export default function BottomNav() {
   const { user, worker } = useAuth();
@@ -22,19 +16,23 @@ export default function BottomNav() {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto flex max-w-md border-t border-slate-800 bg-slate-950/95 backdrop-blur">
       <NavLink to={homePath} className={linkClass} end>
-        <span className="text-lg">{icon.home}</span>
+        <Home size={20} strokeWidth={2} />
         Inicio
       </NavLink>
       <NavLink to="/scan" className={linkClass}>
-        <span className="text-lg">{icon.scan}</span>
+        <QrCode size={20} strokeWidth={2} />
         Escanear
       </NavLink>
+      <NavLink to="/contacts" className={linkClass}>
+        <Users size={20} strokeWidth={2} />
+        Contactos
+      </NavLink>
       <NavLink to="/history" className={linkClass}>
-        <span className="text-lg">{icon.history}</span>
+        <Receipt size={20} strokeWidth={2} />
         Historial
       </NavLink>
       <NavLink to="/profile" className={linkClass}>
-        <span className="text-lg">{icon.profile}</span>
+        <CircleUser size={20} strokeWidth={2} />
         Perfil
       </NavLink>
     </nav>

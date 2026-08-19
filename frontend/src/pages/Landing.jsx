@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
+import { ScanLine, Star, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
+import Logo from '../components/Logo.jsx';
 
 export default function Landing() {
   const { user, worker } = useAuth();
@@ -8,9 +10,7 @@ export default function Landing() {
     <div className="page-shell justify-between pb-10">
       <div>
         <div className="mt-6 flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-xl font-bold">
-            💸
-          </div>
+          <Logo size={40} />
           <span className="text-xl font-bold">TIP-IT</span>
         </div>
 
@@ -20,27 +20,33 @@ export default function Landing() {
           <span className="text-brand-400">simples y directas.</span>
         </h1>
         <p className="mt-4 text-slate-400">
-          Recibe propinas con tu QR único o busca a alguien por su usuario. Sin efectivo, sin
+          Recibe pagos con tu QR único o busca a alguien por su usuario. Sin efectivo, sin
           fricción.
         </p>
 
         <div className="mt-10 grid grid-cols-1 gap-3">
           <div className="card flex items-center gap-3">
-            <span className="text-2xl">📷</span>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-500/15 text-brand-400">
+              <ScanLine size={20} strokeWidth={2} />
+            </span>
             <div>
               <p className="font-semibold">Escanea y envía</p>
               <p className="text-sm text-slate-400">Apunta la cámara al QR y listo.</p>
             </div>
           </div>
           <div className="card flex items-center gap-3">
-            <span className="text-2xl">⭐</span>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-amber-400">
+              <Star size={20} strokeWidth={2} />
+            </span>
             <div>
-              <p className="font-semibold">Califica el servicio</p>
-              <p className="text-sm text-slate-400">Deja rating y comentario opcional.</p>
+              <p className="font-semibold">Califica y deja tu reseña</p>
+              <p className="text-sm text-slate-400">Construye tu reputación con cada servicio.</p>
             </div>
           </div>
           <div className="card flex items-center gap-3">
-            <span className="text-2xl">🔒</span>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400">
+              <ShieldCheck size={20} strokeWidth={2} />
+            </span>
             <div>
               <p className="font-semibold">Pagos seguros con Stripe</p>
               <p className="text-sm text-slate-400">Nunca guardamos tu tarjeta.</p>

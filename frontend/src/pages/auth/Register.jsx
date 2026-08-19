@@ -1,25 +1,53 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { Wallet, HandCoins, ArrowLeftRight } from 'lucide-react';
 import api, { getErrorMessage } from '../../services/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 
+const ROLES = [
+  { id: 'client', icon: Wallet, label: 'Enviar pagos', hint: 'Solo voy a pagar a otros' },
+  { id: 'worker', icon: HandCoins, label: 'Recibir pagos', hint: 'Solo voy a cobrar' },
+  { id: 'both', icon: ArrowLeftRight, label: 'Ambos', hint: 'Quiero enviar y recibir' },
+];
+
 export default function Register() {
   const navigate = useNavigate();
-  const { login } = useAuth();
-  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '' });
+  const { login, refreshMe } = useAuth();
+  const [role, setRole] = useState('client'); // client | worker | both
+  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', username: '' });
   const [loading, setLoading] = useState(false);
+
+  const needsUsername = role === 'worker' || role === 'both';
 
   const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (needsUsername && !form.username.trim()) {
+      toast.error('Elige un username para tu perfil');
+      return;
+    }
+
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/register', form);
+      const { data } = await api.post('/auth/register', {
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        password: form.password,
+      });
       login(data.token, data.user);
-      toast.success('¡Cuenta creada!');
-      navigate('/worker/setup');
+
+      if (needsUsername) {
+        await api.post('/workers/register', { username: form.username });
+        await refreshMe();
+        toast.success('¡Cuenta y perfil listos!');
+        navigate('/worker/dashboard');
+      } else {
+        toast.success('¡Cuenta creada!');
+        navigate('/scan');
+      }
     } catch (err) {
       toast.error(getErrorMessage(err));
     } finally {
@@ -30,9 +58,28 @@ export default function Register() {
   return (
     <div className="page-shell justify-center pb-10">
       <h1 className="text-2xl font-bold">Crear cuenta</h1>
-      <p className="mt-1 text-sm text-slate-400">Regístrate para enviar o recibir propinas.</p>
+      <p className="mt-1 text-sm text-slate-400">¿Cómo vas a usar TIP-IT?</p>
 
-      <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        {ROLES.map(({ id, icon: Icon, label }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setRole(id)}
+            className={`card flex flex-col items-center gap-1.5 !p-3 transition ${
+              role === id ? 'border-brand-500 bg-brand-500/10' : ''
+            }`}
+          >
+            <Icon size={20} className={role === id ? 'text-brand-400' : 'text-slate-400'} />
+            <span className="text-center text-xs font-semibold leading-tight">{label}</span>
+          </button>
+        ))}
+      </div>
+      <p className="mt-2 text-center text-xs text-slate-500">
+        {ROLES.find((r) => r.id === role)?.hint}
+      </p>
+
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <input
           name="name"
           value={form.name}
@@ -68,6 +115,24 @@ export default function Register() {
           minLength={8}
           required
         />
+
+        {needsUsername && (
+          <div className="flex items-center rounded-xl border border-slate-700 bg-slate-900 px-4 focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500">
+            <span className="text-slate-500">@</span>
+            <input
+              name="username"
+              value={form.username}
+              onChange={handleChange}
+              placeholder="tu_username"
+              className="w-full bg-transparent px-2 py-3 text-slate-100 outline-none"
+              minLength={3}
+              maxLength={30}
+              pattern="[a-zA-Z0-9_.]+"
+              required
+            />
+          </div>
+        )}
+
         <button type="submit" disabled={loading} className="btn-primary w-full">
           {loading ? 'Creando cuenta...' : 'Crear cuenta'}
         </button>

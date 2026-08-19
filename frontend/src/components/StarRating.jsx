@@ -1,7 +1,9 @@
-export default function StarRating({ value = 0, onChange, readOnly = false, size = 'text-2xl' }) {
+import { Star } from 'lucide-react';
+
+export default function StarRating({ value = 0, onChange, readOnly = false, iconSize = 28 }) {
   const stars = [1, 2, 3, 4, 5];
   return (
-    <div className={`flex gap-1 ${size}`}>
+    <div className="flex gap-1">
       {stars.map((star) => (
         <button
           key={star}
@@ -9,11 +11,16 @@ export default function StarRating({ value = 0, onChange, readOnly = false, size
           disabled={readOnly}
           onClick={() => onChange?.(star)}
           className={`leading-none transition ${
-            star <= value ? 'text-amber-400' : 'text-slate-700'
-          } ${readOnly ? 'cursor-default' : 'cursor-pointer hover:scale-110'}`}
+            readOnly ? 'cursor-default' : 'cursor-pointer hover:scale-110'
+          }`}
           aria-label={`${star} estrellas`}
         >
-          ★
+          <Star
+            size={iconSize}
+            fill={star <= value ? '#fbbf24' : 'none'}
+            stroke={star <= value ? '#fbbf24' : '#3f3f52'}
+            strokeWidth={1.5}
+          />
         </button>
       ))}
     </div>

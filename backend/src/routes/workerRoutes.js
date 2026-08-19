@@ -35,7 +35,10 @@ router.put(
   '/profile',
   protect,
   requireWorker,
-  [body('bio').optional().isLength({ max: 280 })],
+  [
+    body('bio').optional().isLength({ max: 280 }),
+    body('experience').optional().isLength({ max: 600 }),
+  ],
   validate,
   updateWorkerProfile
 );

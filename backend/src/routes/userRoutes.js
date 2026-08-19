@@ -14,7 +14,10 @@ router.put(
   [
     body('name').optional().trim().notEmpty(),
     body('phone').optional().trim().notEmpty(),
-    body('avatarUrl').optional().isURL().withMessage('URL de avatar inválida'),
+    body('avatarUrl')
+      .optional({ nullable: true })
+      .custom((value) => value === null || /^data:image\/(png|jpe?g|webp);base64,/.test(value))
+      .withMessage('La foto debe ser una imagen (png, jpg o webp)'),
     body('document').optional().trim(),
   ],
   validate,

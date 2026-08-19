@@ -59,7 +59,7 @@ const createIntent = asyncHandler(async (req, res) => {
 });
 
 const confirm = asyncHandler(async (req, res) => {
-  const { paymentIntentId, rating, comment } = req.body;
+  const { paymentIntentId, rating, review } = req.body;
 
   const transaction = await Transaction.findOne({ stripePaymentIntentId: paymentIntentId });
   if (!transaction) {
@@ -74,7 +74,7 @@ const confirm = asyncHandler(async (req, res) => {
   const wasSucceeded = transaction.status === 'succeeded';
   transaction.status = paymentIntent.status === 'succeeded' ? 'succeeded' : transaction.status;
   if (rating !== undefined) transaction.rating = rating;
-  if (comment !== undefined) transaction.comment = comment;
+  if (review !== undefined) transaction.review = review;
   await transaction.save();
 
   if (!wasSucceeded && transaction.status === 'succeeded') {

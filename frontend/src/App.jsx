@@ -5,10 +5,12 @@ import Login from './pages/auth/Login.jsx';
 import WorkerDashboard from './pages/worker/WorkerDashboard.jsx';
 import WorkerSetup from './pages/worker/WorkerSetup.jsx';
 import QRDisplay from './pages/worker/QRDisplay.jsx';
+import WorkerReviews from './pages/worker/WorkerReviews.jsx';
 import ScanQR from './pages/client/ScanQR.jsx';
 import SendTip from './pages/client/SendTip.jsx';
 import History from './pages/History.jsx';
 import Profile from './pages/Profile.jsx';
+import Contacts from './pages/Contacts.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import BottomNav from './components/BottomNav.jsx';
 
@@ -44,6 +46,14 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/worker/reviews"
+          element={
+            <ProtectedRoute requireWorker>
+              <WorkerReviews />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/worker/stripe/return" element={<Navigate to="/worker/dashboard" replace />} />
         <Route path="/worker/stripe/refresh" element={<Navigate to="/worker/dashboard" replace />} />
 
@@ -76,6 +86,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/contacts"
+          element={
+            <ProtectedRoute>
+              <Contacts />
             </ProtectedRoute>
           }
         />

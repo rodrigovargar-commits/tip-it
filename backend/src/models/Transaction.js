@@ -56,6 +56,14 @@ const transactionSchema = new mongoose.Schema(
       default: null,
     },
     comment: {
+      // Optional note the client attaches while sending the tip
+      type: String,
+      maxlength: 500,
+      default: '',
+    },
+    review: {
+      // Written review left after the service, alongside the rating.
+      // Shown publicly on the worker's profile as their track record.
       type: String,
       maxlength: 500,
       default: '',

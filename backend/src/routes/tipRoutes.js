@@ -26,7 +26,7 @@ router.post(
   [
     body('paymentIntentId').trim().notEmpty(),
     body('rating').optional().isInt({ min: 1, max: 5 }),
-    body('comment').optional().isLength({ max: 500 }),
+    body('review').optional().isLength({ max: 500 }),
   ],
   validate,
   confirm

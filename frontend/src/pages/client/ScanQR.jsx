@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { Users } from 'lucide-react';
 
 export default function ScanQR() {
   const navigate = useNavigate();
@@ -60,8 +61,19 @@ export default function ScanQR() {
 
   return (
     <div className="page-shell pb-10">
-      <h1 className="text-2xl font-bold">Enviar propina</h1>
-      <p className="mt-1 text-sm text-slate-400">Escanea un QR o busca por username.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Enviar pago</h1>
+          <p className="mt-1 text-sm text-slate-400">Escanea un QR o busca por username.</p>
+        </div>
+        <Link
+          to="/contacts"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-700 text-slate-400 hover:border-brand-500 hover:text-brand-400"
+          aria-label="Mis contactos"
+        >
+          <Users size={18} />
+        </Link>
+      </div>
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-slate-800 bg-black">
         <div id={containerId} className="aspect-square w-full" />
