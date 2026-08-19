@@ -13,7 +13,7 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 
 const QUICK_AMOUNTS = [20, 50, 100, 200];
 const PERCENT_PRESETS = [10, 15, 20];
 
-function PaymentStep({ worker, onSuccess }) {
+function PaymentStep({ worker, chargeAmount, onSuccess }) {
   const stripe = useStripe();
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
@@ -45,7 +45,9 @@ function PaymentStep({ worker, onSuccess }) {
     <form onSubmit={handleSubmit} className="mt-6 space-y-4">
       <PaymentElement />
       <button type="submit" disabled={!stripe || submitting} className="btn-primary w-full">
-        {submitting ? 'Procesando...' : `Confirmar pago a @${worker.username}`}
+        {submitting
+          ? 'Procesando...'
+          : `Confirmar pago de $${chargeAmount.toFixed(2)} a @${worker.username}`}
       </button>
     </form>
   );
@@ -64,9 +66,12 @@ export default function SendTip() {
   const [percent, setPercent] = useState(15);
   const [customPercent, setCustomPercent] = useState('');
   const [comment, setComment] = useState('');
+  const [coverFee, setCoverFee] = useState(false);
+  const [feeInfo, setFeeInfo] = useState({ feePercent: 8, feeFixedCents: 300 });
   const [clientSecret, setClientSecret] = useState(null);
   const [creatingIntent, setCreatingIntent] = useState(false);
   const [paymentIntentId, setPaymentIntentId] = useState(null);
+  const [chargeAmount, setChargeAmount] = useState(0);
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState('');
   const [savingRating, setSavingRating] = useState(false);
@@ -86,10 +91,24 @@ export default function SendTip() {
     })();
   }, [username, navigate]);
 
+  useEffect(() => {
+    api
+      .get('/tips/fee-info')
+      .then(({ data }) => setFeeInfo({ feePercent: data.feePercent, feeFixedCents: data.feeFixedCents }))
+      .catch(() => {});
+  }, []);
+
   const effectivePercent = customPercent ? Number(customPercent) : percent;
   const computedTip =
     mode === 'percent' && billTotal ? (Number(billTotal) * effectivePercent) / 100 : 0;
-  const finalAmount = mode === 'percent' ? computedTip : Number(amount);
+  const finalAmount = mode === 'percent' ? computedTip : Number(amount) || 0;
+
+  const feeAmount =
+    finalAmount > 0
+      ? (Math.round(finalAmount * 100 * (feeInfo.feePercent / 100)) + feeInfo.feeFixedCents) / 100
+      : 0;
+  const previewChargeAmount = coverFee ? finalAmount + feeAmount : finalAmount;
+  const previewWorkerReceives = coverFee ? finalAmount : Math.max(0, finalAmount - feeAmount);
 
   const handleContinue = async (e) => {
     e.preventDefault();
@@ -103,9 +122,11 @@ export default function SendTip() {
         username,
         amount: Number(finalAmount.toFixed(2)),
         comment,
+        coverFee,
       });
       setClientSecret(data.clientSecret);
       setPaymentIntentId(data.transactionId);
+      setChargeAmount(data.amount / 100);
       setStep('payment');
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -344,6 +365,38 @@ export default function SendTip() {
             </>
           )}
 
+          {finalAmount > 0 && (
+            <div className="card space-y-3 !bg-slate-900/60">
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={coverFee}
+                  onChange={(e) => setCoverFee(e.target.checked)}
+                  className="mt-1 h-4 w-4 accent-brand-500"
+                />
+                <span className="text-sm text-slate-300">
+                  Cubrir la comisión (+${feeAmount.toFixed(2)}) para que{' '}
+                  <span className="font-semibold">@{worker.username}</span> reciba el 100% de tu
+                  propina
+                </span>
+              </label>
+              <div className="space-y-1 border-t border-slate-800 pt-3 text-sm">
+                <div className="flex justify-between text-slate-400">
+                  <span>Trabajador recibe</span>
+                  <span className="font-semibold text-slate-100">
+                    ${previewWorkerReceives.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-slate-400">
+                  <span>Tú pagas</span>
+                  <span className="font-semibold text-slate-100">
+                    ${previewChargeAmount.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
@@ -360,7 +413,7 @@ export default function SendTip() {
 
       {step === 'payment' && clientSecret && (
         <Elements stripe={stripePromise} options={{ clientSecret }}>
-          <PaymentStep worker={worker} onSuccess={handlePaymentSuccess} />
+          <PaymentStep worker={worker} chargeAmount={chargeAmount} onSuccess={handlePaymentSuccess} />
         </Elements>
       )}
 

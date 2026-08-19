@@ -4,10 +4,26 @@ const stripe = require('../config/stripe');
 const Worker = require('../models/Worker');
 const Transaction = require('../models/Transaction');
 
-const FEE_PERCENT = Number(process.env.PLATFORM_FEE_PERCENT || 5);
+const FEE_PERCENT = Number(process.env.PLATFORM_FEE_PERCENT || 8);
+const FEE_FIXED_CENTS = Math.round(Number(process.env.PLATFORM_FEE_FIXED_CENTS || 300));
+
+// Fee is charged on the tip amount the client intends to give, not on the
+// grossed-up total — so the preview shown before payment always matches
+// what's actually deducted, regardless of who ends up paying it.
+function calculateFee(tipCents) {
+  return Math.round((tipCents * FEE_PERCENT) / 100) + FEE_FIXED_CENTS;
+}
+
+const getFeeInfo = asyncHandler(async (req, res) => {
+  res.json({
+    success: true,
+    feePercent: FEE_PERCENT,
+    feeFixedCents: FEE_FIXED_CENTS,
+  });
+});
 
 const createIntent = asyncHandler(async (req, res) => {
-  const { username, amount, comment } = req.body;
+  const { username, amount, comment, coverFee } = req.body;
 
   const worker = await Worker.findOne({ username: String(username).toLowerCase() });
   if (!worker) {
@@ -20,12 +36,17 @@ const createIntent = asyncHandler(async (req, res) => {
     throw new AppError('No puedes enviarte propina a ti mismo', 400);
   }
 
-  const amountCents = Math.round(Number(amount) * 100);
-  if (!Number.isFinite(amountCents) || amountCents < 100) {
+  const tipCents = Math.round(Number(amount) * 100);
+  if (!Number.isFinite(tipCents) || tipCents < 100) {
     throw new AppError('El monto mínimo es de 1.00', 400);
   }
 
-  const platformFeeCents = Math.round((amountCents * FEE_PERCENT) / 100);
+  const platformFeeCents = calculateFee(tipCents);
+
+  // Sin "cubrir comisión": el trabajador recibe la propina menos la comisión.
+  // Con "cubrir comisión": el cliente paga la propina + comisión encima, y
+  // el trabajador recibe el 100% del monto que el cliente quiso dar.
+  const amountCents = coverFee ? tipCents + platformFeeCents : tipCents;
   const netAmountCents = amountCents - platformFeeCents;
 
   const paymentIntent = await stripe.paymentIntents.create({
@@ -46,6 +67,7 @@ const createIntent = asyncHandler(async (req, res) => {
     amount: amountCents,
     platformFee: platformFeeCents,
     netAmount: netAmountCents,
+    coverFee: Boolean(coverFee),
     stripePaymentIntentId: paymentIntent.id,
     comment: comment || '',
     status: 'pending',
@@ -55,6 +77,9 @@ const createIntent = asyncHandler(async (req, res) => {
     success: true,
     clientSecret: paymentIntent.client_secret,
     transactionId: transaction._id,
+    amount: amountCents,
+    platformFee: platformFeeCents,
+    netAmount: netAmountCents,
   });
 });
 
@@ -125,4 +150,4 @@ const getHistory = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { createIntent, confirm, getHistory };
+module.exports = { getFeeInfo, createIntent, confirm, getHistory };

@@ -35,6 +35,11 @@ const transactionSchema = new mongoose.Schema(
       required: true,
       default: 0,
     },
+    coverFee: {
+      // If true, the client paid the commission on top so the worker got 100% of the tip
+      type: Boolean,
+      default: false,
+    },
     currency: {
       type: String,
       default: 'mxn',

@@ -3,9 +3,11 @@ const { body } = require('express-validator');
 const validate = require('../middleware/validate');
 const { protect } = require('../middleware/auth');
 const { tipLimiter } = require('../middleware/rateLimiter');
-const { createIntent, confirm, getHistory } = require('../controllers/tipController');
+const { getFeeInfo, createIntent, confirm, getHistory } = require('../controllers/tipController');
 
 const router = express.Router();
+
+router.get('/fee-info', getFeeInfo);
 
 router.post(
   '/create-intent',
@@ -15,6 +17,7 @@ router.post(
     body('username').trim().notEmpty().withMessage('El username del trabajador es obligatorio'),
     body('amount').isFloat({ min: 1 }).withMessage('El monto mínimo es 1.00'),
     body('comment').optional().isLength({ max: 500 }),
+    body('coverFee').optional().isBoolean(),
   ],
   validate,
   createIntent
