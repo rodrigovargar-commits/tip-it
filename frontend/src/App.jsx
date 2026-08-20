@@ -61,15 +61,9 @@ export default function App() {
         <Route path="/worker/stripe/return" element={<Navigate to="/worker/dashboard" replace />} />
         <Route path="/worker/stripe/refresh" element={<Navigate to="/worker/dashboard" replace />} />
 
-        <Route
-          path="/scan"
-          element={
-            <ProtectedRoute>
-              <ScanQR />
-            </ProtectedRoute>
-          }
-        />
-        {/* No ProtectedRoute: guests can pay with just name + phone, no account required upfront */}
+        {/* No ProtectedRoute on /scan or /tip/:username: sending a payment never
+            requires an account upfront — only receiving one does. */}
+        <Route path="/scan" element={<ScanQR />} />
         <Route path="/tip/:username" element={<SendTip />} />
         <Route
           path="/history"

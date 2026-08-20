@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Users } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 export default function ScanQR() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const scannerRef = useRef(null);
   const containerId = 'qr-reader';
   const [cameraError, setCameraError] = useState(false);
@@ -23,6 +25,18 @@ export default function ScanQR() {
   useEffect(() => {
     let isMounted = true;
 
+    // html5-qrcode's stop() throws synchronously (not just a rejected
+    // promise) when the scanner never reached a running state — e.g. camera
+    // access was denied — so a plain .catch() doesn't protect against it.
+    // Left unguarded, that throw crashes the whole component on unmount.
+    const safeStop = (scanner) => {
+      try {
+        scanner.stop()?.catch(() => {});
+      } catch {
+        // scanner wasn't running — nothing to stop
+      }
+    };
+
     import('html5-qrcode').then(({ Html5Qrcode }) => {
       if (!isMounted) return;
       const scanner = new Html5Qrcode(containerId);
@@ -33,7 +47,7 @@ export default function ScanQR() {
           { facingMode: 'environment' },
           { fps: 10, qrbox: { width: 240, height: 240 } },
           (decodedText) => {
-            scanner.stop().catch(() => {});
+            safeStop(scanner);
             goToUsername(decodedText);
           },
           () => {}
@@ -44,7 +58,7 @@ export default function ScanQR() {
     return () => {
       isMounted = false;
       if (scannerRef.current) {
-        scannerRef.current.stop().catch(() => {});
+        safeStop(scannerRef.current);
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -66,13 +80,15 @@ export default function ScanQR() {
           <h1 className="text-2xl font-bold">Enviar pago</h1>
           <p className="mt-1 text-sm text-slate-400">Escanea un QR o busca por username.</p>
         </div>
-        <Link
-          to="/contacts"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-700 text-slate-400 hover:border-brand-500 hover:text-brand-400"
-          aria-label="Mis contactos"
-        >
-          <Users size={18} />
-        </Link>
+        {user && (
+          <Link
+            to="/contacts"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-700 text-slate-400 hover:border-brand-500 hover:text-brand-400"
+            aria-label="Mis contactos"
+          >
+            <Users size={18} />
+          </Link>
+        )}
       </div>
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-slate-800 bg-black">

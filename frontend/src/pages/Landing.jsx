@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ScanLine, Star, ShieldCheck } from 'lucide-react';
+import { ScanLine, Star, ShieldCheck, QrCode } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import Logo from '../components/Logo.jsx';
 
@@ -62,10 +62,17 @@ export default function Landing() {
           </Link>
         ) : (
           <>
-            <Link to="/register" className="btn-primary w-full">
+            <Link
+              to="/scan"
+              className="btn-primary flex w-full items-center justify-center gap-2"
+            >
+              <QrCode size={18} />
+              Solo quiero enviar un pago
+            </Link>
+            <Link to="/register" className="btn-secondary w-full">
               Crear cuenta gratis
             </Link>
-            <Link to="/login" className="btn-secondary w-full">
+            <Link to="/login" className="text-center text-sm text-slate-400">
               Ya tengo cuenta
             </Link>
           </>
