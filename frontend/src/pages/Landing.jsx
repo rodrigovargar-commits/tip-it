@@ -23,6 +23,12 @@ export default function Landing() {
           Recibe pagos con tu QR único o busca a alguien por su usuario. Sin efectivo, sin
           fricción.
         </p>
+        <Link
+          to="/como-funciona"
+          className="mt-2 inline-block text-sm font-semibold text-brand-400 hover:text-brand-300"
+        >
+          ¿Cómo funciona? →
+        </Link>
 
         <div className="mt-10 grid grid-cols-1 gap-3">
           <div className="card flex items-center gap-3">
@@ -80,6 +86,10 @@ export default function Landing() {
       </div>
 
       <p className="mt-6 text-center text-xs text-slate-600">
+        <Link to="/como-funciona" className="hover:text-slate-400">
+          Cómo funciona
+        </Link>
+        {' · '}
         <Link to="/terminos" className="hover:text-slate-400">
           Términos
         </Link>

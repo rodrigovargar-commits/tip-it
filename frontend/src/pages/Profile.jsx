@@ -191,9 +191,16 @@ export default function Profile() {
         </div>
       )}
 
+      <Link
+        to="/como-funciona"
+        className="mt-8 block text-center text-sm font-semibold text-brand-400 hover:text-brand-300"
+      >
+        ¿Cómo funciona TIP-IT?
+      </Link>
+
       <button
         onClick={handleLogout}
-        className="btn-secondary mt-8 flex w-full items-center justify-center gap-2 !border-rose-800 !text-rose-400"
+        className="btn-secondary mt-4 flex w-full items-center justify-center gap-2 !border-rose-800 !text-rose-400"
       >
         <LogOut size={16} />
         Cerrar sesión

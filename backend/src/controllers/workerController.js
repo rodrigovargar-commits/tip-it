@@ -116,30 +116,50 @@ const updateWorkerProfile = asyncHandler(async (req, res) => {
   res.json({ success: true, worker });
 });
 
+async function createFreshStripeAccount(worker, email) {
+  const account = await stripe.accounts.create({
+    type: 'express',
+    email,
+    business_type: 'individual',
+    capabilities: {
+      transfers: { requested: true },
+      card_payments: { requested: true },
+    },
+  });
+  worker.stripeAccountId = account.id;
+  worker.stripeOnboardingComplete = false;
+  await worker.save();
+}
+
 const createStripeOnboardingLink = asyncHandler(async (req, res) => {
   const worker = await Worker.findById(req.user.worker);
   if (!worker) throw new AppError('Perfil de trabajador no encontrado', 404);
 
   if (!worker.stripeAccountId) {
-    const account = await stripe.accounts.create({
-      type: 'express',
-      email: req.user.email,
-      business_type: 'individual',
-      capabilities: {
-        transfers: { requested: true },
-        card_payments: { requested: true },
-      },
-    });
-    worker.stripeAccountId = account.id;
-    await worker.save();
+    await createFreshStripeAccount(worker, req.user.email);
   }
 
-  const accountLink = await stripe.accountLinks.create({
-    account: worker.stripeAccountId,
-    refresh_url: process.env.STRIPE_CONNECT_REFRESH_URL,
-    return_url: process.env.STRIPE_CONNECT_RETURN_URL,
-    type: 'account_onboarding',
-  });
+  let accountLink;
+  try {
+    accountLink = await stripe.accountLinks.create({
+      account: worker.stripeAccountId,
+      refresh_url: process.env.STRIPE_CONNECT_REFRESH_URL,
+      return_url: process.env.STRIPE_CONNECT_RETURN_URL,
+      type: 'account_onboarding',
+    });
+  } catch (err) {
+    // Stale account id from a different Stripe mode/key — e.g. created
+    // moments before switching from test to live keys, so it no longer
+    // exists under the current key. Self-heal by creating a fresh one
+    // instead of leaving the worker stuck.
+    await createFreshStripeAccount(worker, req.user.email);
+    accountLink = await stripe.accountLinks.create({
+      account: worker.stripeAccountId,
+      refresh_url: process.env.STRIPE_CONNECT_REFRESH_URL,
+      return_url: process.env.STRIPE_CONNECT_RETURN_URL,
+      type: 'account_onboarding',
+    });
+  }
 
   res.json({ success: true, url: accountLink.url });
 });
@@ -152,7 +172,18 @@ const getStripeAccountStatus = asyncHandler(async (req, res) => {
     return res.json({ success: true, connected: false, onboardingComplete: false });
   }
 
-  const account = await stripe.accounts.retrieve(worker.stripeAccountId);
+  let account;
+  try {
+    account = await stripe.accounts.retrieve(worker.stripeAccountId);
+  } catch (err) {
+    // Same orphaned-account case as above: treat as disconnected so the UI
+    // offers "Conectar con Stripe" again instead of erroring out.
+    worker.stripeAccountId = null;
+    worker.stripeOnboardingComplete = false;
+    await worker.save();
+    return res.json({ success: true, connected: false, onboardingComplete: false });
+  }
+
   worker.stripeOnboardingComplete = Boolean(account.details_submitted && account.charges_enabled);
   await worker.save();
 

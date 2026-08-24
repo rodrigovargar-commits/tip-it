@@ -13,6 +13,7 @@ import Profile from './pages/Profile.jsx';
 import Contacts from './pages/Contacts.jsx';
 import PrivacyPolicy from './pages/PrivacyPolicy.jsx';
 import Terms from './pages/Terms.jsx';
+import HowItWorks from './pages/HowItWorks.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import BottomNav from './components/BottomNav.jsx';
 
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/privacidad" element={<PrivacyPolicy />} />
         <Route path="/terminos" element={<Terms />} />
+        <Route path="/como-funciona" element={<HowItWorks />} />
 
         <Route
           path="/worker/setup"
