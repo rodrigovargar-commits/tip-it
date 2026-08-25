@@ -30,6 +30,6 @@ services:
       - key: STRIPE_CONNECT_RETURN_URL
         sync: false
       - key: PLATFORM_FEE_PERCENT
-        value: 11
+        value: 6
       - key: PLATFORM_FEE_FIXED_CENTS
         value: 400
