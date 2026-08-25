@@ -116,14 +116,18 @@ const getHistory = asyncHandler(async (req, res) => {
   const page = Math.max(1, Number(req.query.page) || 1);
   const limit = Math.min(50, Number(req.query.limit) || 20);
 
-  let filter;
+  // Only show payments that actually completed — a "pending" transaction
+  // just means the client opened the payment screen and never finished
+  // (closed the tab, abandoned checkout); nothing ever happened to it, so
+  // it shouldn't appear in anyone's history and cause confusion.
+  let filter = { status: 'succeeded' };
   if (role === 'worker') {
     if (!req.user.isWorker || !req.user.worker) {
       throw new AppError('No tienes una cuenta de trabajador', 403);
     }
-    filter = { worker: req.user.worker };
+    filter.worker = req.user.worker;
   } else {
-    filter = { client: req.user._id };
+    filter.client = req.user._id;
   }
 
   const [transactions, total] = await Promise.all([
