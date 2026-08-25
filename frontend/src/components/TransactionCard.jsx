@@ -7,11 +7,17 @@ const statusLabel = {
   canceled: { text: 'Cancelada', className: 'bg-slate-500/15 text-slate-400' },
 };
 
+function formatMXN(cents) {
+  return (cents / 100).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
+}
+
 export default function TransactionCard({ transaction, perspective }) {
-  const amount = (transaction.amount / 100).toLocaleString('es-MX', {
-    style: 'currency',
-    currency: 'MXN',
-  });
+  // A worker never sees the full amount the client paid — TIP-IT's
+  // commission comes out before it reaches them, so their card shows the
+  // net amount that's actually theirs, not the gross that was charged.
+  const isWorkerView = perspective === 'worker';
+  const amount = formatMXN(isWorkerView ? transaction.netAmount : transaction.amount);
+  const showsFeeNote = isWorkerView && transaction.netAmount !== transaction.amount;
   const status = statusLabel[transaction.status] || statusLabel.pending;
   const counterpart =
     perspective === 'worker' ? transaction.client?.name || 'Cliente' : `@${transaction.worker?.username || ''}`;
@@ -42,6 +48,9 @@ export default function TransactionCard({ transaction, perspective }) {
       </div>
       <div className="flex flex-col items-end gap-2">
         <span className="text-lg font-bold text-slate-100">{amount}</span>
+        {showsFeeNote && (
+          <span className="text-xs text-slate-500">de {formatMXN(transaction.amount)} pagados</span>
+        )}
         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${status.className}`}>
           {status.text}
         </span>
