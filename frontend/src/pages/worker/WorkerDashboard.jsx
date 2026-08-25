@@ -1,18 +1,31 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { QrCode, MessageSquareText, ShieldAlert } from 'lucide-react';
+import { QrCode, MessageSquareText, ShieldAlert, Zap } from 'lucide-react';
 import api, { getErrorMessage } from '../../services/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import Spinner from '../../components/Spinner.jsx';
 import Avatar from '../../components/Avatar.jsx';
 
+function formatMXN(cents) {
+  return (cents / 100).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
+}
+
 export default function WorkerDashboard() {
   const { user, worker } = useAuth();
   const [stats, setStats] = useState(null);
   const [stripeStatus, setStripeStatus] = useState(null);
+  const [balance, setBalance] = useState(null);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
+  const [payingOut, setPayingOut] = useState(false);
+
+  const loadBalance = () => {
+    api
+      .get('/workers/stripe/balance')
+      .then(({ data }) => setBalance(data))
+      .catch(() => {});
+  };
 
   useEffect(() => {
     if (!worker) return;
@@ -24,12 +37,14 @@ export default function WorkerDashboard() {
         ]);
         setStats(statsRes.data.stats);
         setStripeStatus(stripeRes.data);
+        if (stripeRes.data.onboardingComplete) loadBalance();
       } catch (err) {
         toast.error(getErrorMessage(err));
       } finally {
         setLoading(false);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [worker]);
 
   const handleConnectStripe = async () => {
@@ -40,6 +55,25 @@ export default function WorkerDashboard() {
     } catch (err) {
       toast.error(getErrorMessage(err));
       setConnecting(false);
+    }
+  };
+
+  const handleInstantPayout = async () => {
+    if (!balance?.instantAvailable) return;
+    const confirmed = window.confirm(
+      `Vas a retirar ${formatMXN(balance.instantAvailable)} de inmediato. Stripe cobra una comisión extra por retiro instantáneo (se descuenta del monto). ¿Continuar?`
+    );
+    if (!confirmed) return;
+
+    setPayingOut(true);
+    try {
+      await api.post('/workers/stripe/instant-payout');
+      toast.success('Retiro en camino — llega en minutos');
+      loadBalance();
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setPayingOut(false);
     }
   };
 
@@ -83,6 +117,29 @@ export default function WorkerDashboard() {
               {connecting ? 'Redirigiendo...' : 'Conectar con Stripe'}
             </button>
           </div>
+        </div>
+      )}
+
+      {stripeStatus?.onboardingComplete && balance && (
+        <div className="mt-6 card">
+          <p className="text-xs uppercase tracking-wide text-slate-500">Saldo disponible</p>
+          <p className="mt-1 text-2xl font-bold">{formatMXN(balance.available)}</p>
+          {balance.instantAvailable > 0 ? (
+            <button
+              onClick={handleInstantPayout}
+              disabled={payingOut}
+              className="btn-secondary mt-3 flex w-full items-center justify-center gap-1.5 !py-2 text-sm"
+            >
+              <Zap size={14} />
+              {payingOut
+                ? 'Procesando...'
+                : `Retirar ${formatMXN(balance.instantAvailable)} ahora (comisión extra)`}
+            </button>
+          ) : (
+            <p className="mt-2 text-xs text-slate-500">
+              Se deposita solo, todos los días — no hay nada pendiente para retiro instantáneo.
+            </p>
+          )}
         </div>
       )}
 

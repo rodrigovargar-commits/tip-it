@@ -9,6 +9,8 @@ const {
   updateWorkerProfile,
   createStripeOnboardingLink,
   getStripeAccountStatus,
+  getConnectedBalance,
+  createInstantPayout,
 } = require('../controllers/workerController');
 
 const router = express.Router();
@@ -30,6 +32,8 @@ router.post(
 
 router.get('/stripe/status', protect, requireWorker, getStripeAccountStatus);
 router.post('/stripe/onboarding-link', protect, requireWorker, createStripeOnboardingLink);
+router.get('/stripe/balance', protect, requireWorker, getConnectedBalance);
+router.post('/stripe/instant-payout', protect, requireWorker, createInstantPayout);
 
 router.put(
   '/profile',

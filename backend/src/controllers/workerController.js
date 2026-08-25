@@ -125,6 +125,13 @@ async function createFreshStripeAccount(worker, email) {
       transfers: { requested: true },
       card_payments: { requested: true },
     },
+    // Daily is the fastest standard (free) payout schedule Stripe offers —
+    // workers who want faster than that can use Instant Payouts instead,
+    // paying Stripe's per-payout fee themselves via getConnectedBalance /
+    // createInstantPayout below.
+    settings: {
+      payouts: { schedule: { interval: 'daily' } },
+    },
   });
   worker.stripeAccountId = account.id;
   worker.stripeOnboardingComplete = false;
@@ -194,6 +201,55 @@ const getStripeAccountStatus = asyncHandler(async (req, res) => {
   });
 });
 
+const getConnectedBalance = asyncHandler(async (req, res) => {
+  const worker = await Worker.findById(req.user.worker);
+  if (!worker) throw new AppError('Perfil de trabajador no encontrado', 404);
+
+  if (!worker.stripeAccountId) {
+    return res.json({ success: true, available: 0, instantAvailable: 0, currency: 'mxn' });
+  }
+
+  const balance = await stripe.balance.retrieve({ stripeAccount: worker.stripeAccountId });
+  const available = balance.available.find((b) => b.currency === 'mxn');
+  // instant_available may be entirely absent if the account has no debit
+  // card eligible for Instant Payouts on file — that's a normal state, not
+  // an error, so this just reports 0 rather than throwing.
+  const instant = (balance.instant_available || []).find((b) => b.currency === 'mxn');
+
+  res.json({
+    success: true,
+    available: available ? available.amount : 0,
+    instantAvailable: instant ? instant.amount : 0,
+    currency: 'mxn',
+  });
+});
+
+const createInstantPayout = asyncHandler(async (req, res) => {
+  const worker = await Worker.findById(req.user.worker);
+  if (!worker) throw new AppError('Perfil de trabajador no encontrado', 404);
+  if (!worker.stripeAccountId) {
+    throw new AppError('No tienes una cuenta de Stripe conectada', 400);
+  }
+
+  const balance = await stripe.balance.retrieve({ stripeAccount: worker.stripeAccountId });
+  const instant = (balance.instant_available || []).find((b) => b.currency === 'mxn');
+  const amount = instant ? instant.amount : 0;
+
+  if (amount < 1) {
+    throw new AppError('No tienes saldo disponible para retiro instantáneo', 400);
+  }
+
+  const payout = await stripe.payouts.create(
+    { amount, currency: 'mxn', method: 'instant' },
+    { stripeAccount: worker.stripeAccountId }
+  );
+
+  res.json({
+    success: true,
+    payout: { id: payout.id, amount: payout.amount, arrivalDate: payout.arrival_date },
+  });
+});
+
 module.exports = {
   registerWorker,
   getByUsername,
@@ -201,4 +257,6 @@ module.exports = {
   updateWorkerProfile,
   createStripeOnboardingLink,
   getStripeAccountStatus,
+  getConnectedBalance,
+  createInstantPayout,
 };
