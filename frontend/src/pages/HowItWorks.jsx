@@ -105,6 +105,11 @@ export default function HowItWorks() {
       <Link to="/scan" className="btn-primary mt-10 w-full">
         Empezar
       </Link>
+
+      <p className="mt-6 text-center text-sm text-slate-500">
+        ¿Dudas? Escríbenos al{' '}
+        <span className="font-semibold text-slate-300">55 8007 5613</span>
+      </p>
     </div>
   );
 }

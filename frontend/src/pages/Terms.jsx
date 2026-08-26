@@ -65,8 +65,8 @@ export default function Terms() {
           <p className="mt-2">
             Los pagos enviados a través de TIP-IT son, por su naturaleza de propina o pago
             directo, finales y no reembolsables salvo error técnico comprobable (por ejemplo, un
-            cargo duplicado). Si crees que hubo un error, contáctanos en{' '}
-            <span className="font-semibold text-slate-100">[TU EMAIL DE CONTACTO]</span>.
+            cargo duplicado). Si crees que hubo un error, contáctanos al{' '}
+            <span className="font-semibold text-slate-100">55 8007 5613</span>.
           </p>
         </section>
 

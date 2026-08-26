@@ -92,8 +92,8 @@ export default function PrivacyPolicy() {
             Puedes solicitar en cualquier momento el Acceso, Rectificación, Cancelación u
             Oposición al tratamiento de tus datos personales, así como pedir que eliminemos tu
             cuenta. Escríbenos a{' '}
-            <span className="font-semibold text-slate-100">[TU EMAIL DE CONTACTO]</span> para
-            ejercer estos derechos.
+            <span className="font-semibold text-slate-100">55 8007 5613</span> para ejercer estos
+            derechos.
           </p>
         </section>
 
