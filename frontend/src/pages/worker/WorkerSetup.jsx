@@ -27,7 +27,7 @@ export default function WorkerSetup() {
       await api.post('/workers/register', form);
       await refreshMe();
       toast.success('¡Tu perfil de trabajador está listo!');
-      navigate('/worker/dashboard');
+      navigate('/worker/onboarding');
     } catch (err) {
       toast.error(getErrorMessage(err));
     } finally {

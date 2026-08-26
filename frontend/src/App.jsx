@@ -4,6 +4,7 @@ import Register from './pages/auth/Register.jsx';
 import Login from './pages/auth/Login.jsx';
 import WorkerDashboard from './pages/worker/WorkerDashboard.jsx';
 import WorkerSetup from './pages/worker/WorkerSetup.jsx';
+import WorkerOnboarding from './pages/worker/WorkerOnboarding.jsx';
 import QRDisplay from './pages/worker/QRDisplay.jsx';
 import WorkerReviews from './pages/worker/WorkerReviews.jsx';
 import ScanQR from './pages/client/ScanQR.jsx';
@@ -33,6 +34,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <WorkerSetup />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/worker/onboarding"
+          element={
+            <ProtectedRoute requireWorker>
+              <WorkerOnboarding />
             </ProtectedRoute>
           }
         />

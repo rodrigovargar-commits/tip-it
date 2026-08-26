@@ -43,7 +43,7 @@ export default function Register() {
         await api.post('/workers/register', { username: form.username });
         await refreshMe();
         toast.success('¡Cuenta y perfil listos!');
-        navigate('/worker/dashboard');
+        navigate('/worker/onboarding');
       } else {
         toast.success('¡Cuenta creada!');
         navigate('/scan');

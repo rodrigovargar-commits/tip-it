@@ -109,6 +109,11 @@ export default function WorkerDashboard() {
             <p className="mt-1 text-sm text-amber-200/80">
               Conecta tu cuenta de Stripe para poder recibir tus pagos directo a tu banco.
             </p>
+            <p className="mt-2 text-xs text-amber-200/60">
+              Tip: tus primeros pagos pueden tardar unos días en liberarse — es una verificación
+              normal de Stripe para cuentas nuevas, no un error. Después de eso, cobras todos
+              los días.
+            </p>
             <button
               onClick={handleConnectStripe}
               disabled={connecting}
@@ -138,6 +143,12 @@ export default function WorkerDashboard() {
           ) : (
             <p className="mt-2 text-xs text-slate-500">
               Se deposita solo, todos los días — no hay nada pendiente para retiro instantáneo.
+            </p>
+          )}
+          {stats?.tipCount > 0 && stats.tipCount <= 3 && (
+            <p className="mt-2 text-xs text-slate-500">
+              Tus primeros pagos tardan un poco más en liberarse (verificación de cuenta nueva).
+              Después de eso, todo cae diario.
             </p>
           )}
         </div>
