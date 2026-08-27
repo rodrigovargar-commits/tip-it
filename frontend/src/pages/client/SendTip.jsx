@@ -58,12 +58,10 @@ function PaymentStep({ worker, chargeAmount, onSuccess }) {
 export default function SendTip() {
   const { username } = useParams();
   const navigate = useNavigate();
-  const { user, loading: authLoading, login } = useAuth();
+  const { user } = useAuth();
 
   const [worker, setWorker] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [guestForm, setGuestForm] = useState({ name: '', phone: '', email: '' });
-  const [submittingGuest, setSubmittingGuest] = useState(false);
   const [step, setStep] = useState('amount'); // amount -> payment -> rating -> done
   const [mode, setMode] = useState('fixed'); // fixed | percent
   const [amount, setAmount] = useState('');
@@ -133,6 +131,7 @@ export default function SendTip() {
       setPaymentIntentId(data.transactionId);
       setChargeAmount(data.amount / 100);
       setStep('payment');
+      trackEvent('begin_checkout', { value: data.amount / 100, currency: 'MXN' });
     } catch (err) {
       toast.error(getErrorMessage(err));
     } finally {
@@ -140,31 +139,10 @@ export default function SendTip() {
     }
   };
 
-  const handleGuestSubmit = async (e) => {
-    e.preventDefault();
-    if (!guestForm.name.trim() || !guestForm.phone.trim()) {
-      toast.error('Ingresa tu nombre y teléfono');
-      return;
-    }
-    setSubmittingGuest(true);
-    try {
-      const { data } = await api.post('/auth/guest', {
-        name: guestForm.name.trim(),
-        phone: guestForm.phone.trim(),
-        email: guestForm.email.trim() || undefined,
-      });
-      await login(data.token, data.user);
-      trackEvent('sign_up', { method: 'guest' });
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSubmittingGuest(false);
-    }
-  };
-
   const handlePaymentSuccess = (piId) => {
     setPaymentIntentId(piId);
     setStep('rating');
+    trackEvent('purchase', { value: chargeAmount, currency: 'MXN' });
   };
 
   const handleSubmitRating = async () => {
@@ -191,7 +169,7 @@ export default function SendTip() {
     }
   };
 
-  if (loading || authLoading) {
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Spinner />
@@ -272,52 +250,7 @@ export default function SendTip() {
         </div>
       )}
 
-      {step === 'amount' && !user && (
-        <form onSubmit={handleGuestSubmit} className="mt-8 space-y-4">
-          <p className="text-sm text-slate-400">
-            Solo necesitamos tu nombre y teléfono para enviar el pago — no hace falta crear una
-            cuenta.
-          </p>
-          <input
-            value={guestForm.name}
-            onChange={(e) => setGuestForm((f) => ({ ...f, name: e.target.value }))}
-            placeholder="Tu nombre"
-            className="input-field"
-            required
-          />
-          <input
-            type="tel"
-            value={guestForm.phone}
-            onChange={(e) => setGuestForm((f) => ({ ...f, phone: e.target.value }))}
-            placeholder="Tu teléfono"
-            className="input-field"
-            required
-          />
-          <input
-            type="email"
-            value={guestForm.email}
-            onChange={(e) => setGuestForm((f) => ({ ...f, email: e.target.value }))}
-            placeholder="Email (opcional, para tu recibo)"
-            className="input-field"
-          />
-          <p className="text-center text-xs text-slate-500">
-            Al continuar aceptas los{' '}
-            <Link to="/terminos" className="text-brand-400" target="_blank">
-              Términos
-            </Link>{' '}
-            y el{' '}
-            <Link to="/privacidad" className="text-brand-400" target="_blank">
-              Aviso de privacidad
-            </Link>
-            .
-          </p>
-          <button type="submit" disabled={submittingGuest} className="btn-primary w-full">
-            {submittingGuest ? 'Un momento...' : 'Continuar'}
-          </button>
-        </form>
-      )}
-
-      {step === 'amount' && user && (
+      {step === 'amount' && (
         <form onSubmit={handleContinue} className="mt-8 space-y-4">
           <div className="flex gap-2 rounded-xl border border-slate-800 bg-slate-900 p-1">
             <button
@@ -480,6 +413,17 @@ export default function SendTip() {
           <button type="submit" disabled={creatingIntent} className="btn-primary w-full">
             {creatingIntent ? 'Preparando pago...' : 'Continuar'}
           </button>
+          <p className="text-center text-xs text-slate-500">
+            Al continuar aceptas los{' '}
+            <Link to="/terminos" className="text-brand-400" target="_blank">
+              Términos
+            </Link>{' '}
+            y el{' '}
+            <Link to="/privacidad" className="text-brand-400" target="_blank">
+              Aviso de privacidad
+            </Link>
+            .
+          </p>
         </form>
       )}
 

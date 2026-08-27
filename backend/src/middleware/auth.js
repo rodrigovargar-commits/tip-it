@@ -38,4 +38,25 @@ const requireWorker = asyncHandler(async (req, res, next) => {
   next();
 });
 
-module.exports = { protect, requireWorker };
+// Like protect, but never rejects the request — populates req.user when a
+// valid token is present (so a logged-in/guest client still gets attributed
+// and can save contacts), and just leaves it null otherwise, for a fully
+// anonymous payer with no identification at all.
+const optionalAuth = asyncHandler(async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.sub);
+      if (user && user.active) req.user = user;
+    } catch {
+      // invalid/expired token on an optional route — just proceed anonymous
+    }
+  }
+
+  next();
+});
+
+module.exports = { protect, requireWorker, optionalAuth };

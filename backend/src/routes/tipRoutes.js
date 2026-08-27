@@ -1,7 +1,7 @@
 const express = require('express');
 const { body } = require('express-validator');
 const validate = require('../middleware/validate');
-const { protect } = require('../middleware/auth');
+const { protect, optionalAuth } = require('../middleware/auth');
 const { tipLimiter } = require('../middleware/rateLimiter');
 const { getFeeInfo, createIntent, confirm, getHistory } = require('../controllers/tipController');
 
@@ -11,7 +11,7 @@ router.get('/fee-info', getFeeInfo);
 
 router.post(
   '/create-intent',
-  protect,
+  optionalAuth,
   tipLimiter,
   [
     body('username').trim().notEmpty().withMessage('El username del trabajador es obligatorio'),
@@ -25,7 +25,7 @@ router.post(
 
 router.post(
   '/confirm',
-  protect,
+  optionalAuth,
   [
     body('paymentIntentId').trim().notEmpty(),
     body('rating').optional().isInt({ min: 1, max: 5 }),

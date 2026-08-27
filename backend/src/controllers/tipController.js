@@ -33,7 +33,7 @@ const createIntent = asyncHandler(async (req, res) => {
   if (!worker.stripeAccountId || !worker.stripeOnboardingComplete) {
     throw new AppError('Este trabajador aún no puede recibir propinas', 400);
   }
-  if (String(worker.user) === String(req.user._id)) {
+  if (req.user && String(worker.user) === String(req.user._id)) {
     throw new AppError('No puedes enviarte propina a ti mismo', 400);
   }
 
@@ -58,13 +58,13 @@ const createIntent = asyncHandler(async (req, res) => {
     automatic_payment_methods: { enabled: true },
     metadata: {
       workerId: String(worker._id),
-      clientId: String(req.user._id),
+      clientId: req.user ? String(req.user._id) : 'anonymous',
     },
   });
 
   const transaction = await Transaction.create({
     worker: worker._id,
-    client: req.user._id,
+    client: req.user ? req.user._id : null,
     amount: amountCents,
     platformFee: platformFeeCents,
     netAmount: netAmountCents,
@@ -91,7 +91,11 @@ const confirm = asyncHandler(async (req, res) => {
   if (!transaction) {
     throw new AppError('Transacción no encontrada', 404);
   }
-  if (String(transaction.client) !== String(req.user._id)) {
+  // Anonymous payments have no client to match against — knowing the
+  // paymentIntentId (only ever handed to the browser that made the
+  // payment, via its client_secret) is what proves this is legitimate,
+  // same trust model Stripe itself uses for the client_secret.
+  if (transaction.client && req.user && String(transaction.client) !== String(req.user._id)) {
     throw new AppError('No autorizado', 403);
   }
 
