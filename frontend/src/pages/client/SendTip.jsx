@@ -9,6 +9,7 @@ import Spinner from '../../components/Spinner.jsx';
 import StarRating from '../../components/StarRating.jsx';
 import Avatar from '../../components/Avatar.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { trackEvent } from '../../utils/analytics.js';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
 const QUICK_AMOUNTS = [20, 50, 100, 200];
@@ -153,6 +154,7 @@ export default function SendTip() {
         email: guestForm.email.trim() || undefined,
       });
       await login(data.token, data.user);
+      trackEvent('sign_up', { method: 'guest' });
     } catch (err) {
       toast.error(getErrorMessage(err));
     } finally {

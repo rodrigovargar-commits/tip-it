@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { Wallet, HandCoins, ArrowLeftRight } from 'lucide-react';
 import api, { getErrorMessage } from '../../services/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { trackEvent } from '../../utils/analytics.js';
 
 const ROLES = [
   { id: 'client', icon: Wallet, label: 'Enviar pagos', hint: 'Solo voy a pagar a otros' },
@@ -38,6 +39,7 @@ export default function Register() {
         password: form.password,
       });
       await login(data.token, data.user);
+      trackEvent('sign_up', { method: 'email', role });
 
       if (needsUsername) {
         await api.post('/workers/register', { username: form.username });
