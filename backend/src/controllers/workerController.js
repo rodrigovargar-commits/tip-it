@@ -53,12 +53,12 @@ const getByUsername = asyncHandler(async (req, res) => {
   const reviews = await Transaction.find({
     worker: worker._id,
     status: 'succeeded',
-    $or: [{ review: { $ne: '' } }, { rating: { $ne: null } }],
+    $or: [{ review: { $ne: '' } }, { comment: { $ne: '' } }, { rating: { $ne: null } }],
   })
     .sort({ createdAt: -1 })
     .limit(10)
     .populate('client', 'name')
-    .select('rating review createdAt client');
+    .select('rating review comment createdAt client');
 
   res.json({
     success: true,
@@ -77,6 +77,7 @@ const getByUsername = asyncHandler(async (req, res) => {
       reviews: reviews.map((r) => ({
         rating: r.rating,
         review: r.review,
+        comment: r.comment,
         clientName: r.client?.name?.split(' ')[0] || 'Cliente',
         createdAt: r.createdAt,
       })),
@@ -231,7 +232,14 @@ const getConnectedBalance = asyncHandler(async (req, res) => {
   if (!worker) throw new AppError('Perfil de trabajador no encontrado', 404);
 
   if (!worker.stripeAccountId) {
-    return res.json({ success: true, available: 0, pending: 0, instantAvailable: 0, currency: 'mxn' });
+    return res.json({
+      success: true,
+      available: 0,
+      pending: 0,
+      instantAvailable: 0,
+      nextAvailableAt: null,
+      currency: 'mxn',
+    });
   }
 
   const balance = await stripe.balance.retrieve({ stripeAccount: worker.stripeAccountId });
@@ -242,11 +250,30 @@ const getConnectedBalance = asyncHandler(async (req, res) => {
   // an error, so this just reports 0 rather than throwing.
   const instant = (balance.instant_available || []).find((b) => b.currency === 'mxn');
 
+  // Stripe holds each charge for a rolling number of days before it moves
+  // from "pending" to "available" (risk-based, higher for new accounts).
+  // Balance transactions carry the exact date each one unlocks
+  // (`available_on`), so we surface the soonest one instead of guessing.
+  let nextAvailableAt = null;
+  if (pending && pending.amount > 0) {
+    const txns = await stripe.balanceTransactions.list(
+      { limit: 100 },
+      { stripeAccount: worker.stripeAccountId }
+    );
+    const pendingUnlocks = txns.data
+      .filter((t) => t.status === 'pending' && t.currency === 'mxn')
+      .map((t) => t.available_on);
+    if (pendingUnlocks.length) {
+      nextAvailableAt = new Date(Math.min(...pendingUnlocks) * 1000).toISOString();
+    }
+  }
+
   res.json({
     success: true,
     available: available ? available.amount : 0,
     pending: pending ? pending.amount : 0,
     instantAvailable: instant ? instant.amount : 0,
+    nextAvailableAt,
     currency: 'mxn',
   });
 });

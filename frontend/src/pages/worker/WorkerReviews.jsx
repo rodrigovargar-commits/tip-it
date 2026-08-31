@@ -68,7 +68,9 @@ export default function WorkerReviews() {
                   dateStyle: 'medium',
                 })}
               </p>
-              {r.review ? <p className="mt-2 text-sm text-slate-300">“{r.review}”</p> : null}
+              {r.review || r.comment ? (
+                <p className="mt-2 text-sm text-slate-300">“{r.review || r.comment}”</p>
+              ) : null}
             </div>
           ))
         )}

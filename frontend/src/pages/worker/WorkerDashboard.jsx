@@ -11,6 +11,15 @@ function formatMXN(cents) {
   return (cents / 100).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
 }
 
+function formatDate(iso) {
+  return new Date(iso).toLocaleDateString('es-MX', {
+    day: 'numeric',
+    month: 'long',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
 export default function WorkerDashboard() {
   const { user, worker } = useAuth();
   const [stats, setStats] = useState(null);
@@ -152,6 +161,9 @@ export default function WorkerDashboard() {
           {balance.pending > 0 && (
             <p className="mt-1 text-sm text-slate-400">
               + {formatMXN(balance.pending)} pendiente de liberarse
+              {balance.nextAvailableAt && (
+                <> — el próximo cae el {formatDate(balance.nextAvailableAt)}</>
+              )}
             </p>
           )}
           {balance.instantAvailable > 0 ? (
@@ -167,7 +179,9 @@ export default function WorkerDashboard() {
             </button>
           ) : (
             <p className="mt-2 text-xs text-slate-500">
-              Se deposita solo, todos los días — no hay nada pendiente para retiro instantáneo.
+              {balance.pending > 0
+                ? 'Sin retiro instantáneo disponible todavía para ese monto pendiente.'
+                : 'Se deposita solo, todos los días — no hay nada pendiente ahora mismo.'}
             </p>
           )}
           {stats?.tipCount > 0 && stats.tipCount <= 3 && (
