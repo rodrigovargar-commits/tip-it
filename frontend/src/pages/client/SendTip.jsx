@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { ArrowLeft, UserPlus, PartyPopper, Star, Calculator, Wallet } from 'lucide-react';
+import { ArrowLeft, UserPlus, PartyPopper, Star, Calculator, Wallet, ShieldCheck } from 'lucide-react';
 import api, { getErrorMessage } from '../../services/api.js';
 import Spinner from '../../components/Spinner.jsx';
 import StarRating from '../../components/StarRating.jsx';
@@ -15,7 +15,7 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 
 const QUICK_AMOUNTS = [20, 50, 100, 200];
 const PERCENT_PRESETS = [10, 15, 20];
 
-function PaymentStep({ worker, chargeAmount, netAmount, onSuccess }) {
+function PaymentStep({ worker, chargeAmount, netAmount, onSuccess, user }) {
   const stripe = useStripe();
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
@@ -57,6 +57,18 @@ function PaymentStep({ worker, chargeAmount, netAmount, onSuccess }) {
           ? 'Procesando...'
           : `Confirmar pago de $${chargeAmount.toFixed(2)} a @${worker.username}`}
       </button>
+      <p className="flex items-center justify-center gap-1.5 text-xs text-slate-500">
+        <ShieldCheck size={13} />
+        Pago seguro, procesado por Stripe
+      </p>
+      {!user && (
+        <p className="text-center text-xs text-slate-600">
+          <Link to="/register" className="text-slate-500 underline hover:text-brand-400">
+            Crear cuenta
+          </Link>{' '}
+          (opcional)
+        </p>
+      )}
     </form>
   );
 }
@@ -442,6 +454,7 @@ export default function SendTip() {
             chargeAmount={chargeAmount}
             netAmount={netAmount}
             onSuccess={handlePaymentSuccess}
+            user={user}
           />
         </Elements>
       )}
@@ -471,9 +484,15 @@ export default function SendTip() {
         <div className="mt-10 space-y-5 text-center">
           <PartyPopper size={48} className="mx-auto text-brand-400" />
           <p className="text-lg font-semibold">¡Gracias por tu pago!</p>
-          <Link to="/history" className="btn-secondary w-full">
-            Ver historial
-          </Link>
+          {user ? (
+            <Link to="/history" className="btn-secondary w-full">
+              Ver historial
+            </Link>
+          ) : (
+            <Link to="/register" className="btn-secondary w-full">
+              Crear cuenta gratis (guarda tu historial)
+            </Link>
+          )}
           <Link to="/scan" className="btn-primary w-full">
             Enviar otro pago
           </Link>
