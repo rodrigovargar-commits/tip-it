@@ -138,6 +138,23 @@ async function createFreshStripeAccount(worker, email) {
   await worker.save();
 }
 
+// Accounts connected before the 'daily' schedule was added at creation time
+// (2026-08-25) were left on Stripe's default payout schedule — which can be
+// weekly, or even 'manual' (meaning Stripe never auto-sends the balance to
+// the bank at all until someone calls payouts.create). This makes sure every
+// account is on 'daily' going forward, whenever we already have it loaded.
+async function ensureDailyPayoutSchedule(account) {
+  if (account.settings?.payouts?.schedule?.interval === 'daily') return;
+  try {
+    await stripe.accounts.update(account.id, {
+      settings: { payouts: { schedule: { interval: 'daily' } } },
+    });
+  } catch (err) {
+    // Non-fatal — e.g. account not fully onboarded yet and doesn't accept
+    // this update. Status/balance checks should still succeed.
+  }
+}
+
 const createStripeOnboardingLink = asyncHandler(async (req, res) => {
   const worker = await Worker.findById(req.user.worker);
   if (!worker) throw new AppError('Perfil de trabajador no encontrado', 404);
@@ -193,6 +210,10 @@ const getStripeAccountStatus = asyncHandler(async (req, res) => {
 
   worker.stripeOnboardingComplete = Boolean(account.details_submitted && account.charges_enabled);
   await worker.save();
+
+  if (worker.stripeOnboardingComplete) {
+    await ensureDailyPayoutSchedule(account);
+  }
 
   res.json({
     success: true,

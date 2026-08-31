@@ -15,7 +15,7 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 
 const QUICK_AMOUNTS = [20, 50, 100, 200];
 const PERCENT_PRESETS = [10, 15, 20];
 
-function PaymentStep({ worker, chargeAmount, onSuccess }) {
+function PaymentStep({ worker, chargeAmount, netAmount, onSuccess }) {
   const stripe = useStripe();
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
@@ -45,6 +45,12 @@ function PaymentStep({ worker, chargeAmount, onSuccess }) {
 
   return (
     <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+      <div className="card !bg-brand-500/10 text-center">
+        <p className="text-sm text-slate-400">Tú pagas ${chargeAmount.toFixed(2)}</p>
+        <p className="mt-1 text-2xl font-bold text-brand-300">
+          {worker.name || `@${worker.username}`} recibe ${netAmount.toFixed(2)}
+        </p>
+      </div>
       <PaymentElement />
       <button type="submit" disabled={!stripe || submitting} className="btn-primary w-full">
         {submitting
@@ -75,6 +81,7 @@ export default function SendTip() {
   const [creatingIntent, setCreatingIntent] = useState(false);
   const [paymentIntentId, setPaymentIntentId] = useState(null);
   const [chargeAmount, setChargeAmount] = useState(0);
+  const [netAmount, setNetAmount] = useState(0);
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState('');
   const [savingRating, setSavingRating] = useState(false);
@@ -130,6 +137,7 @@ export default function SendTip() {
       setClientSecret(data.clientSecret);
       setPaymentIntentId(data.transactionId);
       setChargeAmount(data.amount / 100);
+      setNetAmount(data.netAmount / 100);
       setStep('payment');
       trackEvent('begin_checkout', { value: data.amount / 100, currency: 'MXN' });
     } catch (err) {
@@ -429,7 +437,12 @@ export default function SendTip() {
 
       {step === 'payment' && clientSecret && (
         <Elements stripe={stripePromise} options={{ clientSecret }}>
-          <PaymentStep worker={worker} chargeAmount={chargeAmount} onSuccess={handlePaymentSuccess} />
+          <PaymentStep
+            worker={worker}
+            chargeAmount={chargeAmount}
+            netAmount={netAmount}
+            onSuccess={handlePaymentSuccess}
+          />
         </Elements>
       )}
 
