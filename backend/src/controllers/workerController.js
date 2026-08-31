@@ -256,15 +256,22 @@ const getConnectedBalance = asyncHandler(async (req, res) => {
   // (`available_on`), so we surface the soonest one instead of guessing.
   let nextAvailableAt = null;
   if (pending && pending.amount > 0) {
-    const txns = await stripe.balanceTransactions.list(
-      { limit: 100 },
-      { stripeAccount: worker.stripeAccountId }
-    );
-    const pendingUnlocks = txns.data
-      .filter((t) => t.status === 'pending' && t.currency === 'mxn')
-      .map((t) => t.available_on);
-    if (pendingUnlocks.length) {
-      nextAvailableAt = new Date(Math.min(...pendingUnlocks) * 1000).toISOString();
+    // Best-effort — if this call fails for any reason, the rest of the
+    // balance (which already worked before this was added) should still
+    // be returned instead of failing the whole request.
+    try {
+      const txns = await stripe.balanceTransactions.list(
+        { limit: 100 },
+        { stripeAccount: worker.stripeAccountId }
+      );
+      const pendingUnlocks = txns.data
+        .filter((t) => t.status === 'pending' && t.currency === 'mxn')
+        .map((t) => t.available_on);
+      if (pendingUnlocks.length) {
+        nextAvailableAt = new Date(Math.min(...pendingUnlocks) * 1000).toISOString();
+      }
+    } catch (err) {
+      nextAvailableAt = null;
     }
   }
 

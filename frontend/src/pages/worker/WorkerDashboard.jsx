@@ -33,7 +33,7 @@ export default function WorkerDashboard() {
     api
       .get('/workers/stripe/balance')
       .then(({ data }) => setBalance(data))
-      .catch(() => {});
+      .catch((err) => toast.error(getErrorMessage(err)));
   };
 
   useEffect(() => {
