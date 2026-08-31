@@ -125,10 +125,35 @@ export default function WorkerDashboard() {
         </div>
       )}
 
+      {stripeStatus?.onboardingComplete && stripeStatus.requirementsDue?.length > 0 && (
+        <div className="mt-6 card flex gap-3 border-red-600/40 bg-red-500/10">
+          <ShieldAlert size={20} className="mt-0.5 shrink-0 text-red-400" />
+          <div className="flex-1">
+            <p className="font-semibold text-red-300">Stripe necesita más información</p>
+            <p className="mt-1 text-sm text-red-200/80">
+              Tus pagos están detenidos hasta que completes esto en Stripe:{' '}
+              {stripeStatus.requirementsDue.join(', ')}
+            </p>
+            <button
+              onClick={handleConnectStripe}
+              disabled={connecting}
+              className="btn-primary mt-3 w-full !bg-red-500 hover:!bg-red-600"
+            >
+              {connecting ? 'Redirigiendo...' : 'Completar en Stripe'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {stripeStatus?.onboardingComplete && balance && (
         <div className="mt-6 card">
           <p className="text-xs uppercase tracking-wide text-slate-500">Saldo disponible</p>
           <p className="mt-1 text-2xl font-bold">{formatMXN(balance.available)}</p>
+          {balance.pending > 0 && (
+            <p className="mt-1 text-sm text-slate-400">
+              + {formatMXN(balance.pending)} pendiente de liberarse
+            </p>
+          )}
           {balance.instantAvailable > 0 ? (
             <button
               onClick={handleInstantPayout}

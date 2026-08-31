@@ -219,6 +219,10 @@ const getStripeAccountStatus = asyncHandler(async (req, res) => {
     success: true,
     connected: true,
     onboardingComplete: worker.stripeOnboardingComplete,
+    payoutsEnabled: account.payouts_enabled,
+    requirementsDue: account.requirements?.currently_due || [],
+    disabledReason: account.requirements?.disabled_reason || null,
+    payoutSchedule: account.settings?.payouts?.schedule?.interval || null,
   });
 });
 
@@ -227,11 +231,12 @@ const getConnectedBalance = asyncHandler(async (req, res) => {
   if (!worker) throw new AppError('Perfil de trabajador no encontrado', 404);
 
   if (!worker.stripeAccountId) {
-    return res.json({ success: true, available: 0, instantAvailable: 0, currency: 'mxn' });
+    return res.json({ success: true, available: 0, pending: 0, instantAvailable: 0, currency: 'mxn' });
   }
 
   const balance = await stripe.balance.retrieve({ stripeAccount: worker.stripeAccountId });
   const available = balance.available.find((b) => b.currency === 'mxn');
+  const pending = balance.pending.find((b) => b.currency === 'mxn');
   // instant_available may be entirely absent if the account has no debit
   // card eligible for Instant Payouts on file — that's a normal state, not
   // an error, so this just reports 0 rather than throwing.
@@ -240,6 +245,7 @@ const getConnectedBalance = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     available: available ? available.amount : 0,
+    pending: pending ? pending.amount : 0,
     instantAvailable: instant ? instant.amount : 0,
     currency: 'mxn',
   });
