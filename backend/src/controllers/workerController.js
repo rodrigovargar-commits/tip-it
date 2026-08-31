@@ -129,9 +129,14 @@ async function createFreshStripeAccount(worker, email) {
     // Daily is the fastest standard (free) payout schedule Stripe offers —
     // workers who want faster than that can use Instant Payouts instead,
     // paying Stripe's per-payout fee themselves via getConnectedBalance /
-    // createInstantPayout below.
+    // createInstantPayout below. delay_days: 'minimum' asks Stripe for the
+    // lowest hold it'll allow for this account's risk profile — unlike a
+    // fixed number, it keeps auto-shrinking on its own as the account
+    // builds a track record, instead of staying stuck at whatever we set
+    // once. We were leaving this unset before, which let Stripe apply its
+    // more conservative default for brand-new accounts.
     settings: {
-      payouts: { schedule: { interval: 'daily' } },
+      payouts: { schedule: { interval: 'daily', delay_days: 'minimum' } },
     },
   });
   worker.stripeAccountId = account.id;
@@ -145,10 +150,14 @@ async function createFreshStripeAccount(worker, email) {
 // the bank at all until someone calls payouts.create). This makes sure every
 // account is on 'daily' going forward, whenever we already have it loaded.
 async function ensureDailyPayoutSchedule(account) {
-  if (account.settings?.payouts?.schedule?.interval === 'daily') return;
+  // delay_days comes back from Stripe as a resolved number, not the literal
+  // 'minimum' we send — so we can't tell from a GET whether it's already
+  // set to track the minimum or just happens to match it today. Sending the
+  // update every time is cheap and idempotent, so just always send it
+  // rather than trying to detect current state first.
   try {
     await stripe.accounts.update(account.id, {
-      settings: { payouts: { schedule: { interval: 'daily' } } },
+      settings: { payouts: { schedule: { interval: 'daily', delay_days: 'minimum' } } },
     });
   } catch (err) {
     // Non-fatal — e.g. account not fully onboarded yet and doesn't accept
