@@ -122,6 +122,14 @@ async function createFreshStripeAccount(worker, email) {
     type: 'express',
     email,
     business_type: 'individual',
+    // Our workers are people, not businesses — most have no website. Without
+    // this, Stripe's hosted onboarding asks them for a "business URL" field
+    // that doesn't apply and confuses people. Providing a product
+    // description up front satisfies that requirement instead, so Stripe
+    // skips asking for a URL at all.
+    business_profile: {
+      product_description: 'Recibe propinas digitales como trabajador independiente en TIP-IT',
+    },
     capabilities: {
       transfers: { requested: true },
       card_payments: { requested: true },
