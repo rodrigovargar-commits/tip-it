@@ -10,7 +10,7 @@ const forClients = [
   {
     icon: Calculator,
     title: 'Elige el monto',
-    desc: 'Monto fijo o % de la cuenta — tú decides. Si es tu primera vez, solo pedimos tu nombre y teléfono.',
+    desc: 'Monto fijo o % de la cuenta — tú decides. No pedimos nombre ni ningún dato.',
   },
   {
     icon: ShieldCheck,
