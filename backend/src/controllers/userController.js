@@ -4,7 +4,13 @@ const User = require('../models/User');
 
 const getMe = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).populate('worker');
-  res.json({ success: true, user: user.toPublicJSON(), worker: user.worker || null });
+  // Worker has no `name` field of its own — it lives on User. Without this,
+  // every screen that reads worker.name (QR card, dashboard, reviews) falls
+  // back to "@username" and shows the handle twice instead of the real name.
+  const worker = user.worker
+    ? { ...user.worker.toObject(), name: user.name, avatarUrl: user.avatarUrl }
+    : null;
+  res.json({ success: true, user: user.toPublicJSON(), worker });
 });
 
 const updateProfile = asyncHandler(async (req, res) => {
