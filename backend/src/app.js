@@ -40,6 +40,7 @@ const apiLimiter = rateLimit({
   max: 300,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === 'test',
   message: { success: false, message: 'Demasiadas solicitudes, intenta más tarde.' },
 });
 app.use('/api', apiLimiter);

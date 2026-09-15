@@ -150,4 +150,7 @@ const getHistory = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { getFeeInfo, createIntent, confirm, getHistory };
+// calculateFee is exported alongside the route handlers so the business
+// rule itself has a direct unit test (RV Mejores Prácticas §9), independent
+// of the HTTP/DB layer around it.
+module.exports = { getFeeInfo, createIntent, confirm, getHistory, calculateFee };

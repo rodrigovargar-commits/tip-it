@@ -1,0 +1,103 @@
+name: CI
+
+# Pipeline de la sección 10 de RV Mejores Practicas Desarrollo.md, adaptado al
+# stack real de este repo (Node/Express, sin Terraform/Checkov todavía). Cada
+# job corresponde a una fila de esa tabla; el criterio de bloqueo está en el
+# comentario de cada uno.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    name: Pruebas (backend)
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - name: Instalar dependencias
+        working-directory: backend
+        run: npm ci
+      - name: Ejecutar pruebas
+        working-directory: backend
+        env:
+          NODE_ENV: test
+          MONGO_URI: mongodb://127.0.0.1:27017/tip-it-test
+          JWT_SECRET: ci-test-secret-not-a-real-secret
+        run: npm test
+      # Criterio de bloqueo: cualquier prueba fallida bloquea el merge (§10).
+
+  frontend-build:
+    name: Build (frontend)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Instalar dependencias
+        working-directory: frontend
+        run: npm ci
+      - name: Build de producción
+        working-directory: frontend
+        run: npm run build
+      # Criterio de bloqueo: cualquier error de build bloquea el merge.
+
+  secrets-scan:
+    name: Secretos (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Criterio de bloqueo: cualquier coincidencia (§2.1, §10).
+
+  sast:
+    name: Análisis estático (Semgrep)
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v4
+      - name: Semgrep (reglas OWASP + reglas de seguridad para JS/Node)
+        run: semgrep ci --config auto --error
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+      # Criterio de bloqueo: cualquier hallazgo alto o crítico (§10).
+      # SEMGREP_APP_TOKEN es opcional (login a Semgrep Cloud para reglas
+      # adicionales) — sin él, `--config auto` sigue corriendo el set de
+      # reglas públicas de OWASP/seguridad.
+
+  dependency-scan:
+    name: Dependencias (Trivy — SCA)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+          skip-dirs: frontend/node_modules,backend/node_modules
+      # Criterio de bloqueo: CVE crítico o alto con parche disponible (§10).
+      # SBOM (también con Trivy) queda como pendiente declarado — se genera
+      # por build/release, no por PR; ver docs/adr/0001.

@@ -69,6 +69,49 @@ silenciosa.
    validación (máx. 30 caracteres, alfanumérico) en la ruta y en el modelo.
    → `backend/src/routes/userRoutes.js`, `backend/src/models/User.js`
 
+5. **4 vulnerabilidades moderadas y 1 alta en dependencias (§10, SCA).** `npm audit` encontró
+   `qs`/`express`/`body-parser` desactualizados y `js-yaml` (transitiva de una dependencia de
+   desarrollo) con un hallazgo alto. Corregido con `npm audit fix` — 0 vulnerabilidades después.
+
+## Suite de pruebas (§9) — ya no es un pendiente
+
+Se agregó Jest + Supertest, corriendo contra una base de datos local dedicada (`tip-it-test`, el
+mismo mongod embebido en `backend/.mongo/`, nunca la real). 28 pruebas, en cuatro archivos:
+
+- `tests/unit/fee.test.js` — la regla de negocio de la comisión (6% + $4 MXN) y sus casos límite.
+- `tests/integration/auth.test.js` — validación de entradas malformadas (400, no 500), duplicados,
+  y que el login no revele si un correo existe.
+- `tests/integration/authorization.test.js` — **la prueba obligatoria de §6**: el usuario A no
+  puede leer las estadísticas del trabajador B (404, no 403), ni borrar su contacto; y que
+  `registerWorker` no expone `stripeAccountId` ni otros campos internos.
+- `tests/integration/tips.test.js` — reglas de negocio del cobro (trabajador inexistente, monto
+  mínimo, onboarding incompleto, auto-propina) y la **idempotencia obligatoria de operaciones que
+  mueven dinero**: `markTransactionSucceeded` llamado dos veces en paralelo solo acredita una vez.
+
+Correr con `npm test` desde `backend/` (requiere `npm run mongo:start` primero, o el mongod del
+CI). El rate limiting se desactiva automáticamente bajo `NODE_ENV=test` (`skip` en
+`express-rate-limit`) para que la suite no dependa de correr por debajo de los límites de
+producción.
+
+**Lo que esta suite todavía no cubre** (para no sobrevender el alcance): pruebas de carga (k6),
+integración real contra el sandbox de Stripe (aquí se mockea), y pruebas de UI/frontend.
+
+## Pipeline de CI (§10) — ya no es un pendiente
+
+`.github/workflows/ci.yml`, cinco jobs, cada uno bloquea el merge en su propio criterio:
+
+| Job | Herramienta | Bloquea si |
+|---|---|---|
+| `test` | Jest, contra un `mongo:7` de servicio | cualquier prueba falla |
+| `frontend-build` | `vite build` | el build falla |
+| `secrets-scan` | gitleaks | cualquier coincidencia |
+| `sast` | Semgrep (`--config auto`) | hallazgo alto o crítico |
+| `dependency-scan` | Trivy (`scan-type: fs`) | CVE crítico o alto |
+
+**Lo que este pipeline todavía no hace** (pendiente, no escondido): Checkov (no hay Terraform que
+escanear todavía), DAST con OWASP ZAP contra staging, MobSF (no hay app móvil), y la generación de
+SBOM por build — los cuatro dependen de infraestructura que este proyecto no tiene aún.
+
 ## Excepción documentada (no corregida a propósito)
 
 **`tips/confirm` autoriza por posesión del `paymentIntentId`, no por identidad de usuario cuando
@@ -93,16 +136,21 @@ usa el propio Stripe. Se documenta aquí como excepción con los seis campos que
 Siguiendo el formato de §15 del propio documento — un pendiente declarado es gestión de riesgo, uno
 omitido es un hallazgo:
 
+- [x] ~~Suite de pruebas automatizadas (§9)~~ — hecho, ver arriba.
+- [x] ~~Pipeline de CI con SAST/SCA/secretos (§10)~~ — hecho, ver arriba (falta Checkov/DAST/MobSF/SBOM,
+      cada uno bloqueado por infraestructura que aún no existe).
 - [ ] **Migración de stack** a NestJS + TypeScript, PostgreSQL y Terraform — decisión de arquitectura
       grande, requiere su propio plan y ventana de trabajo, no aplicable a una app ya en producción
       sin planearlo aparte.
-- [ ] **Suite de pruebas automatizadas** (§9) — hoy no existe ninguna prueba automatizada en el
-      repositorio, incluyendo las pruebas de autorización obligatorias del §6 (A no accede a B).
+- [ ] **Proveedor de identidad gestionado** (§5) — el documento prohíbe autenticación propia; hoy
+      TIP-IT tiene su propio login con bcrypt+JWT. Migrar a un proveedor (Auth0, Clerk, Firebase
+      Auth) es un cambio de arquitectura real, más chico que la migración de stack pero no trivial.
+- [ ] **Bóveda de secretos** (§7) — hoy los secretos viven como variables de entorno en Render/Vercel,
+      no en una bóveda dedicada (Vault, AWS Secrets Manager).
 - [ ] **Bitácora de seguridad estructurada** (§8) — hoy solo hay logs de acceso HTTP (`morgan`) y
       `console.error` puntuales; falta el catálogo de eventos de seguridad, el formato JSON de una
-      línea con los seis campos de PCI 10.2.2, y la redacción centralizada de campos prohibidos.
-- [ ] **Pipeline de CI con SAST/SCA/secretos** (§10) — no hay GitHub Actions corriendo Semgrep,
-      Trivy, gitleaks ni Checkov en este repositorio.
+      línea con los seis campos de PCI 10.2.2, la redacción centralizada de campos prohibidos, y un
+      destino centralizado de solo-agregar con retención de 12 meses (típicamente un servicio pagado).
 - [ ] **Clasificación formal de datos personales** (§7) — `document`, `email`, `phone` no tienen
       declarada su base legal ni plazo de retención (LFPDPPP).
 - [ ] **MFA** para cualquier acceso administrativo — hoy el único "admin" es el endpoint
