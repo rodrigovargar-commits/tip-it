@@ -36,10 +36,14 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    // Basic KYC
+    // Basic KYC — an official ID number (INE/passport). Personal data:
+    // classified per RV Mejores Prácticas §7. Never returned by
+    // toPublicJSON() below, and excluded from logs (never referenced by the
+    // logger/morgan config, which only sees request metadata, not bodies).
     document: {
       type: String,
       trim: true,
+      maxlength: 30,
       default: null,
     },
     isWorker: {

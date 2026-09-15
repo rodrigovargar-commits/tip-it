@@ -17,7 +17,9 @@ const protect = asyncHandler(async (req, res, next) => {
 
   let decoded;
   try {
-    decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Pin the accepted algorithm explicitly — never trust the `alg` a token
+    // declares about itself (RV Mejores Prácticas §5 / ASVS V9).
+    decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
   } catch (err) {
     throw new AppError('Token inválido o expirado', 401);
   }
@@ -48,7 +50,7 @@ const optionalAuth = asyncHandler(async (req, res, next) => {
 
   if (token) {
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
       const user = await User.findById(decoded.sub);
       if (user && user.active) req.user = user;
     } catch {

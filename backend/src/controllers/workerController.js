@@ -6,6 +6,24 @@ const Transaction = require('../models/Transaction');
 const stripe = require('../config/stripe');
 const { generateWorkerQR } = require('../utils/generateQR');
 
+// Explicit output DTO — never hand back the raw Mongo document. It carries
+// internal fields (stripeAccountId, ratingSum, __v) that the client has no
+// business seeing, and a new internal field added later would otherwise
+// leak automatically (RV Mejores Prácticas §7 / ASVS V14).
+function toWorkerDTO(worker) {
+  return {
+    id: worker._id,
+    username: worker.username,
+    bio: worker.bio,
+    experience: worker.experience,
+    qrCode: worker.qrCode,
+    rating: worker.rating,
+    ratingCount: worker.ratingCount,
+    tipCount: worker.tipCount,
+    readyForTips: Boolean(worker.stripeOnboardingComplete),
+  };
+}
+
 const registerWorker = asyncHandler(async (req, res) => {
   const { username, bio } = req.body;
 
@@ -37,7 +55,7 @@ const registerWorker = asyncHandler(async (req, res) => {
   req.user.worker = worker._id;
   await req.user.save();
 
-  res.status(201).json({ success: true, worker });
+  res.status(201).json({ success: true, worker: toWorkerDTO(worker) });
 });
 
 const getByUsername = asyncHandler(async (req, res) => {
@@ -86,12 +104,16 @@ const getByUsername = asyncHandler(async (req, res) => {
 });
 
 const getStats = asyncHandler(async (req, res) => {
+  // Owner check happens on the way to a single 404, not a 403 after the
+  // fact — a 403 would confirm to any caller that a given worker id exists,
+  // even one that isn't theirs (RV Mejores Prácticas §6: no confirmar
+  // existencia de un recurso ajeno).
+  if (!req.user.worker || String(req.user.worker) !== String(req.params.id)) {
+    throw new AppError('Trabajador no encontrado', 404);
+  }
   const worker = await Worker.findById(req.params.id);
   if (!worker) {
     throw new AppError('Trabajador no encontrado', 404);
-  }
-  if (!req.user.worker || String(req.user.worker) !== String(worker._id)) {
-    throw new AppError('No autorizado para ver estas estadísticas', 403);
   }
 
   res.json({
@@ -114,7 +136,7 @@ const updateWorkerProfile = asyncHandler(async (req, res) => {
   if (req.body.experience !== undefined) worker.experience = req.body.experience;
   await worker.save();
 
-  res.json({ success: true, worker });
+  res.json({ success: true, worker: toWorkerDTO(worker) });
 });
 
 async function createFreshStripeAccount(worker, email) {

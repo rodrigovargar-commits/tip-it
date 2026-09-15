@@ -18,7 +18,12 @@ router.put(
       .optional({ nullable: true })
       .custom((value) => value === null || /^data:image\/(png|jpe?g|webp);base64,/.test(value))
       .withMessage('La foto debe ser una imagen (png, jpg o webp)'),
-    body('document').optional().trim(),
+    body('document')
+      .optional({ nullable: true, checkFalsy: true })
+      .trim()
+      .isLength({ max: 30 })
+      .matches(/^[A-Za-z0-9]+$/)
+      .withMessage('Documento inválido (solo letras y números, máx. 30 caracteres)'),
   ],
   validate,
   updateProfile
