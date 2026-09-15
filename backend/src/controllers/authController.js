@@ -1,6 +1,7 @@
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
 const generateToken = require('../utils/generateToken');
+const { logSecurityEvent } = require('../utils/logger');
 const User = require('../models/User');
 
 const register = asyncHandler(async (req, res) => {
@@ -13,6 +14,14 @@ const register = asyncHandler(async (req, res) => {
 
   const user = await User.create({ name, email, phone, password });
   const token = generateToken(user._id);
+
+  logSecurityEvent({
+    event: 'auth.register',
+    outcome: 'success',
+    actorId: user._id,
+    sourceIp: req.ip,
+    target: `user:${user._id}`,
+  });
 
   res.status(201).json({
     success: true,
@@ -55,12 +64,38 @@ const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
-  if (!user || !(await user.comparePassword(password))) {
+  const validPassword = user && (await user.comparePassword(password));
+
+  if (!user || !validPassword) {
+    // actorId stays "anonymous" — we never log an email/identifier for a
+    // failed attempt against an account that may not even exist (§8.3: no
+    // PII in logs; and logging the attempted email would let the log itself
+    // become an account-enumeration oracle).
+    logSecurityEvent({
+      event: 'auth.login',
+      outcome: 'failure',
+      sourceIp: req.ip,
+      reason: !user ? 'no_such_account' : 'bad_password',
+    });
     throw new AppError('Credenciales inválidas', 401);
   }
   if (!user.active) {
+    logSecurityEvent({
+      event: 'auth.login',
+      outcome: 'failure',
+      actorId: user._id,
+      sourceIp: req.ip,
+      reason: 'account_disabled',
+    });
     throw new AppError('Cuenta desactivada', 403);
   }
+
+  logSecurityEvent({
+    event: 'auth.login',
+    outcome: 'success',
+    actorId: user._id,
+    sourceIp: req.ip,
+  });
 
   const token = generateToken(user._id);
 

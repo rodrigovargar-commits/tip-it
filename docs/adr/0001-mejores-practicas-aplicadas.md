@@ -147,17 +147,44 @@ omitido es un hallazgo:
       Auth) es un cambio de arquitectura real, más chico que la migración de stack pero no trivial.
 - [ ] **Bóveda de secretos** (§7) — hoy los secretos viven como variables de entorno en Render/Vercel,
       no en una bóveda dedicada (Vault, AWS Secrets Manager).
-- [ ] **Bitácora de seguridad estructurada** (§8) — hoy solo hay logs de acceso HTTP (`morgan`) y
-      `console.error` puntuales; falta el catálogo de eventos de seguridad, el formato JSON de una
-      línea con los seis campos de PCI 10.2.2, la redacción centralizada de campos prohibidos, y un
-      destino centralizado de solo-agregar con retención de 12 meses (típicamente un servicio pagado).
-- [ ] **Clasificación formal de datos personales** (§7) — `document`, `email`, `phone` no tienen
-      declarada su base legal ni plazo de retención (LFPDPPP).
+- [x] ~~Bitácora de seguridad estructurada (§8)~~ — hecho parcialmente, ver sección siguiente. Falta
+      el destino centralizado de solo-agregar con retención de 12 meses (típicamente un servicio
+      pagado) y la revisión diaria automatizada — ambos dependen de contratar un servicio externo.
+- [x] ~~Clasificación de datos personales (§7)~~ — borrador en `docs/CLASIFICACION_DATOS.md`. Sigue
+      pendiente que lo revise alguien con conocimiento real de la LFPDPPP.
+- [x] ~~Plan de respuesta a incidentes (§15, PCI 12.10.1)~~ — borrador en
+      `docs/PLAN_RESPUESTA_INCIDENTES.md`.
 - [ ] **MFA** para cualquier acceso administrativo — hoy el único "admin" es el endpoint
       key-gated de `/api/admin/stats`, sin MFA porque no hay panel de administración real todavía.
 - [ ] **Cifrado en reposo del campo `document`** — hoy se guarda en texto plano en MongoDB (con
       límite de longitud ya aplicado). Cifrarlo a nivel de aplicación es un cambio más grande
       (gestión de llaves) que se deja pendiente en vez de improvisado.
+- [ ] **Proveedor de pentest anual** (§15) — no contratado; no aplica todavía a la escala de un
+      piloto de curso, pero queda anotado para antes de escalar en serio.
+
+## Bitácora de seguridad estructurada (§8) — parcial
+
+Se agregó `backend/src/utils/logger.js` (pino) con:
+
+- Redacción centralizada de los campos prohibidos por §8.3 (contraseñas, tokens, PAN, email,
+  teléfono, CURP, RFC, domicilio, `document`).
+- Un catálogo cerrado de eventos (§8.1): `auth.register`, `auth.login`, `authz.denied`,
+  `worker.privilege_granted`, `admin.access`, `payment.succeeded` — cada uno con los seis campos
+  de `PCI 10.2.2` (`ts`, `event`, `outcome`, `actor_id`, `source_ip`, `target`) más `trace_id` y
+  `reason`.
+- Conectado en: login y registro (éxito/fallo, sin revelar si un correo existe en un intento
+  fallido), `authz.denied` en los tres puntos reales de autorización por recurso
+  (`workers/:id/stats`, `requireWorker`, borrar un contacto ajeno), `worker.privilege_granted` al
+  registrarse como trabajador, `admin.access` en el endpoint key-gated, y `payment.succeeded` en
+  `markTransactionSucceeded` — nunca con el monto ni la identidad de la otra parte en la línea de
+  log, solo el id de la transacción para correlacionar contra Stripe.
+- Todos los `console.log`/`console.error`/`console.warn` que quedaban en código de producción se
+  reemplazaron por el logger (§8.3: "cualquier console.log en código de producción es un defecto").
+
+**Lo que falta** (dependiente de un servicio externo, no de más código): destino centralizado de
+solo-agregar (el servicio de aplicación no puede tener permiso de borrar sus propios logs — hoy si
+puede, porque solo escriben a stdout), retención de 12 meses gestionada automáticamente, y
+correlación/alertamiento diario automatizado.
 
 ## Nota aparte (no es un hallazgo de seguridad)
 

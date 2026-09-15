@@ -1,5 +1,6 @@
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
+const { logSecurityEvent } = require('../utils/logger');
 const User = require('../models/User');
 const Worker = require('../models/Worker');
 const Transaction = require('../models/Transaction');
@@ -10,8 +11,24 @@ const Transaction = require('../models/Transaction');
 const getStats = asyncHandler(async (req, res) => {
   const key = req.query.key || req.headers['x-admin-key'];
   if (!process.env.ADMIN_STATS_KEY || key !== process.env.ADMIN_STATS_KEY) {
+    // No actor_id — this route has no concept of an authenticated user,
+    // only a shared key. source_ip is the only identity we have for it.
+    logSecurityEvent({
+      event: 'admin.access',
+      outcome: 'failure',
+      sourceIp: req.ip,
+      target: 'admin:stats',
+      reason: 'bad_or_missing_key',
+    });
     throw new AppError('No autorizado', 401);
   }
+
+  logSecurityEvent({
+    event: 'admin.access',
+    outcome: 'success',
+    sourceIp: req.ip,
+    target: 'admin:stats',
+  });
 
   const [
     totalUsers,

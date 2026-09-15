@@ -1,5 +1,6 @@
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
+const { logSecurityEvent } = require('../utils/logger');
 const Contact = require('../models/Contact');
 const Worker = require('../models/Worker');
 
@@ -50,6 +51,16 @@ const addContact = asyncHandler(async (req, res) => {
 const removeContact = asyncHandler(async (req, res) => {
   const result = await Contact.deleteOne({ _id: req.params.id, owner: req.user._id });
   if (result.deletedCount === 0) {
+    // Same 404 whether the contact doesn't exist at all or belongs to
+    // someone else — doesn't confirm which (§6).
+    logSecurityEvent({
+      event: 'authz.denied',
+      outcome: 'failure',
+      actorId: req.user._id,
+      sourceIp: req.ip,
+      target: `contact:${req.params.id}`,
+      reason: 'not_found_or_owner_mismatch',
+    });
     throw new AppError('Contacto no encontrado', 404);
   }
   res.json({ success: true });

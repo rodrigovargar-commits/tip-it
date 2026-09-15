@@ -1,3 +1,5 @@
+const { logger } = require('../utils/logger');
+
 function errorHandler(err, req, res, next) { // eslint-disable-line no-unused-vars
   let statusCode = err.statusCode || 500;
   let message = err.message || 'Error interno del servidor';
@@ -24,7 +26,10 @@ function errorHandler(err, req, res, next) { // eslint-disable-line no-unused-va
   }
 
   if (process.env.NODE_ENV !== 'production') {
-    console.error(err);
+    // Full stack trace stays out of production logs on purpose — this path
+    // is for local/dev debugging only. §8.5: the client itself never gets
+    // more than a generic message either way, regardless of env.
+    logger.error({ err }, 'Unhandled error');
   }
 
   res.status(statusCode).json({

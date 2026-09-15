@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
+const { logSecurityEvent } = require('../utils/logger');
 const User = require('../models/User');
 
 const protect = asyncHandler(async (req, res, next) => {
@@ -35,6 +36,14 @@ const protect = asyncHandler(async (req, res, next) => {
 
 const requireWorker = asyncHandler(async (req, res, next) => {
   if (!req.user.isWorker || !req.user.worker) {
+    logSecurityEvent({
+      event: 'authz.denied',
+      outcome: 'failure',
+      actorId: req.user._id,
+      sourceIp: req.ip,
+      target: `route:${req.originalUrl}`,
+      reason: 'not_a_worker',
+    });
     throw new AppError('Esta acción requiere una cuenta de trabajador', 403);
   }
   next();

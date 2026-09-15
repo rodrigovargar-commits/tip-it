@@ -2,6 +2,7 @@ const stripe = require('../config/stripe');
 const Worker = require('../models/Worker');
 const Transaction = require('../models/Transaction');
 const markTransactionSucceeded = require('../utils/markTransactionSucceeded');
+const { logger } = require('../utils/logger');
 
 const handleStripeWebhook = async (req, res) => {
   const signature = req.headers['stripe-signature'];
@@ -10,7 +11,8 @@ const handleStripeWebhook = async (req, res) => {
   try {
     event = stripe.webhooks.constructEvent(req.body, signature, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
-    console.error('Webhook signature verification failed:', err.message);
+    // Only the error message, never the raw body/signature (§8.3).
+    logger.error({ err: err.message }, 'Webhook signature verification failed');
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
@@ -43,7 +45,7 @@ const handleStripeWebhook = async (req, res) => {
     }
     res.json({ received: true });
   } catch (err) {
-    console.error('Error processing webhook event:', err);
+    logger.error({ err: err.message, eventType: event.type }, 'Error processing webhook event');
     res.status(500).json({ received: false });
   }
 };

@@ -5,6 +5,7 @@ const User = require('../models/User');
 const Transaction = require('../models/Transaction');
 const stripe = require('../config/stripe');
 const { generateWorkerQR } = require('../utils/generateQR');
+const { logSecurityEvent } = require('../utils/logger');
 
 // Explicit output DTO — never hand back the raw Mongo document. It carries
 // internal fields (stripeAccountId, ratingSum, __v) that the client has no
@@ -54,6 +55,14 @@ const registerWorker = asyncHandler(async (req, res) => {
   req.user.isWorker = true;
   req.user.worker = worker._id;
   await req.user.save();
+
+  logSecurityEvent({
+    event: 'worker.privilege_granted',
+    outcome: 'success',
+    actorId: req.user._id,
+    sourceIp: req.ip,
+    target: `worker:${worker._id}`,
+  });
 
   res.status(201).json({ success: true, worker: toWorkerDTO(worker) });
 });
@@ -109,6 +118,14 @@ const getStats = asyncHandler(async (req, res) => {
   // even one that isn't theirs (RV Mejores Prácticas §6: no confirmar
   // existencia de un recurso ajeno).
   if (!req.user.worker || String(req.user.worker) !== String(req.params.id)) {
+    logSecurityEvent({
+      event: 'authz.denied',
+      outcome: 'failure',
+      actorId: req.user._id,
+      sourceIp: req.ip,
+      target: `worker:${req.params.id}`,
+      reason: 'owner_mismatch',
+    });
     throw new AppError('Trabajador no encontrado', 404);
   }
   const worker = await Worker.findById(req.params.id);
