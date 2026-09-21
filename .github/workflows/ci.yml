@@ -99,5 +99,15 @@ jobs:
           exit-code: '1'
           skip-dirs: frontend/node_modules,backend/node_modules
       # Criterio de bloqueo: CVE crítico o alto con parche disponible (§10).
-      # SBOM (también con Trivy) queda como pendiente declarado — se genera
-      # por build/release, no por PR; ver docs/adr/0001.
+      - name: SBOM (CycloneDX)
+        uses: aquasecurity/trivy-action@d2a0b60797ff03db6132bd4e2b293f9b37081297 # master
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: cyclonedx
+          output: sbom.cdx.json
+          skip-dirs: frontend/node_modules,backend/node_modules
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: sbom
+          path: sbom.cdx.json

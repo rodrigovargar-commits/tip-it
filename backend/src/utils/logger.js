@@ -43,6 +43,7 @@ const SECURITY_EVENTS = new Set([
   'worker.privilege_granted',
   'admin.access',
   'payment.succeeded',
+  'account.deleted',
 ]);
 
 // One JSON line per event, with exactly the six PCI 10.2.2 fields (§8.2):

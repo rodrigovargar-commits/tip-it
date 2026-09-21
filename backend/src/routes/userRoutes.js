@@ -2,11 +2,12 @@ const express = require('express');
 const { body } = require('express-validator');
 const validate = require('../middleware/validate');
 const { protect } = require('../middleware/auth');
-const { getMe, updateProfile, upgradeAccount } = require('../controllers/userController');
+const { getMe, updateProfile, upgradeAccount, deleteMe } = require('../controllers/userController');
 
 const router = express.Router();
 
 router.get('/me', protect, getMe);
+router.delete('/me', protect, deleteMe);
 
 router.put(
   '/profile',

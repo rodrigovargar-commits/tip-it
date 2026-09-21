@@ -156,9 +156,14 @@ omitido es un hallazgo:
       `docs/PLAN_RESPUESTA_INCIDENTES.md`.
 - [ ] **MFA** para cualquier acceso administrativo — hoy el único "admin" es el endpoint
       key-gated de `/api/admin/stats`, sin MFA porque no hay panel de administración real todavía.
-- [ ] **Cifrado en reposo del campo `document`** — hoy se guarda en texto plano en MongoDB (con
-      límite de longitud ya aplicado). Cifrarlo a nivel de aplicación es un cambio más grande
-      (gestión de llaves) que se deja pendiente en vez de improvisado.
+- [x] ~~Cifrado en reposo del campo `document`~~ — hecho a nivel de aplicación (AES-256-GCM,
+      `backend/src/utils/fieldCrypto.js`, llave en `DATA_ENCRYPTION_KEY`, 64 hex). **Requiere generar
+      la llave y ponerla en Render** (`openssl rand -hex 32`); sin ella el campo se guarda sin cifrar.
+      Rotación de llaves y bóveda dedicada siguen pendientes (ligado al pendiente de bóveda).
+- [x] ~~Flujo "eliminar mi cuenta y mis datos" (LFPDPPP)~~ — `DELETE /api/users/me` + botón en Perfil.
+      Borra datos personales y desactiva la cuenta; conserva transacciones como registro contable.
+- [x] ~~SBOM (§10)~~ — CycloneDX generado en CI y subido como artifact `sbom` en cada corrida.
+- [x] Acciones de GitHub fijadas a SHA de commit (hallazgo de Semgrep: tags mutables).
 - [ ] **Proveedor de pentest anual** (§15) — no contratado; no aplica todavía a la escala de un
       piloto de curso, pero queda anotado para antes de escalar en serio.
 

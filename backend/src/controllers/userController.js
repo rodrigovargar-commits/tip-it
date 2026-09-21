@@ -1,6 +1,9 @@
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
+const crypto = require('crypto');
 const User = require('../models/User');
+const Worker = require('../models/Worker');
+const { logSecurityEvent } = require('../utils/logger');
 
 const getMe = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).populate('worker');
@@ -46,4 +49,41 @@ const upgradeAccount = asyncHandler(async (req, res) => {
   res.json({ success: true, user: user.toPublicJSON() });
 });
 
-module.exports = { getMe, updateProfile, upgradeAccount };
+// "Delete my account" (LFPDPPP right of cancellation). Personal data is erased
+// and the account disabled; Transaction rows stay because they are the
+// accounting record of real payments (see docs/CLASIFICACION_DATOS.md).
+const deleteMe = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id).select('+password');
+  const id = String(user._id);
+
+  user.name = 'Cuenta eliminada';
+  user.email = user.isGuest ? undefined : `deleted-${id}@deleted.invalid`;
+  user.phone = '0000000000';
+  user.document = null;
+  user.avatarUrl = null;
+  user.active = false;
+  user.isGuest = true; // no password/email requirements once erased
+  user.password = crypto.randomBytes(24).toString('hex'); // unusable, hashed by the pre-save hook
+  user.isWorker = false;
+  await user.save();
+
+  if (user.worker) {
+    await Worker.findByIdAndUpdate(user.worker, {
+      bio: '',
+      experience: '',
+      username: `deleted_${crypto.randomBytes(6).toString('hex')}`,
+    });
+  }
+
+  logSecurityEvent({
+    event: 'account.deleted',
+    outcome: 'success',
+    actorId: id,
+    sourceIp: req.ip,
+    target: `user:${id}`,
+  });
+
+  res.json({ success: true });
+});
+
+module.exports = { getMe, updateProfile, upgradeAccount, deleteMe };

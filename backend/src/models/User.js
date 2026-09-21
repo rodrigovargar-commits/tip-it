@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const { encryptField, decryptField } = require('../utils/fieldCrypto');
 
 const userSchema = new mongoose.Schema(
   {
@@ -43,8 +44,12 @@ const userSchema = new mongoose.Schema(
     document: {
       type: String,
       trim: true,
-      maxlength: 30,
+      // Ciphertext is longer than the 30-char plain value; the 30-char limit is
+      // enforced at the route validator, not here.
+      maxlength: 200,
       default: null,
+      set: encryptField,
+      get: decryptField,
     },
     isWorker: {
       type: Boolean,
@@ -86,6 +91,7 @@ userSchema.methods.toPublicJSON = function toPublicJSON() {
     name: this.name,
     email: this.email,
     phone: this.phone,
+    hasDocument: Boolean(this.document),
     isWorker: this.isWorker,
     worker: this.worker,
     avatarUrl: this.avatarUrl,

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Camera, LogOut } from 'lucide-react';
+import { Camera, LogOut, Trash2 } from 'lucide-react';
 import api, { getErrorMessage } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { fileToResizedDataUrl } from '../utils/image.js';
@@ -14,7 +14,7 @@ export default function Profile() {
   const [form, setForm] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
-    document: user?.document || '',
+    document: '',
   });
   const [bio, setBio] = useState(worker?.bio || '');
   const [experience, setExperience] = useState(worker?.experience || '');
@@ -22,13 +22,25 @@ export default function Profile() {
   const [savingWorkerProfile, setSavingWorkerProfile] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
+  const handleDeleteAccount = async () => {
+    if (!window.confirm('Se borrarán tus datos personales y tu cuenta quedará desactivada. Esto no se puede deshacer. ¿Continuar?')) return;
+    try {
+      await api.delete('/users/me');
+      toast.success('Tu cuenta fue eliminada');
+      logout();
+      navigate('/');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  };
+
   const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     setSavingProfile(true);
     try {
-      await api.put('/users/profile', form);
+      await api.put('/users/profile', form.document ? form : { name: form.name, phone: form.phone });
       await refreshMe();
       toast.success('Perfil actualizado');
     } catch (err) {
@@ -123,7 +135,7 @@ export default function Profile() {
             name="document"
             value={form.document}
             onChange={handleChange}
-            placeholder="INE / Pasaporte"
+            placeholder={user?.hasDocument ? 'Registrado (escribe para reemplazar)' : 'INE / Pasaporte'}
             className="input-field mt-1"
           />
         </div>
@@ -197,6 +209,14 @@ export default function Profile() {
       >
         ¿Cómo funciona TIP-IT?
       </Link>
+
+      <button
+        onClick={handleDeleteAccount}
+        className="mt-3 flex w-full items-center justify-center gap-2 text-sm text-slate-500 hover:text-rose-400"
+      >
+        <Trash2 size={14} />
+        Eliminar mi cuenta y mis datos
+      </button>
 
       <button
         onClick={handleLogout}
