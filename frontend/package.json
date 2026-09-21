@@ -12,6 +12,7 @@
   "dependencies": {
     "@stripe/react-stripe-js": "^2.8.1",
     "@stripe/stripe-js": "^4.7.0",
+    "@vercel/analytics": "^2.0.1",
     "axios": "^1.7.7",
     "html5-qrcode": "^2.3.8",
     "lucide-react": "^1.32.0",

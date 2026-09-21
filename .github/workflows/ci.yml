@@ -72,14 +72,15 @@ jobs:
   sast:
     name: Análisis estático (Semgrep)
     runs-on: ubuntu-latest
-    container:
-      image: semgrep/semgrep
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install semgrep
       - name: Semgrep (reglas OWASP + reglas de seguridad para JS/Node)
         run: |
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          semgrep scan --config p/javascript --config p/nodejs --config p/owasp-top-ten --error --metrics=off
+          semgrep scan --exclude node_modules --config p/javascript --config p/nodejs --config p/owasp-top-ten --error --metrics=off
       # Criterio de bloqueo: cualquier hallazgo alto o crítico (§10).
       # Sin login a Semgrep Cloud: paquetes públicos p/javascript, p/nodejs y
       # p/owasp-top-ten (`--config auto` exige métricas activas, por eso no se usa).
