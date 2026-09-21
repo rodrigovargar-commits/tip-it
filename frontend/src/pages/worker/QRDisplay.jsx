@@ -108,12 +108,15 @@ async function buildPrintableQR(worker) {
 
   ctx.fillStyle = BRAND.brand400;
   ctx.font = `600 38px ${FONT}`;
-  ctx.fillText('¿Te gustó el servicio?', W / 2, 355);
-  ctx.fillText('¡Déjame una propina!', W / 2, 401);
+  ctx.fillText('¿Te gustó el servicio?', W / 2, 345);
+  ctx.fillText('¡Déjame una propina!', W / 2, 387);
+  ctx.fillStyle = BRAND.muted;
+  ctx.font = `500 32px ${FONT}`;
+  ctx.fillText('Enjoyed the service? Leave a tip!', W / 2, 437);
 
-  const qrBox = 560;
+  const qrBox = 540;
   const qrX = W / 2 - qrBox / 2;
-  const qrY = 460;
+  const qrY = 475;
   roundRectPath(ctx, qrX, qrY, qrBox, qrBox, 28);
   ctx.fillStyle = '#FFFFFF';
   ctx.fill();
@@ -131,8 +134,9 @@ async function buildPrintableQR(worker) {
 
   ctx.fillStyle = BRAND.muted;
   ctx.font = `400 26px ${FONT}`;
-  ctx.fillText('Escanea y paga con tarjeta, Apple Pay o Google Pay', W / 2, H - 95);
-  ctx.fillText('Pagos seguros procesados por Stripe', W / 2, H - 58);
+  ctx.fillText('Escanea y paga con tarjeta, Apple Pay o Google Pay', W / 2, H - 170);
+  ctx.fillText('Scan and pay with card, Apple Pay or Google Pay', W / 2, H - 132);
+  ctx.fillText('Pagos seguros / Secure payments by Stripe', W / 2, H - 80);
 
   return canvas.toDataURL('image/png');
 }
