@@ -55,8 +55,36 @@ const getStats = asyncHandler(async (req, res) => {
     ]),
   ]);
 
+  // Worker funnel (read-only, straight from the DB — no client tracking needed):
+  // registered -> onboarding done -> first real tip -> 5+ tips (activated).
+  const tipsPerWorker = await Transaction.aggregate([
+    { $match: { status: 'succeeded' } },
+    { $group: { _id: '$worker', tips: { $sum: 1 } } },
+  ]);
+  const withFirstTip = tipsPerWorker.length;
+  const withFivePlus = tipsPerWorker.filter((w) => w.tips >= 5).length;
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const [newWorkers7d, newUsers7d, tips7d] = await Promise.all([
+    Worker.countDocuments({ createdAt: { $gte: weekAgo } }),
+    User.countDocuments({ createdAt: { $gte: weekAgo } }),
+    Transaction.countDocuments({ status: 'succeeded', createdAt: { $gte: weekAgo } }),
+  ]);
+  const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
+
   res.json({
     success: true,
+    funnel: {
+      workersRegistered: totalWorkers,
+      onboardingComplete: readyWorkers,
+      firstTipReceived: withFirstTip,
+      fivePlusTips: withFivePlus,
+      conversionPct: {
+        registeredToOnboarded: pct(readyWorkers, totalWorkers),
+        onboardedToFirstTip: pct(withFirstTip, readyWorkers),
+        firstTipToFivePlus: pct(withFivePlus, withFirstTip),
+      },
+      last7Days: { newUsers: newUsers7d, newWorkers: newWorkers7d, succeededTips: tips7d },
+    },
     users: { total: totalUsers, guests: guestUsers, full: fullUsers },
     workers: { total: totalWorkers, readyForTips: readyWorkers },
     transactions: {
