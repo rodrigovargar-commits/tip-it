@@ -17,7 +17,7 @@ const encryptField = (plain) => {
   const key = getKey();
   if (!key) return plain;
   const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv, { authTagLength: 16 });
   const data = Buffer.concat([cipher.update(String(plain), 'utf8'), cipher.final()]);
   const tag = cipher.getAuthTag();
   return PREFIX + Buffer.concat([iv, tag, data]).toString('base64');
@@ -29,7 +29,7 @@ const decryptField = (stored) => {
   if (!key) return null;
   try {
     const raw = Buffer.from(stored.slice(PREFIX.length), 'base64');
-    const decipher = crypto.createDecipheriv('aes-256-gcm', key, raw.subarray(0, 12));
+    const decipher = crypto.createDecipheriv('aes-256-gcm', key, raw.subarray(0, 12), { authTagLength: 16 });
     decipher.setAuthTag(raw.subarray(12, 28));
     return Buffer.concat([decipher.update(raw.subarray(28)), decipher.final()]).toString('utf8');
   } catch {
