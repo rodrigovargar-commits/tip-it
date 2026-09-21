@@ -88,7 +88,7 @@ export default function SendTip() {
   const [customPercent, setCustomPercent] = useState('');
   const [comment, setComment] = useState('');
   const [coverFee, setCoverFee] = useState(false);
-  const [feeInfo, setFeeInfo] = useState({ feePercent: 8, feeFixedCents: 300 });
+  const [feeInfo, setFeeInfo] = useState({ feePercent: 6, feeFixedCents: 400 });
   const [clientSecret, setClientSecret] = useState(null);
   const [creatingIntent, setCreatingIntent] = useState(false);
   const [paymentIntentId, setPaymentIntentId] = useState(null);
