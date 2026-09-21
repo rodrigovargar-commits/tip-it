@@ -77,13 +77,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Semgrep (reglas OWASP + reglas de seguridad para JS/Node)
-        run: semgrep scan --config p/javascript --config p/nodejs --config p/owasp-top-ten --error --metrics=off
-        env:
-          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          semgrep scan --config p/javascript --config p/nodejs --config p/owasp-top-ten --error --metrics=off
       # Criterio de bloqueo: cualquier hallazgo alto o crítico (§10).
-      # SEMGREP_APP_TOKEN es opcional (login a Semgrep Cloud para reglas
-      # adicionales) — sin él, `--config auto` sigue corriendo el set de
-      # reglas públicas de OWASP/seguridad.
+      # Sin login a Semgrep Cloud: paquetes públicos p/javascript, p/nodejs y
+      # p/owasp-top-ten (`--config auto` exige métricas activas, por eso no se usa).
 
   dependency-scan:
     name: Dependencias (Trivy — SCA)
