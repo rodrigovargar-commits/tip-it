@@ -77,7 +77,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Semgrep (reglas OWASP + reglas de seguridad para JS/Node)
-        run: semgrep ci --config auto --error
+        run: semgrep scan --config auto --error --metrics=off
         env:
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
       # Criterio de bloqueo: cualquier hallazgo alto o crítico (§10).
@@ -97,6 +97,7 @@ jobs:
           scan-ref: .
           severity: CRITICAL,HIGH
           exit-code: '1'
+          trivyignores: .trivyignore
           skip-dirs: frontend/node_modules,backend/node_modules
       # Criterio de bloqueo: CVE crítico o alto con parche disponible (§10).
       # SBOM (también con Trivy) queda como pendiente declarado — se genera
