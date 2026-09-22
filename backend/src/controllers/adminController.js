@@ -4,6 +4,7 @@ const { logSecurityEvent } = require('../utils/logger');
 const User = require('../models/User');
 const Worker = require('../models/Worker');
 const Transaction = require('../models/Transaction');
+const Lead = require('../models/Lead');
 
 // Simple key-gated stats endpoint — not a full admin/RBAC system, just
 // enough to pull real numbers for metrics without exposing them publicly.
@@ -71,6 +72,15 @@ const getStats = asyncHandler(async (req, res) => {
   ]);
   const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
 
+  // Marketing landing (interest only, no account created) — measured
+  // separately from the real worker funnel above.
+  const [totalLeads, leadsByCategory, leads7d, uncontactedLeads] = await Promise.all([
+    Lead.countDocuments({}),
+    Lead.aggregate([{ $group: { _id: '$category', count: { $sum: 1 } } }]),
+    Lead.countDocuments({ createdAt: { $gte: weekAgo } }),
+    Lead.countDocuments({ contacted: false }),
+  ]);
+
   res.json({
     success: true,
     funnel: {
@@ -84,6 +94,12 @@ const getStats = asyncHandler(async (req, res) => {
         firstTipToFivePlus: pct(withFivePlus, withFirstTip),
       },
       last7Days: { newUsers: newUsers7d, newWorkers: newWorkers7d, succeededTips: tips7d },
+    },
+    leads: {
+      total: totalLeads,
+      uncontacted: uncontactedLeads,
+      last7Days: leads7d,
+      byCategory: Object.fromEntries(leadsByCategory.map((c) => [c._id, c.count])),
     },
     users: { total: totalUsers, guests: guestUsers, full: fullUsers },
     workers: { total: totalWorkers, readyForTips: readyWorkers },

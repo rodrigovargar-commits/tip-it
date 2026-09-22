@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Landing from './pages/Landing.jsx';
+import JoinInterest from './pages/JoinInterest.jsx';
 import Register from './pages/auth/Register.jsx';
 import Login from './pages/auth/Login.jsx';
 import WorkerDashboard from './pages/worker/WorkerDashboard.jsx';
@@ -23,6 +24,7 @@ export default function App() {
     <>
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/unete" element={<JoinInterest />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/privacidad" element={<PrivacyPolicy />} />

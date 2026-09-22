@@ -14,6 +14,7 @@ const workerRoutes = require('./routes/workerRoutes');
 const tipRoutes = require('./routes/tipRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const leadRoutes = require('./routes/leadRoutes');
 
 const app = express();
 
@@ -55,6 +56,7 @@ app.use('/api/workers', workerRoutes);
 app.use('/api/tips', tipRoutes);
 app.use('/api/contacts', contactRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/leads', leadRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ success: false, message: 'Recurso no encontrado' });
