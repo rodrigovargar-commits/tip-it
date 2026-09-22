@@ -4,3 +4,18 @@ dist/
 .env.local
 *.log
 .DS_Store
+
+# Capacitor native projects — commit the project files (Xcode/Gradle need
+# them to build and sign), but not machine-local paths, build output, or
+# anything a signing key would live in.
+android/local.properties
+android/**/build/
+android/.gradle/
+android/app/*.keystore
+android/app/*.jks
+ios/App/Pods/
+ios/App/App/public/
+ios/App/build/
+ios/**/xcuserdata/
+ios/**/*.xcuserstate
+ios/App/*.xcworkspace/xcuserdata/

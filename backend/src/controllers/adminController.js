@@ -1,36 +1,11 @@
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
-const { logSecurityEvent } = require('../utils/logger');
 const User = require('../models/User');
 const Worker = require('../models/Worker');
 const Transaction = require('../models/Transaction');
 const Lead = require('../models/Lead');
 
-// Simple key-gated stats endpoint — not a full admin/RBAC system, just
-// enough to pull real numbers for metrics without exposing them publicly.
-// Checked against ADMIN_STATS_KEY, set as an env var (never committed).
 const getStats = asyncHandler(async (req, res) => {
-  const key = req.query.key || req.headers['x-admin-key'];
-  if (!process.env.ADMIN_STATS_KEY || key !== process.env.ADMIN_STATS_KEY) {
-    // No actor_id — this route has no concept of an authenticated user,
-    // only a shared key. source_ip is the only identity we have for it.
-    logSecurityEvent({
-      event: 'admin.access',
-      outcome: 'failure',
-      sourceIp: req.ip,
-      target: 'admin:stats',
-      reason: 'bad_or_missing_key',
-    });
-    throw new AppError('No autorizado', 401);
-  }
-
-  logSecurityEvent({
-    event: 'admin.access',
-    outcome: 'success',
-    sourceIp: req.ip,
-    target: 'admin:stats',
-  });
-
   const [
     totalUsers,
     guestUsers,
@@ -73,7 +48,8 @@ const getStats = asyncHandler(async (req, res) => {
   const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
 
   // Marketing landing (interest only, no account created) — measured
-  // separately from the real worker funnel above.
+  // separately from the real worker funnel above. Counts only; the actual
+  // names/phones to contact live at GET /api/admin/leads.
   const [totalLeads, leadsByCategory, leads7d, uncontactedLeads] = await Promise.all([
     Lead.countDocuments({}),
     Lead.aggregate([{ $group: { _id: '$category', count: { $sum: 1 } } }]),
@@ -113,4 +89,36 @@ const getStats = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { getStats };
+// The actual contact list from the /unete landing — name, phone, category,
+// zone — so a real person can follow up on WhatsApp. Newest first, capped
+// at 200 per page (?before=<ISO date> to paginate further back).
+const getLeads = asyncHandler(async (req, res) => {
+  const filter = {};
+  if (req.query.before) {
+    const before = new Date(req.query.before);
+    if (!Number.isNaN(before.getTime())) filter.createdAt = { $lt: before };
+  }
+  if (req.query.category) filter.category = req.query.category;
+  if (req.query.contacted === 'true') filter.contacted = true;
+  if (req.query.contacted === 'false') filter.contacted = false;
+
+  const leads = await Lead.find(filter).sort({ createdAt: -1 }).limit(200);
+  res.json({ success: true, count: leads.length, leads });
+});
+
+// Mark a lead as contacted (or not) once someone has actually followed up —
+// keeps /admin/stats' "uncontacted" count meaningful over time.
+const updateLead = asyncHandler(async (req, res) => {
+  if (typeof req.body.contacted !== 'boolean') {
+    throw new AppError('contacted debe ser true o false', 400);
+  }
+  const lead = await Lead.findByIdAndUpdate(
+    req.params.id,
+    { contacted: req.body.contacted },
+    { new: true }
+  );
+  if (!lead) throw new AppError('No encontrado', 404);
+  res.json({ success: true, lead });
+});
+
+module.exports = { getStats, getLeads, updateLead };

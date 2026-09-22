@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">TIP-IT</string>
+    <string name="title_activity_main">TIP-IT</string>
+    <string name="package_name">com.tipit.app</string>
+    <string name="custom_url_scheme">com.tipit.app</string>
+</resources>
