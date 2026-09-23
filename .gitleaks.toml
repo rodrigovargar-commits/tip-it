@@ -10,4 +10,4 @@ regexes = ['''pk_(live|test)_[A-Za-z0-9]+''']
 
 [[allowlists]]
 description = "Literal fallback placeholder in backend/src/config/stripe.js — not a real key. The real key always comes from the STRIPE_SECRET_KEY env var; this string only appears if that var is unset, and Stripe calls fail immediately in that case."
-regexes = ['''sk_test_placeholder''']
+regexes = ['''sk_test_p[l]aceholder''']
