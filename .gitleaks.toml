@@ -1,0 +1,13 @@
+# Extends gitleaks' default ruleset (§10 of RV Mejores Prácticas: any match
+# blocks CI) with two narrow allowlists for patterns that LOOK like secrets
+# but are not — both reviewed by hand, not blanket-disabled.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Stripe publishable keys (pk_live_/pk_test_) are designed to be public — they only tokenize card data client-side and carry no server-side power. Stripe's own docs say to ship them in frontend bundles. Ours is already public in the deployed web build."
+regexes = ['''pk_(live|test)_[A-Za-z0-9]+''']
+
+[[allowlists]]
+description = "Literal fallback placeholder in backend/src/config/stripe.js — not a real key. The real key always comes from the STRIPE_SECRET_KEY env var; this string only appears if that var is unset, and Stripe calls fail immediately in that case."
+regexes = ['''sk_test_placeholder''']
