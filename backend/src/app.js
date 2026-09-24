@@ -20,9 +20,22 @@ const app = express();
 
 app.set('trust proxy', 1);
 app.use(helmet());
+// CLIENT_URL accepts a comma-separated list (e.g. the Vercel URL AND the custom
+// domain, with and without www). The native iOS/Android shells (Capacitor)
+// send their own fixed origins, so those are always allowed too.
+const NATIVE_APP_ORIGINS = ['capacitor://localhost', 'https://localhost', 'http://localhost'];
+const allowedOrigins = (process.env.CLIENT_URL || '')
+  .split(',')
+  .map((o) => o.trim().replace(/\/$/, ''))
+  .filter(Boolean);
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || '*',
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes('*')) {
+        return callback(null, true);
+      }
+      return callback(null, allowedOrigins.includes(origin) || NATIVE_APP_ORIGINS.includes(origin));
+    },
     credentials: true,
   })
 );
