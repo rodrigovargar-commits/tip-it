@@ -14,7 +14,7 @@ export default function BottomNav() {
     }`;
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto flex max-w-md border-t border-slate-800 bg-slate-950/95 backdrop-blur">
+    <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto flex max-w-md md:hidden border-t border-slate-800 bg-slate-950/95 backdrop-blur">
       <NavLink to={homePath} className={linkClass} end>
         <Home size={20} strokeWidth={2} />
         Inicio

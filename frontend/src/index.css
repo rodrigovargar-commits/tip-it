@@ -8,6 +8,16 @@ body,
   height: 100%;
 }
 
+html {
+  scroll-padding-top: 5rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 body {
   @apply bg-punch-cream font-sans text-punch-ink antialiased;
 }
@@ -33,6 +43,6 @@ h3 {
     @apply rounded-3xl border-2 border-punch-ink bg-white p-5 shadow-[4px_4px_0_0_#0A2F2F];
   }
   .page-shell {
-    @apply mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-28 pt-6;
+    @apply mx-auto flex min-h-[calc(100dvh-3.5rem)] w-full max-w-md flex-col px-5 pb-28 pt-6 md:min-h-[calc(100dvh-4rem)] md:max-w-3xl md:px-8 md:pb-16 md:pt-10;
   }
 }

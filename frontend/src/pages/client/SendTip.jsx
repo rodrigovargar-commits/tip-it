@@ -214,12 +214,14 @@ export default function SendTip() {
   }
 
   return (
-    <div className="page-shell pb-10">
+    <div className="page-shell pb-10 md:!max-w-5xl">
       <Link to="/scan" className="flex items-center gap-1 text-sm text-slate-400">
         <ArrowLeft size={16} />
         Volver
       </Link>
 
+      <div className="lg:mt-6 lg:grid lg:grid-cols-[1fr_1.1fr] lg:items-start lg:gap-14">
+        <div className="lg:sticky lg:top-24">
       <div className="mt-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Avatar src={worker.avatarUrl} name={worker.name || worker.username} size={56} />
@@ -270,8 +272,10 @@ export default function SendTip() {
         </div>
       )}
 
+        </div>
+        <div>
       {step === 'amount' && (
-        <form onSubmit={handleContinue} className="mt-8 space-y-4">
+        <form onSubmit={handleContinue} className="mt-8 space-y-4 lg:mt-0">
           <div className="flex gap-2 rounded-2xl border-2 border-punch-ink/30 bg-white p-1">
             <button
               type="button"
@@ -498,6 +502,8 @@ export default function SendTip() {
           </Link>
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 }

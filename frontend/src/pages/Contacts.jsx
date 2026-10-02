@@ -31,13 +31,13 @@ export default function Contacts() {
   };
 
   return (
-    <div className="page-shell">
+    <div className="page-shell md:!max-w-4xl">
       <h1 className="text-2xl font-bold">Contactos</h1>
       <p className="mt-1 text-sm text-slate-400">
         Guarda a las personas a las que sueles enviarles pagos para encontrarlas rápido.
       </p>
 
-      <div className="mt-6 space-y-3">
+      <div className="mt-6 space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
         {loading ? (
           <div className="flex justify-center py-10">
             <Spinner />

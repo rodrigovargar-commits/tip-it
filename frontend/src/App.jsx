@@ -20,10 +20,12 @@ import Terms from './pages/Terms.jsx';
 import HowItWorks from './pages/HowItWorks.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import BottomNav from './components/BottomNav.jsx';
+import TopBar from './components/TopBar.jsx';
 
 export default function App() {
   return (
     <>
+      <TopBar />
       <Routes>
         {/* Web visitors get the public marketing page; the installed iOS/Android app
             opens straight into the in-app home. */}

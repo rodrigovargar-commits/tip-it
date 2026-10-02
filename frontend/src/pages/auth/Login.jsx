@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api, { getErrorMessage } from '../../services/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import AuthLayout from '../../components/AuthLayout.jsx';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -28,11 +29,19 @@ export default function Login() {
   };
 
   return (
-    <div className="page-shell justify-center pb-10">
-      <h1 className="text-2xl font-bold">Iniciar sesión</h1>
-      <p className="mt-1 text-sm text-slate-400">Ingresa a tu cuenta de TIP-IT.</p>
-
-      <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+    <AuthLayout
+      title="Iniciar sesión"
+      subtitle="Ingresa a tu cuenta de TIP-IT."
+      footer={
+        <>
+          ¿No tienes cuenta?{' '}
+          <Link to="/register" className="font-semibold text-brand-400">
+            Regístrate
+          </Link>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="email"
           name="email"
@@ -55,13 +64,6 @@ export default function Login() {
           {loading ? 'Ingresando...' : 'Ingresar'}
         </button>
       </form>
-
-      <p className="mt-6 text-center text-sm text-slate-400">
-        ¿No tienes cuenta?{' '}
-        <Link to="/register" className="font-semibold text-brand-400">
-          Regístrate
-        </Link>
-      </p>
-    </div>
+    </AuthLayout>
   );
 }

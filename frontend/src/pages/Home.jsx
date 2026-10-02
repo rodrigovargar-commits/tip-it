@@ -27,13 +27,6 @@ import RegisterForm from '../components/RegisterForm.jsx';
 // same page. Palette: "Tropical punch" on warm cream. Playful on purpose —
 // the people using it are barbers, musicians and food stalls, not executives.
 
-const NAV = [
-  { href: '#que-es', label: 'Qué es' },
-  { href: '#como-funciona', label: 'Cómo funciona' },
-  { href: '#para-quien', label: 'Para quién' },
-  { href: '#preguntas', label: 'Preguntas' },
-];
-
 const PAINS = [
   { quote: '“No traigo cambio.”', note: 'Y ahí se fue la propina.', bg: 'bg-punch-pink', tilt: '-rotate-1' },
   { quote: '“Al rato te paso.”', note: 'Ese “al rato” casi nunca llega.', bg: 'bg-punch-yellow', tilt: 'rotate-1' },
@@ -384,32 +377,8 @@ export default function Home() {
   return (
     <div className="min-h-screen overflow-x-hidden bg-punch-cream font-sans text-punch-ink">
       {/* ---------- Nav + Hero ---------- */}
-      <div className="bg-punch-orange">
-        <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
-          <a href="#top" className="flex items-center gap-2.5" id="top">
-            <Logo size={40} />
-            <span className="font-display text-2xl font-extrabold tracking-tight">TIP-IT</span>
-          </a>
-          <nav className="hidden items-center gap-7 text-sm font-semibold md:flex">
-            {NAV.map((n) => (
-              <a key={n.href} href={n.href} className="hover:underline hover:decoration-2 hover:underline-offset-4">
-                {n.label}
-              </a>
-            ))}
-          </nav>
-          <div className="flex items-center gap-3">
-            {!user && (
-              <Link to="/login" className="hidden text-sm font-semibold hover:underline sm:inline">
-                Iniciar sesión
-              </Link>
-            )}
-            <Cta to={signup} where="nav" tone="ink" className="!px-5 !py-2.5 !text-sm">
-              {user ? 'Mi cuenta' : 'Crea tu cuenta'}
-            </Cta>
-          </div>
-        </header>
-
-        <section className="mx-auto grid max-w-6xl items-center gap-14 px-5 pb-24 pt-8 md:grid-cols-[1.15fr_1fr] md:pb-32 md:pt-14">
+      <div className="bg-punch-orange" id="top">
+        <section className="mx-auto grid max-w-6xl items-center gap-14 px-5 pb-24 pt-10 md:grid-cols-[1.15fr_1fr] md:pb-32 md:pt-14">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border-2 border-punch-ink bg-punch-yellow px-4 py-1.5 font-display text-sm font-extrabold">
               <HandCoins size={16} /> Únete a la revolución de las propinas

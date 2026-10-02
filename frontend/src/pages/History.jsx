@@ -21,7 +21,7 @@ export default function History() {
   }, [role]);
 
   return (
-    <div className="page-shell">
+    <div className="page-shell md:!max-w-4xl">
       <h1 className="text-2xl font-bold">Historial</h1>
 
       {worker && (
@@ -45,7 +45,7 @@ export default function History() {
         </div>
       )}
 
-      <div className="mt-6 space-y-3">
+      <div className="mt-6 space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
         {loading ? (
           <div className="flex justify-center py-10">
             <Spinner />

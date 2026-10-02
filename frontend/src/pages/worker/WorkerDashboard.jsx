@@ -95,7 +95,7 @@ export default function WorkerDashboard() {
   }
 
   return (
-    <div className="page-shell">
+    <div className="page-shell md:!max-w-4xl">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Avatar src={user?.avatarUrl} name={user?.name} size={48} />
@@ -193,10 +193,10 @@ export default function WorkerDashboard() {
         </div>
       )}
 
-      <div className="mt-6 grid grid-cols-2 gap-3">
+      <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
         <div className="card">
           <p className="text-xs uppercase tracking-wide text-slate-500">Total recibido</p>
-          <p className="mt-1 text-2xl font-bold">
+          <p className="mt-1 break-words text-xl font-bold sm:text-2xl">
             {(stats?.totalReceived || 0).toLocaleString('es-MX', {
               style: 'currency',
               currency: 'MXN',
@@ -207,7 +207,7 @@ export default function WorkerDashboard() {
           <p className="text-xs uppercase tracking-wide text-slate-500">Pagos recibidos</p>
           <p className="mt-1 text-2xl font-bold">{stats?.tipCount || 0}</p>
         </div>
-        <Link to="/worker/reviews" className="card col-span-2 transition hover:border-brand-600/50">
+        <Link to="/worker/reviews" className="card col-span-2 transition hover:-translate-y-0.5 md:col-span-1">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs uppercase tracking-wide text-slate-500">Reputación</p>
