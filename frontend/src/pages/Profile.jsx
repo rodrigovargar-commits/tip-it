@@ -208,6 +208,8 @@ export default function Profile() {
         <p className="font-display text-lg font-extrabold">Ayuda y más</p>
         <div className="mt-3 grid gap-1 sm:grid-cols-2">
           {[
+            ['/history', 'Mi historial'],
+            ['/contacts', 'Mis contactos'],
             ['/', 'Página principal'],
             ['/#preguntas', 'Preguntas frecuentes'],
             ['/#como-funciona', 'Cómo funciona'],

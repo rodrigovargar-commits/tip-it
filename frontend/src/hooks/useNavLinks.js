@@ -1,4 +1,4 @@
-import { CircleUser, LayoutDashboard, QrCode, Receipt, ScanLine, Users } from 'lucide-react';
+import { CircleUser, Home, LayoutDashboard, QrCode, Receipt, ScanLine, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 
 // One source of truth for the app's sections, shared by the top bar (desktop)
@@ -6,20 +6,23 @@ import { useAuth } from '../context/AuthContext.jsx';
 // workers start from their panel and QR, everyone else from paying.
 export default function useNavLinks() {
   const { worker } = useAuth();
+  const inicio = { to: '/', label: 'Inicio', icon: Home };
   if (worker) {
     return [
+      inicio,
       { to: '/worker/dashboard', label: 'Mi panel', icon: LayoutDashboard },
       { to: '/worker/qr', label: 'Mi QR', icon: QrCode },
       { to: '/scan', label: 'Pagar', icon: ScanLine },
+      { to: '/history', label: 'Historial', icon: Receipt, desktopOnly: true },
       { to: '/contacts', label: 'Contactos', icon: Users, desktopOnly: true },
-      { to: '/history', label: 'Historial', icon: Receipt },
       { to: '/profile', label: 'Perfil', icon: CircleUser },
     ];
   }
   return [
+    inicio,
     { to: '/scan', label: 'Pagar', icon: ScanLine },
-    { to: '/contacts', label: 'Contactos', icon: Users },
     { to: '/history', label: 'Historial', icon: Receipt },
+    { to: '/contacts', label: 'Contactos', icon: Users, desktopOnly: true },
     { to: '/profile', label: 'Perfil', icon: CircleUser },
   ];
 }

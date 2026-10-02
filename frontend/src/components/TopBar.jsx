@@ -94,7 +94,7 @@ export default function TopBar() {
                 </button>
                 {helpOpen && (
                   <div className="absolute right-0 top-full mt-3 w-60 rounded-2xl border-2 border-punch-ink bg-white p-2 shadow-[5px_5px_0_0_#0A2F2F]">
-                    {HELP_LINKS.map((l) => (
+                    {HELP_LINKS.filter((l) => !l.home).map((l) => (
                       <HelpItem
                         key={l.label}
                         link={l}

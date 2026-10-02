@@ -58,8 +58,8 @@ const WHO = [
 
 const NUMBERS = [
   { big: '$0', title: 'para crear tu cuenta', body: 'Tu cuenta y tu QR son gratis. No hay terminal que comprar.' },
-  { big: '6% + $4', title: 'por propina recibida', body: 'Una comisión pequeña, siempre visible antes de pagar.' },
-  { big: '100%', title: 'si tu cliente cubre la comisión', body: 'Puede elegir cubrirla para que recibas todo lo que te quiso dejar.' },
+  { big: '1 QR', title: 'para todos tus clientes', body: 'Uno solo, con tu nombre. Lo escanean con la cámara del celular, sin descargar nada.' },
+  { big: 'Directo', title: 'a tu banco', body: 'TIP-IT no retiene tu dinero: va de tu cliente a tu cuenta.' },
 ];
 
 const FEATURES = [
@@ -387,7 +387,7 @@ export default function Home() {
   const signup = user ? myAccount : '/register?role=worker';
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-punch-cream font-sans text-punch-ink">
+    <div className={`min-h-screen overflow-x-hidden bg-punch-cream font-sans text-punch-ink ${user ? 'pb-24 md:pb-0' : ''}`}>
       {/* ---------- Nav + Hero ---------- */}
       <div className="bg-punch-orange" id="top">
         <section className="mx-auto grid max-w-6xl items-center gap-14 px-5 pb-24 pt-10 md:grid-cols-[1.15fr_1fr] md:pb-32 md:pt-14">
@@ -407,9 +407,20 @@ export default function Home() {
               de TIP-IT tus clientes te dejan propina en segundos y tú ganas más.
             </p>
             <div className="mt-9 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-              <Cta to={signup} where="hero" tone="ink" className="text-lg">
-                {user ? 'Ir a mi cuenta' : 'Crea tu cuenta'} <ArrowRight size={20} />
-              </Cta>
+              {user ? (
+                <>
+                  <Cta to={myAccount} where="hero" tone="ink" className="text-lg">
+                    {worker ? 'Mi panel' : 'Pagar una propina'} <ArrowRight size={20} />
+                  </Cta>
+                  <Cta to={worker ? '/worker/qr' : '/history'} where="hero_2" tone="white" className="text-lg">
+                    {worker ? 'Mi QR' : 'Mi historial'}
+                  </Cta>
+                </>
+              ) : (
+                <Cta to={signup} where="hero" tone="ink" className="text-lg">
+                  Crea tu cuenta <ArrowRight size={20} />
+                </Cta>
+              )}
               <a
                 href="#como-funciona"
                 className="font-display text-base font-extrabold underline decoration-2 underline-offset-4"
@@ -600,18 +611,13 @@ export default function Home() {
             ))}
           </div>
 
-          <Reveal className="mt-10">
-            <div className="mx-auto max-w-2xl rounded-3xl border-2 border-punch-ink bg-white p-6 text-punch-ink shadow-[8px_8px_0_0_#0A2F2F]">
-              <p className="font-display text-sm font-extrabold uppercase tracking-wider text-punch-teal">
-                Con una propina de $100
-              </p>
-              <p className="mt-1 text-lg font-medium">
-                Te dejan <b>$100</b> → te llegan <b>$90</b>. Si tu cliente cubre la comisión, te
-                llegan los <b>$100</b> completos. Solo ganamos cuando tú ganas: si no te llegan
-                propinas, no pagas nada.
-              </p>
-            </div>
-          </Reveal>
+          <p className="mt-8 text-center text-xs font-medium text-white/80">
+            Solo ganamos cuando tú ganas: cobramos una comisión pequeña por propina recibida,
+            siempre visible antes de pagar.{' '}
+            <Link to="/#preguntas" className="font-extrabold underline underline-offset-2">
+              Ver detalles
+            </Link>
+          </p>
         </div>
       </section>
 
