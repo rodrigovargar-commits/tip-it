@@ -6,6 +6,7 @@ import api, { getErrorMessage } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { fileToResizedDataUrl } from '../utils/image.js';
 import Avatar from '../components/Avatar.jsx';
+import PageHeader from '../components/PageHeader.jsx';
 
 export default function Profile() {
   const { user, worker, logout, refreshMe } = useAuth();
@@ -92,16 +93,16 @@ export default function Profile() {
 
   return (
     <div className="page-shell">
-      <h1 className="text-2xl font-bold">Perfil</h1>
+      <PageHeader eyebrow="Tu cuenta" title="Perfil" subtitle="Tus datos y cómo te ve la gente." />
 
-      <div className="mt-6 flex items-center gap-4">
+      <div className="mt-6 card flex items-center gap-4 !bg-punch-pink">
         <div className="relative">
           <Avatar src={user?.avatarUrl} name={user?.name} size={72} />
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploadingPhoto}
-            className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-white ring-2 ring-punch-cream"
+            className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-punch-ink bg-punch-yellow text-punch-ink"
             aria-label="Cambiar foto"
           >
             <Camera size={14} />
@@ -115,8 +116,8 @@ export default function Profile() {
           />
         </div>
         <div>
-          <p className="font-semibold">{user?.name}</p>
-          <p className="text-sm text-slate-500">{uploadingPhoto ? 'Subiendo foto...' : 'Toca el ícono para cambiar tu foto'}</p>
+          <p className="font-display text-xl font-extrabold">{user?.name}</p>
+          <p className="text-sm font-medium text-slate-400">{uploadingPhoto ? 'Subiendo foto...' : 'Toca el ícono para cambiar tu foto'}</p>
         </div>
       </div>
 
@@ -203,12 +204,30 @@ export default function Profile() {
         </div>
       )}
 
-      <Link
-        to="/como-funciona"
-        className="mt-8 block text-center text-sm font-semibold text-brand-400 hover:text-brand-300"
-      >
-        ¿Cómo funciona TIP-IT?
-      </Link>
+      <div className="mt-8 card !bg-punch-yellow">
+        <p className="font-display text-lg font-extrabold">Ayuda y más</p>
+        <div className="mt-3 grid gap-1 sm:grid-cols-2">
+          {[
+            ['/', 'Página principal'],
+            ['/#preguntas', 'Preguntas frecuentes'],
+            ['/#como-funciona', 'Cómo funciona'],
+            ['/como-funciona', 'Guía de la app'],
+            ['/terminos', 'Términos'],
+            ['/privacidad', 'Aviso de privacidad'],
+          ].map(([to, label]) => (
+            <Link
+              key={to}
+              to={to}
+              className="rounded-xl px-3 py-2 font-display text-sm font-extrabold hover:bg-white/70"
+            >
+              {label} →
+            </Link>
+          ))}
+        </div>
+        <a href="tel:+525580075613" className="mt-2 block px-3 text-sm font-semibold underline">
+          ¿Dudas? Llámanos: 55 8007 5613
+        </a>
+      </div>
 
       <button
         onClick={handleDeleteAccount}

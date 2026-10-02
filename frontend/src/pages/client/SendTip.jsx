@@ -201,7 +201,7 @@ export default function SendTip() {
 
   if (!worker.readyForTips && step === 'amount') {
     return (
-      <div className="page-shell items-center pb-10 text-center">
+      <div className="page-shell items-center text-center">
         <h1 className="mt-10 text-xl font-bold">@{worker.username}</h1>
         <p className="mt-4 text-slate-400">
           Este trabajador todavía no puede recibir pagos. Inténtalo más tarde.
@@ -214,7 +214,7 @@ export default function SendTip() {
   }
 
   return (
-    <div className="page-shell pb-10 md:!max-w-5xl">
+    <div className="page-shell md:!max-w-5xl">
       <Link to="/scan" className="flex items-center gap-1 text-sm text-slate-400">
         <ArrowLeft size={16} />
         Volver

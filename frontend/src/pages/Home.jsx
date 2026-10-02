@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
   Calculator,
@@ -371,6 +371,18 @@ function PayBox() {
 
 export default function Home() {
   const { user, worker } = useAuth();
+  const { hash } = useLocation();
+
+  // Router hash links (#preguntas…) don't scroll by themselves.
+  useEffect(() => {
+    if (!hash) {
+      window.scrollTo({ top: 0 });
+      return undefined;
+    }
+    const t = setTimeout(() => document.getElementById(hash.slice(1))?.scrollIntoView(), 60);
+    return () => clearTimeout(t);
+  }, [hash]);
+
   const myAccount = worker ? '/worker/dashboard' : '/scan';
   const signup = user ? myAccount : '/register?role=worker';
 
@@ -381,7 +393,8 @@ export default function Home() {
         <section className="mx-auto grid max-w-6xl items-center gap-14 px-5 pb-24 pt-10 md:grid-cols-[1.15fr_1fr] md:pb-32 md:pt-14">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border-2 border-punch-ink bg-punch-yellow px-4 py-1.5 font-display text-sm font-extrabold">
-              <HandCoins size={16} /> Únete a la revolución de las propinas
+              <HandCoins size={16} />{' '}
+              {user ? `Hola, ${user.name?.split(' ')[0] || 'bienvenido'}` : 'Únete a la revolución de las propinas'}
             </span>
             <h1 className="mt-6 font-display text-[2.6rem] font-extrabold leading-[0.97] tracking-tight sm:text-6xl lg:text-7xl">
               Cada vez hay menos cash.{' '}

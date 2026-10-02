@@ -100,8 +100,8 @@ export default function WorkerDashboard() {
         <div className="flex items-center gap-3">
           <Avatar src={user?.avatarUrl} name={user?.name} size={48} />
           <div>
-            <p className="text-sm text-slate-400">Hola,</p>
-            <h1 className="text-xl font-bold">@{worker.username}</h1>
+            <p className="text-sm font-semibold text-slate-400">¡Qué bueno verte!</p>
+            <h1 className="text-2xl font-extrabold md:text-3xl">@{worker.username}</h1>
           </div>
         </div>
         <Link to="/worker/qr" className="btn-secondary flex items-center gap-1.5 !px-4 !py-2 text-sm">
@@ -111,24 +111,23 @@ export default function WorkerDashboard() {
       </div>
 
       {stripeStatus && !stripeStatus.onboardingComplete && (
-        <div className="mt-6 card flex gap-3 border-amber-600/40 bg-amber-500/10">
-          <ShieldAlert size={20} className="mt-0.5 shrink-0 text-amber-700" />
+        <div className="mt-6 card flex gap-3 !bg-punch-yellow">
+          <ShieldAlert size={22} className="mt-0.5 shrink-0" />
           <div className="flex-1">
-            <p className="font-semibold text-amber-700">Activa tus pagos</p>
-            <p className="mt-1 text-sm text-amber-800">
-              Conecta tu cuenta de Stripe para poder recibir tus pagos directo a tu banco.
+            <p className="font-display text-lg font-extrabold">Activa tus pagos</p>
+            <p className="mt-1 text-sm font-medium">
+              Conecta tu banco (una sola vez) para recibir tus propinas directo en tu cuenta.
             </p>
-            <p className="mt-2 text-xs text-amber-800">
+            <p className="mt-2 text-xs font-medium text-slate-400">
               Tip: tus primeros pagos pueden tardar unos días en liberarse — es una verificación
-              normal de Stripe para cuentas nuevas, no un error. Después de eso, cobras todos
-              los días.
+              normal para cuentas nuevas, no un error. Después de eso, cobras todos los días.
             </p>
             <button
               onClick={handleConnectStripe}
               disabled={connecting}
-              className="btn-primary mt-3 w-full !bg-amber-500 hover:!bg-amber-600"
+              className="btn-primary mt-3 w-full"
             >
-              {connecting ? 'Redirigiendo...' : 'Conectar con Stripe'}
+              {connecting ? 'Redirigiendo...' : 'Conectar mi banco'}
             </button>
           </div>
         </div>
@@ -155,11 +154,11 @@ export default function WorkerDashboard() {
       )}
 
       {stripeStatus?.onboardingComplete && balance && (
-        <div className="mt-6 card">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Saldo disponible</p>
-          <p className="mt-1 text-2xl font-bold">{formatMXN(balance.available)}</p>
+        <div className="mt-6 card !bg-punch-teal !text-white">
+          <p className="text-xs font-bold uppercase tracking-wide text-white/80">Saldo disponible</p>
+          <p className="mt-1 font-display text-4xl font-extrabold text-punch-yellow">{formatMXN(balance.available)}</p>
           {balance.pending > 0 && (
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-white/90">
               + {formatMXN(balance.pending)} pendiente de liberarse
               {balance.nextAvailableAt && (
                 <> — el próximo cae el {formatDate(balance.nextAvailableAt)}</>
@@ -178,14 +177,14 @@ export default function WorkerDashboard() {
                 : `Retirar ${formatMXN(balance.instantAvailable)} ahora (comisión extra)`}
             </button>
           ) : (
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-white/80">
               {balance.pending > 0
                 ? 'Sin retiro instantáneo disponible todavía para ese monto pendiente.'
                 : 'Se deposita solo, todos los días — no hay nada pendiente ahora mismo.'}
             </p>
           )}
           {stats?.tipCount > 0 && stats.tipCount <= 3 && (
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-white/80">
               Tus primeros pagos tardan un poco más en liberarse (verificación de cuenta nueva).
               Después de eso, todo cae diario.
             </p>
@@ -194,8 +193,8 @@ export default function WorkerDashboard() {
       )}
 
       <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
-        <div className="card">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Total recibido</p>
+        <div className="card !bg-punch-pink">
+          <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Total recibido</p>
           <p className="mt-1 break-words text-xl font-bold sm:text-2xl">
             {(stats?.totalReceived || 0).toLocaleString('es-MX', {
               style: 'currency',
@@ -203,9 +202,9 @@ export default function WorkerDashboard() {
             })}
           </p>
         </div>
-        <div className="card">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Pagos recibidos</p>
-          <p className="mt-1 text-2xl font-bold">{stats?.tipCount || 0}</p>
+        <div className="card !bg-punch-yellow">
+          <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Pagos recibidos</p>
+          <p className="mt-1 font-display text-3xl font-extrabold">{stats?.tipCount || 0}</p>
         </div>
         <Link to="/worker/reviews" className="card col-span-2 transition hover:-translate-y-0.5 md:col-span-1">
           <div className="flex items-center justify-between">
@@ -224,7 +223,7 @@ export default function WorkerDashboard() {
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-3">
-        <Link to="/worker/qr" className="btn-secondary">
+        <Link to="/worker/qr" className="btn-primary">
           Mi código QR
         </Link>
         <Link to="/history" className="btn-secondary">

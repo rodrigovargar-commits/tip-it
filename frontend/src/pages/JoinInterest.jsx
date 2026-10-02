@@ -13,7 +13,6 @@ import {
   Wallet,
 } from 'lucide-react';
 import api, { getErrorMessage } from '../services/api.js';
-import Logo from '../components/Logo.jsx';
 
 // Public marketing landing — intentionally NOT the mobile app shell
 // (page-shell / bottom nav / phone-width). This is a real, wide, scrollable
@@ -78,43 +77,29 @@ export default function JoinInterest() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      {/* Top bar */}
-      <header className="mx-auto flex max-w-5xl items-center justify-between px-5 py-5">
-        <div className="flex items-center gap-2">
-          <Logo size={36} />
-          <span className="text-lg font-bold">TIP-IT</span>
-        </div>
-        <button onClick={scrollToForm} className="btn-primary !px-4 !py-2 text-sm">
-          Quiero mi QR
-        </button>
-      </header>
-
+    <div className="min-h-screen bg-punch-cream text-punch-ink">
       {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 -top-40 h-96 bg-gradient-to-b from-brand-500/20 via-brand-500/5 to-transparent blur-2xl"
-        />
-        <div className="relative mx-auto max-w-3xl px-5 pb-16 pt-10 text-center sm:pt-16">
-          <span className="inline-block rounded-full border border-brand-500/30 bg-brand-500/10 px-4 py-1 text-xs font-semibold text-brand-300">
+      <section className="border-b-2 border-punch-ink bg-punch-orange">
+        <div className="mx-auto max-w-3xl px-5 pb-16 pt-12 text-center sm:pt-16">
+          <span className="inline-flex items-center gap-2 rounded-full border-2 border-punch-ink bg-punch-yellow px-4 py-1.5 font-display text-sm font-extrabold">
             Programa piloto en CDMX
           </span>
-          <h1 className="mt-6 text-4xl font-extrabold leading-tight sm:text-5xl">
-            ¿Trabajas dando servicio?
-            <br />
-            <span className="text-brand-400">Que te dejen propina sin efectivo.</span>
+          <h1 className="mt-6 font-display text-4xl font-extrabold leading-[1] tracking-tight sm:text-6xl">
+            ¿Chambeas dando servicio?{' '}
+            <span className="inline-block -rotate-1 rounded-2xl bg-punch-yellow px-3 pb-1">
+              Que te dejen propina sin efectivo.
+            </span>
           </h1>
-          <p className="mx-auto mt-5 max-w-xl text-lg text-slate-400">
-            Barberos, músicos callejeros, puestos de comida: te instalamos gratis un código QR
-            para que tus clientes te dejen propina con tarjeta, Apple Pay o Google Pay.
+          <p className="mx-auto mt-6 max-w-xl text-lg font-medium">
+            Barberos, músicos de calle, puestos de comida: te instalamos gratis un código QR para
+            que tus clientes te dejen propina con tarjeta, Apple Pay o Google Pay.
           </p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <button onClick={scrollToForm} className="btn-primary w-full sm:w-auto">
+            <button onClick={scrollToForm} className="btn-primary w-full text-lg sm:w-auto">
               Quiero mi QR gratis
             </button>
-            <Link to="/como-funciona" className="text-sm font-semibold text-slate-400 hover:text-slate-200">
-              ¿Cómo funciona la app? →
+            <Link to="/register?role=worker" className="font-display text-base font-extrabold underline decoration-2 underline-offset-4">
+              Prefiero crear mi cuenta yo →
             </Link>
           </div>
         </div>
@@ -122,14 +107,14 @@ export default function JoinInterest() {
 
       {/* Cómo funciona */}
       <section className="mx-auto max-w-5xl px-5 py-14">
-        <h2 className="text-center text-2xl font-bold sm:text-3xl">Así de simple</h2>
+        <h2 className="text-center text-3xl font-extrabold sm:text-5xl">Así de simple</h2>
         <div className="mt-10 grid gap-5 sm:grid-cols-3">
           {STEPS.map(({ icon: Icon, title, body }, i) => (
             <div key={title} className="card relative">
-              <span className="absolute -top-3 -left-3 flex h-8 w-8 items-center justify-center rounded-full bg-brand-500 text-sm font-bold text-white">
+              <span className="absolute -left-3 -top-3 flex h-9 w-9 items-center justify-center rounded-full border-2 border-punch-ink bg-punch-orange font-display text-base font-extrabold text-punch-ink">
                 {i + 1}
               </span>
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-500/15 text-brand-400">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-punch-ink bg-punch-pink text-punch-ink">
                 <Icon size={22} />
               </span>
               <p className="mt-4 font-semibold">{title}</p>
@@ -140,9 +125,9 @@ export default function JoinInterest() {
       </section>
 
       {/* Para quién es */}
-      <section className="border-y border-slate-900 bg-slate-900/30 py-14">
+      <section className="border-y-2 border-punch-ink bg-punch-yellow py-14">
         <div className="mx-auto max-w-5xl px-5">
-          <h2 className="text-center text-2xl font-bold sm:text-3xl">¿Es para ti?</h2>
+          <h2 className="text-center text-3xl font-extrabold sm:text-5xl">¿Es para ti?</h2>
           <div className="mt-10 grid gap-4 sm:grid-cols-4">
             {CATEGORIES.map(({ id, label, icon: Icon }) => (
               <div key={id} className="card flex flex-col items-center gap-2 py-6 text-center">
@@ -254,18 +239,18 @@ export default function JoinInterest() {
         )}
       </section>
 
-      <footer className="border-t border-slate-900 py-8 text-center text-xs text-slate-600">
+      <footer className="border-t-2 border-punch-ink bg-punch-ink py-8 text-center text-sm text-punch-cream/80">
         <p>
           ¿Ya tienes cuenta?{' '}
-          <Link to="/login" className="text-brand-400">
+          <Link to="/login" className="font-extrabold text-punch-yellow">
             Inicia sesión
           </Link>
           {' · '}
-          <Link to="/" className="hover:text-slate-400">
-            Conoce la app
+          <Link to="/" className="hover:text-punch-yellow">
+            Página principal
           </Link>
         </p>
-        <p className="mt-2">TIP-IT · Propinas digitales</p>
+        <p className="mt-2 text-xs text-punch-cream/50">TIP-IT · Propinas digitales · tipit.com.mx</p>
       </footer>
     </div>
   );

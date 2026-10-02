@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import api, { getErrorMessage } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import PageHeader from '../components/PageHeader.jsx';
+import EmptyState from '../components/EmptyState.jsx';
 import Spinner from '../components/Spinner.jsx';
 import TransactionCard from '../components/TransactionCard.jsx';
 
@@ -22,7 +24,7 @@ export default function History() {
 
   return (
     <div className="page-shell md:!max-w-4xl">
-      <h1 className="text-2xl font-bold">Historial</h1>
+      <PageHeader eyebrow="Tus movimientos" title="Historial" subtitle={worker ? 'Lo que has recibido y lo que has enviado.' : 'Las propinas que has enviado.'} />
 
       {worker && (
         <div className="mt-4 flex gap-2 rounded-2xl border-2 border-punch-ink/30 bg-white p-1">
@@ -51,7 +53,21 @@ export default function History() {
             <Spinner />
           </div>
         ) : transactions.length === 0 ? (
-          <p className="mt-10 text-center text-sm text-slate-500">Aún no hay transacciones.</p>
+          role === 'worker' ? (
+            <EmptyState
+              person="musician"
+              title="Aún no te llegan propinas"
+              body="Comparte tu QR donde chambeas y aquí verás cada una."
+              cta={{ to: '/worker/qr', label: 'Ver mi QR' }}
+            />
+          ) : (
+            <EmptyState
+              person="waiter"
+              title="Aún no has enviado propinas"
+              body="Escanea el QR de quien te atendió bien y dale las gracias."
+              cta={{ to: '/scan', label: 'Escanear un QR' }}
+            />
+          )
         ) : (
           transactions.map((tx) => (
             <TransactionCard key={tx._id} transaction={tx} perspective={role} />

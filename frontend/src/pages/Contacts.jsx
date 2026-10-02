@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Users, Trash2 } from 'lucide-react';
 import api, { getErrorMessage } from '../services/api.js';
+import PageHeader from '../components/PageHeader.jsx';
+import EmptyState from '../components/EmptyState.jsx';
 import Spinner from '../components/Spinner.jsx';
 import Avatar from '../components/Avatar.jsx';
 
@@ -32,10 +34,11 @@ export default function Contacts() {
 
   return (
     <div className="page-shell md:!max-w-4xl">
-      <h1 className="text-2xl font-bold">Contactos</h1>
-      <p className="mt-1 text-sm text-slate-400">
-        Guarda a las personas a las que sueles enviarles pagos para encontrarlas rápido.
-      </p>
+      <PageHeader
+        eyebrow="Tu gente"
+        title="Contactos"
+        subtitle="Guarda a las personas a las que sueles darles propina para encontrarlas rápido."
+      />
 
       <div className="mt-6 space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
         {loading ? (
@@ -43,13 +46,12 @@ export default function Contacts() {
             <Spinner />
           </div>
         ) : contacts.length === 0 ? (
-          <div className="mt-10 flex flex-col items-center text-center text-slate-500">
-            <Users size={32} className="mb-3 text-slate-700" />
-            <p className="text-sm">
-              Aún no tienes contactos guardados. Desde el perfil de alguien, toca "Guardar
-              contacto".
-            </p>
-          </div>
+          <EmptyState
+            person="cook"
+            title="Todavía no tienes contactos"
+            body="Desde el perfil de alguien, toca “Guardar contacto” y aparecerá aquí."
+            cta={{ to: '/scan', label: 'Buscar a alguien' }}
+          />
         ) : (
           contacts.map((c) => (
             <div key={c.id} className="card flex items-center gap-3">

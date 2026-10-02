@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 
 export default function PrivacyPolicy() {
   return (
-    <div className="page-shell pb-16">
+    <div className="page-shell">
       <Link to="/" className="flex items-center gap-1 text-sm text-slate-400">
         <ArrowLeft size={16} />
         Volver

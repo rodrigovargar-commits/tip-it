@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { ArrowRight } from 'lucide-react';
+import PageHeader from '../../components/PageHeader.jsx';
 import api, { getErrorMessage } from '../../services/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 
@@ -54,12 +55,12 @@ export default function WorkerSetup() {
 
   if (user?.isGuest) {
     return (
-      <div className="page-shell justify-center pb-10">
-        <h1 className="text-2xl font-bold">Protege tu cuenta</h1>
-        <p className="mt-1 text-sm text-slate-400">
-          Para recibir pagos necesitas una contraseña — así nadie más que tú puede entrar a tu
-          cuenta y disponer de tu dinero.
-        </p>
+      <div className="page-shell justify-center">
+        <PageHeader
+          eyebrow="Un paso más"
+          title="Protege tu cuenta"
+          subtitle="Para recibir pagos necesitas una contraseña — así nadie más que tú puede entrar a tu cuenta y disponer de tu dinero."
+        />
 
         <form onSubmit={handleUpgradeSubmit} className="mt-8 space-y-4">
           <input
@@ -90,11 +91,12 @@ export default function WorkerSetup() {
   }
 
   return (
-    <div className="page-shell justify-center pb-10">
-      <h1 className="text-2xl font-bold">Configura tu perfil</h1>
-      <p className="mt-1 text-sm text-slate-400">
-        Elige tu username único. Con él generamos tu QR para recibir pagos.
-      </p>
+    <div className="page-shell justify-center">
+      <PageHeader
+        eyebrow="Casi listo"
+        title="Configura tu perfil"
+        subtitle="Elige tu username único. Con él generamos tu QR para recibir propinas."
+      />
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <div>

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { ArrowLeft, QrCode, Calculator, ShieldCheck, HandCoins, UserPlus, Star } from 'lucide-react';
+import PageHeader from '../components/PageHeader.jsx';
+import { QrCode, Calculator, ShieldCheck, HandCoins, UserPlus, Star } from 'lucide-react';
 
 const forClients = [
   {
@@ -60,7 +61,7 @@ function StepList({ steps }) {
     <div className="mt-4 space-y-3">
       {steps.map(({ icon: Icon, title, desc }, i) => (
         <div key={i} className="card flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-500/15 text-brand-400">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-punch-ink bg-punch-yellow text-punch-ink">
             <Icon size={18} strokeWidth={2} />
           </span>
           <div>
@@ -75,24 +76,21 @@ function StepList({ steps }) {
 
 export default function HowItWorks() {
   return (
-    <div className="page-shell pb-16">
-      <Link to="/" className="flex items-center gap-1 text-sm text-slate-400">
-        <ArrowLeft size={16} />
-        Volver
-      </Link>
+    <div className="page-shell">
+      <PageHeader
+        back={{ to: '/', label: 'Página principal' }}
+        eyebrow="Guía de la app"
+        title="¿Cómo funciona TIP-IT?"
+        subtitle="Dar o recibir propinas toma menos de un minuto. Así funciona cada lado."
+      />
 
-      <h1 className="mt-4 text-2xl font-bold">¿Cómo funciona TIP-IT?</h1>
-      <p className="mt-1 text-sm text-slate-400">
-        Enviar o recibir pagos toma menos de un minuto. Así funciona cada lado.
-      </p>
-
-      <h2 className="mt-8 text-lg font-bold text-brand-400">Si vas a pagar</h2>
+      <h2 className="mt-8 text-2xl font-extrabold">Si vas a dar propina</h2>
       <StepList steps={forClients} />
 
-      <h2 className="mt-10 text-lg font-bold text-brand-400">Si vas a cobrar</h2>
+      <h2 className="mt-10 text-2xl font-extrabold">Si vas a recibir propinas</h2>
       <StepList steps={forWorkers} />
 
-      <h2 className="mt-10 text-lg font-bold text-brand-400">Preguntas frecuentes</h2>
+      <h2 className="mt-10 text-2xl font-extrabold">Preguntas frecuentes</h2>
       <div className="mt-4 space-y-4">
         {faqs.map(([q, a], i) => (
           <div key={i}>

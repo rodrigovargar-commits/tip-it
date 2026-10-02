@@ -11,12 +11,12 @@ const STEPS = [
   {
     icon: ShieldCheck,
     title: 'Conecta tu banco una sola vez',
-    desc: 'Verificas tu identidad con Stripe para que el dinero llegue directo a tu cuenta — TIP-IT nunca lo retiene ni lo toca.',
+    desc: 'Verificas tu identidad (verificación segura) para que el dinero llegue directo a tu cuenta — TIP-IT nunca lo retiene ni lo toca.',
   },
   {
     icon: Clock,
     title: 'Los primeros pagos tardan más',
-    desc: 'Es normal, no es un error: Stripe retiene los primeros pagos de toda cuenta nueva unos días como medida de seguridad. Después de eso, tus pagos se liberan todos los días.',
+    desc: 'Es normal, no es un error: se retienen los primeros pagos de toda cuenta nueva unos días como medida de seguridad. Después de eso, tus pagos se liberan todos los días.',
   },
   {
     icon: Star,
@@ -41,21 +41,21 @@ export default function WorkerOnboarding() {
   };
 
   return (
-    <div className="page-shell justify-between pb-10">
+    <div className="page-shell justify-between">
       <div>
         <div className="mt-10 flex justify-center gap-1.5">
           {STEPS.map((_, i) => (
             <span
               key={i}
-              className={`h-1.5 rounded-full transition-all ${
-                i === step ? 'w-6 bg-brand-500' : 'w-1.5 bg-slate-700'
+              className={`h-2 rounded-full transition-all ${
+                i === step ? 'w-7 border border-punch-ink bg-punch-orange' : 'w-2 bg-punch-ink/25'
               }`}
             />
           ))}
         </div>
 
         <div className="mt-16 flex flex-col items-center text-center">
-          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-500/15 text-brand-400">
+          <span className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-punch-ink bg-punch-yellow text-punch-ink shadow-[3px_3px_0_0_#0A2F2F]">
             <Icon size={28} strokeWidth={2} />
           </span>
           <h1 className="mt-6 text-2xl font-bold">{current.title}</h1>

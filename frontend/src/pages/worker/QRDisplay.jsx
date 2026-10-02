@@ -1,6 +1,5 @@
-import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowLeft } from 'lucide-react';
+import PageHeader from '../../components/PageHeader.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 
 // Tropical punch brand tokens (same values as tailwind.config.js `punch`).
@@ -184,17 +183,18 @@ export default function QRDisplay() {
   };
 
   return (
-    <div className="page-shell items-center pb-10 text-center">
-      <Link to="/worker/dashboard" className="flex items-center gap-1 self-start text-sm text-slate-400">
-        <ArrowLeft size={16} />
-        Volver
-      </Link>
+    <div className="page-shell items-center text-center">
+      <div className="self-start text-left">
+        <PageHeader back={{ to: '/worker/dashboard', label: 'Mi panel' }} title="Tu código QR" subtitle={`@${worker.username}`} />
+      </div>
 
-      <h1 className="mt-6 text-2xl font-bold">Tu código QR</h1>
-      <p className="mt-1 text-sm text-slate-400">@{worker.username}</p>
-
-      <div className="mt-8 rounded-3xl bg-white p-6 shadow-none border-2 border-punch-ink">
-        <img src={worker.qrCode} alt="Código QR" className="h-64 w-64" />
+      <div className="relative mt-8 -rotate-1 rounded-[2rem] border-2 border-punch-ink bg-punch-yellow p-5 shadow-[8px_8px_0_0_#0A2F2F]">
+        <div className="rounded-3xl border-2 border-punch-ink bg-white p-4">
+          <img src={worker.qrCode} alt="Código QR" className="h-64 w-64 md:h-72 md:w-72" />
+        </div>
+        <span className="absolute -right-4 -top-4 rotate-6 rounded-2xl border-2 border-punch-ink bg-punch-pink px-3 py-1.5 font-display text-sm font-extrabold shadow-[3px_3px_0_0_#0A2F2F]">
+          ¡Escanéame!
+        </span>
       </div>
 
       <p className="mt-6 break-all text-sm text-slate-500">{tipUrl}</p>

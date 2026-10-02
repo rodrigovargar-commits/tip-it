@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Star } from 'lucide-react';
+import { Star } from 'lucide-react';
 import api, { getErrorMessage } from '../../services/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import PageHeader from '../../components/PageHeader.jsx';
+import EmptyState from '../../components/EmptyState.jsx';
 import Spinner from '../../components/Spinner.jsx';
 
 export default function WorkerReviews() {
@@ -29,14 +30,14 @@ export default function WorkerReviews() {
   }
 
   return (
-    <div className="page-shell">
-      <Link to="/worker/dashboard" className="flex items-center gap-1 text-sm text-slate-400">
-        <ArrowLeft size={16} />
-        Volver
-      </Link>
-
-      <h1 className="mt-4 text-2xl font-bold">Mis reseñas</h1>
-      <div className="mt-2 flex items-center gap-2 text-amber-700">
+    <div className="page-shell md:!max-w-4xl">
+      <PageHeader
+        back={{ to: '/worker/dashboard', label: 'Mi panel' }}
+        eyebrow="Tu reputación"
+        title="Mis reseñas"
+        subtitle="Lo que dicen de ti. Es tu currículum frente a nuevos clientes."
+      />
+      <div className="mt-4 flex items-center gap-2 text-amber-700">
         <Star size={18} fill="#FF8243" stroke="#FF8243" />
         <span className="font-semibold">
           {profile?.rating ? `${profile.rating} de 5` : 'Sin calificaciones aún'}
@@ -46,12 +47,13 @@ export default function WorkerReviews() {
         ) : null}
       </div>
 
-      <div className="mt-6 space-y-3">
+      <div className="mt-6 space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
         {!profile?.reviews?.length ? (
-          <p className="mt-10 text-center text-sm text-slate-500">
-            Todavía no tienes reseñas. Aparecerán aquí en cuanto tus clientes califiquen tu
-            servicio.
-          </p>
+          <EmptyState
+            person="stylist"
+            title="Aún no tienes reseñas"
+            body="Aparecerán aquí en cuanto tus clientes califiquen tu servicio."
+          />
         ) : (
           profile.reviews.map((r, i) => (
             <div key={i} className="card">

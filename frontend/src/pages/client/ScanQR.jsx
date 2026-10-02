@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Users } from 'lucide-react';
+import PageHeader from '../../components/PageHeader.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 
 export default function ScanQR() {
@@ -74,24 +75,25 @@ export default function ScanQR() {
   };
 
   return (
-    <div className="page-shell pb-10">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Enviar pago</h1>
-          <p className="mt-1 text-sm text-slate-400">Escanea un QR o busca por username.</p>
-        </div>
-        {user && (
-          <Link
-            to="/contacts"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-700 text-slate-400 hover:border-brand-500 hover:text-brand-400"
-            aria-label="Mis contactos"
-          >
-            <Users size={18} />
-          </Link>
-        )}
-      </div>
+    <div className="page-shell">
+      <PageHeader
+        eyebrow="Dar propina"
+        title="Escanea y listo"
+        subtitle="Apunta la cámara al QR de quien te atendió, o búscalo por su username."
+        action={
+          user && (
+            <Link
+              to="/contacts"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-punch-ink bg-white transition hover:bg-punch-yellow"
+              aria-label="Mis contactos"
+            >
+              <Users size={19} strokeWidth={2.4} />
+            </Link>
+          )
+        }
+      />
 
-      <div className="mt-6 overflow-hidden rounded-2xl border border-slate-800 bg-black">
+      <div className="mx-auto mt-6 w-full max-w-sm overflow-hidden rounded-[2rem] border-2 border-punch-ink bg-black shadow-[6px_6px_0_0_#0A2F2F] md:max-w-md">
         <div id={containerId} className="aspect-square w-full" />
       </div>
       {cameraError && (
@@ -100,13 +102,13 @@ export default function ScanQR() {
         </p>
       )}
 
-      <div className="mt-6 flex items-center gap-3 text-slate-600">
-        <div className="h-px flex-1 bg-slate-800" />
-        <span className="text-xs uppercase">o</span>
-        <div className="h-px flex-1 bg-slate-800" />
+      <div className="mx-auto mt-6 flex w-full max-w-sm items-center gap-3 text-punch-ink/60 md:max-w-md">
+        <div className="h-0.5 flex-1 rounded bg-punch-ink/20" />
+        <span className="font-display text-xs font-extrabold uppercase">o búscalo</span>
+        <div className="h-0.5 flex-1 rounded bg-punch-ink/20" />
       </div>
 
-      <form onSubmit={handleSearch} className="mt-6 flex gap-2">
+      <form onSubmit={handleSearch} className="mx-auto mt-6 flex w-full max-w-sm gap-2 md:max-w-md">
         <div className="flex flex-1 items-center rounded-2xl border-2 border-punch-ink/30 bg-white px-4 focus-within:border-punch-ink focus-within:ring-2 focus-within:ring-punch-yellow">
           <span className="text-slate-500">@</span>
           <input
