@@ -33,5 +33,6 @@ export const HELP_LINKS = [
   { href: '/#como-funciona', label: 'Cómo funciona' },
   { href: '/#para-quien', label: 'Para quién es' },
   { href: '/#preguntas', label: 'Preguntas frecuentes' },
+  { href: '/#ayuda', label: 'Ayuda en persona' },
   { to: '/como-funciona', label: 'Guía de la app' },
 ];

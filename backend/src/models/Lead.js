@@ -12,11 +12,25 @@ const leadSchema = new mongoose.Schema(
       trim: true,
       maxlength: 100,
     },
+    // At least one way to reach them is required: WhatsApp/phone and/or email.
     phone: {
       type: String,
-      required: [true, 'El teléfono es obligatorio'],
       trim: true,
       maxlength: 30,
+      default: '',
+      validate: {
+        validator(v) {
+          return Boolean(v) || Boolean(this.email);
+        },
+        message: 'Déjanos un WhatsApp o un correo para contactarte',
+      },
+    },
+    email: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      maxlength: 120,
+      default: '',
     },
     category: {
       type: String,

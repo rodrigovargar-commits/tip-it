@@ -9,6 +9,7 @@ import Avatar from './Avatar.jsx';
 // Site-wide header: logo (always goes to the main page), the options right at
 // the top, and the rest of the site (questions, how it works…) one tap away —
 // also once you're signed in.
+const HELP_IN_PERSON = { href: '/#ayuda', label: 'Ayuda en persona' };
 const SITE_LINKS = [
   { href: '/#que-es', label: 'Qué es' },
   { href: '/#como-funciona', label: 'Cómo funciona' },
@@ -107,11 +108,13 @@ export default function TopBar() {
               </div>
             </>
           ) : (
-            SITE_LINKS.map((l) => (
+            [...SITE_LINKS, ...[HELP_IN_PERSON].map((l) => ({ ...l, xl: true }))].map((l) => (
               <Link
                 key={l.href}
                 to={l.href}
-                className="rounded-full px-3.5 py-1.5 font-display text-sm font-extrabold text-punch-ink/80 transition hover:bg-punch-yellow hover:text-punch-ink"
+                className={`rounded-full px-3.5 py-1.5 font-display text-sm font-extrabold transition hover:bg-punch-yellow hover:text-punch-ink ${
+                  l.xl ? 'hidden bg-punch-pink/60 text-punch-ink xl:inline' : 'text-punch-ink/80'
+                }`}
               >
                 {l.label}
               </Link>
@@ -178,7 +181,7 @@ export default function TopBar() {
               </>
             ) : (
               <>
-                {SITE_LINKS.map((l) => (
+                {[...SITE_LINKS, HELP_IN_PERSON].map((l) => (
                   <Link key={l.href} to={l.href} onClick={() => setOpen(false)} className={mobileItem}>
                     {l.label}
                   </Link>

@@ -14,7 +14,19 @@ router.post(
   guestLimiter,
   [
     body('name').trim().notEmpty().withMessage('El nombre es obligatorio').isLength({ max: 100 }),
-    body('phone').trim().notEmpty().withMessage('El teléfono es obligatorio').isLength({ max: 30 }),
+    body('phone').optional({ checkFalsy: true }).trim().isLength({ max: 30 }),
+    body('email')
+      .optional({ checkFalsy: true })
+      .trim()
+      .isEmail()
+      .withMessage('Correo inválido')
+      .isLength({ max: 120 }),
+    body().custom((value) => {
+      if (!value.phone?.toString().trim() && !value.email?.toString().trim()) {
+        throw new Error('Déjanos un WhatsApp o un correo para contactarte');
+      }
+      return true;
+    }),
     body('category')
       .isIn(['barbero_estilista', 'musico_artista', 'puesto_comida', 'otro'])
       .withMessage('Categoría inválida'),

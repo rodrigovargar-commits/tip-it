@@ -6,6 +6,7 @@ import {
   Check,
   HandCoins,
   Heart,
+  LifeBuoy,
   MessageSquareQuote,
   Plus,
   QrCode,
@@ -21,6 +22,7 @@ import { trackEvent } from '../utils/analytics.js';
 import Logo from '../components/Logo.jsx';
 import Person from '../components/Person.jsx';
 import RegisterForm from '../components/RegisterForm.jsx';
+import LeadForm from '../components/LeadForm.jsx';
 
 // TIP-IT's public site AND front door of the app, all in one: marketing on
 // top, and the real thing (pay a tip, create an account, log in) inside the
@@ -372,16 +374,29 @@ function PayBox() {
 export default function Home() {
   const { user, worker } = useAuth();
   const { hash } = useLocation();
+  // "solo" = create the account yourself, "ayuda" = leave a contact and we help in person.
+  const [tab, setTab] = useState('solo');
 
-  // Router hash links (#preguntas…) don't scroll by themselves.
+  // Router hash links (#preguntas…) don't scroll by themselves. #ayuda opens
+  // the "help me in person" tab of the sign-up card.
   useEffect(() => {
     if (!hash) {
       window.scrollTo({ top: 0 });
       return undefined;
     }
-    const t = setTimeout(() => document.getElementById(hash.slice(1))?.scrollIntoView(), 60);
+    let id = hash.slice(1);
+    if (id === 'ayuda') {
+      setTab('ayuda');
+      id = 'registro';
+    }
+    const t = setTimeout(() => document.getElementById(id)?.scrollIntoView(), 60);
     return () => clearTimeout(t);
   }, [hash]);
+
+  const openHelp = () => {
+    setTab('ayuda');
+    document.getElementById('registro')?.scrollIntoView();
+  };
 
   const myAccount = worker ? '/worker/dashboard' : '/scan';
   const signup = user ? myAccount : '/register?role=worker';
@@ -429,6 +444,15 @@ export default function Home() {
               </a>
             </div>
             <p className="mt-5 text-sm font-semibold">Gratis · Sin efectivo, sin fricción · Hecho en CDMX</p>
+            {!user && (
+              <button
+                type="button"
+                onClick={openHelp}
+                className="mt-3 inline-flex items-center gap-2 rounded-full border-2 border-punch-ink bg-white/80 px-4 py-2 font-display text-sm font-extrabold transition hover:bg-punch-yellow"
+              >
+                <LifeBuoy size={16} /> ¿No te animas solo? Te ayudamos en persona
+              </button>
+            )}
           </div>
 
           <Reveal>
@@ -522,6 +546,25 @@ export default function Home() {
               {user ? 'Ir a mi cuenta' : 'Empieza ahora'} <ArrowRight size={20} />
             </Cta>
           </Reveal>
+          {!user && (
+            <Reveal className="mt-10">
+              <div className="flex flex-col items-center gap-4 rounded-3xl border-2 border-punch-ink bg-white p-6 text-center shadow-[6px_6px_0_0_#0A2F2F] sm:flex-row sm:text-left">
+                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-punch-ink bg-punch-pink">
+                  <LifeBuoy size={26} />
+                </span>
+                <div className="flex-1">
+                  <p className="font-display text-2xl font-extrabold">¿Te late pero no te animas solo?</p>
+                  <p className="mt-1 font-medium text-slate-400">
+                    Déjanos tu WhatsApp o tu correo y te ayudamos a armar tu cuenta y tu QR en
+                    persona, en unos 10 minutos.
+                  </p>
+                </div>
+                <button type="button" onClick={openHelp} className="btn-primary shrink-0">
+                  Quiero ayuda en persona
+                </button>
+              </div>
+            </Reveal>
+          )}
         </div>
       </section>
 
@@ -668,13 +711,18 @@ export default function Home() {
               </div>
               <p className="text-sm font-semibold">Para quienes viven de dar buen servicio.</p>
             </div>
-            <Link
-              to="/unete?src=landing_ayuda"
-              onClick={() => trackEvent('landing_cta', { where: 'help' })}
-              className="mt-8 inline-block font-display text-base font-extrabold underline decoration-2 underline-offset-4"
-            >
-              Prefiero que me ayuden en persona →
-            </Link>
+            {!user && (
+              <button
+                type="button"
+                onClick={() => {
+                  trackEvent('landing_cta', { where: 'help' });
+                  setTab('ayuda');
+                }}
+                className="mt-8 inline-block text-left font-display text-base font-extrabold underline decoration-2 underline-offset-4"
+              >
+                Prefiero que me ayuden en persona →
+              </button>
+            )}
           </Reveal>
 
           <Reveal delay={120}>
@@ -689,19 +737,53 @@ export default function Home() {
                 </div>
               ) : (
                 <>
-                  <p className="font-display text-2xl font-extrabold">Crea tu cuenta</p>
-                  <p className="mt-1 text-sm font-medium text-punch-ink/70">
-                    Gratis. Sin terminal. Sin compromiso.
-                  </p>
-                  <div className="mt-5">
-                    <RegisterForm defaultRole="worker" />
+                  <div className="grid grid-cols-2 gap-2 rounded-full border-2 border-punch-ink bg-white p-1" role="tablist">
+                    {[
+                      ['solo', 'Lo hago yo'],
+                      ['ayuda', 'Quiero ayuda'],
+                    ].map(([id, label]) => (
+                      <button
+                        key={id}
+                        type="button"
+                        role="tab"
+                        aria-selected={tab === id}
+                        onClick={() => setTab(id)}
+                        className={`rounded-full py-2 font-display text-sm font-extrabold transition ${
+                          tab === id ? 'bg-punch-orange shadow-[2px_2px_0_0_#0A2F2F] ring-2 ring-punch-ink' : 'text-punch-ink/70'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
                   </div>
-                  <p className="mt-5 text-center text-sm font-medium">
-                    ¿Ya tienes cuenta?{' '}
-                    <Link to="/login" className="font-extrabold underline underline-offset-2">
-                      Inicia sesión
-                    </Link>
-                  </p>
+
+                  {tab === 'solo' ? (
+                    <>
+                      <p className="mt-5 font-display text-2xl font-extrabold">Crea tu cuenta</p>
+                      <p className="mt-1 text-sm font-medium text-punch-ink/70">
+                        Gratis. Sin terminal. Sin compromiso.
+                      </p>
+                      <div className="mt-5">
+                        <RegisterForm defaultRole="worker" />
+                      </div>
+                      <p className="mt-5 text-center text-sm font-medium">
+                        ¿Ya tienes cuenta?{' '}
+                        <Link to="/login" className="font-extrabold underline underline-offset-2">
+                          Inicia sesión
+                        </Link>
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="mt-5 font-display text-2xl font-extrabold">Te ayudamos en persona</p>
+                      <p className="mt-1 text-sm font-medium text-punch-ink/70">
+                        Déjanos un WhatsApp o un correo y coordinamos para armar tu cuenta y tu QR.
+                      </p>
+                      <div className="mt-5">
+                        <LeadForm source="landing_ayuda" />
+                      </div>
+                    </>
+                  )}
                 </>
               )}
             </div>

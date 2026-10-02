@@ -33,6 +33,7 @@ async function notifyLead(lead) {
   if (!apiKey || to.length === 0) return false;
 
   const category = CATEGORY_LABELS[lead.category] || lead.category;
+  const subjectWho = lead.name;
   const wa = whatsappLink(lead.phone);
   const when = new Date(lead.createdAt || Date.now()).toLocaleString('es-MX', {
     timeZone: 'America/Mexico_City',
@@ -42,7 +43,8 @@ async function notifyLead(lead) {
     `Nuevo registro desde /unete`,
     ``,
     `Nombre: ${lead.name}`,
-    `WhatsApp / teléfono: ${lead.phone}${wa ? ` (${wa})` : ''}`,
+    `WhatsApp / teléfono: ${lead.phone ? `${lead.phone}${wa ? ` (${wa})` : ''}` : '—'}`,
+    `Correo: ${lead.email || '—'}`,
     `A qué se dedica: ${category}`,
     `Zona: ${lead.zone || '—'}`,
     `Llegó desde: ${lead.source || 'landing'}`,
@@ -55,13 +57,15 @@ async function notifyLead(lead) {
       <p style="margin:0 0 16px">Alguien quiere su QR de TIP-IT:</p>
       <table style="border-collapse:collapse;width:100%">
         <tr><td style="padding:6px 0;color:#5F7371">Nombre</td><td><b>${escapeHtml(lead.name)}</b></td></tr>
-        <tr><td style="padding:6px 0;color:#5F7371">WhatsApp</td><td><b>${escapeHtml(lead.phone)}</b></td></tr>
+        <tr><td style="padding:6px 0;color:#5F7371">WhatsApp</td><td><b>${escapeHtml(lead.phone || '—')}</b></td></tr>
+        <tr><td style="padding:6px 0;color:#5F7371">Correo</td><td>${lead.email ? `<a href="mailto:${escapeHtml(lead.email)}">${escapeHtml(lead.email)}</a>` : '—'}</td></tr>
         <tr><td style="padding:6px 0;color:#5F7371">Se dedica a</td><td>${escapeHtml(category)}</td></tr>
         <tr><td style="padding:6px 0;color:#5F7371">Zona</td><td>${escapeHtml(lead.zone || '—')}</td></tr>
         <tr><td style="padding:6px 0;color:#5F7371">Llegó desde</td><td>${escapeHtml(lead.source || 'landing')}</td></tr>
         <tr><td style="padding:6px 0;color:#5F7371">Fecha</td><td>${escapeHtml(when)}</td></tr>
       </table>
       ${wa ? `<p style="margin-top:20px"><a href="${wa}" style="background:#FF8243;color:#0A2F2F;padding:12px 20px;border-radius:999px;text-decoration:none;font-weight:700;border:2px solid #0A2F2F">Escribirle por WhatsApp</a></p>` : ''}
+      ${!wa && lead.email ? `<p style="margin-top:20px"><a href="mailto:${escapeHtml(lead.email)}" style="background:#FF8243;color:#0A2F2F;padding:12px 20px;border-radius:999px;text-decoration:none;font-weight:700;border:2px solid #0A2F2F">Responderle por correo</a></p>` : ''}
     </div>`;
 
   const controller = new AbortController();
@@ -73,7 +77,8 @@ async function notifyLead(lead) {
       body: JSON.stringify({
         from: process.env.LEAD_NOTIFY_FROM || 'TIP-IT <onboarding@resend.dev>',
         to,
-        subject: `Nuevo registro: ${lead.name} · ${category}`,
+        subject: `Nuevo registro: ${subjectWho} · ${category}`,
+        ...(lead.email ? { reply_to: lead.email } : {}),
         text,
         html,
       }),

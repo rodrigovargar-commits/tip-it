@@ -1,18 +1,11 @@
-import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import toast from 'react-hot-toast';
 import {
-  CheckCircle2,
-  Scissors,
-  Mic2,
-  UtensilsCrossed,
-  HandCoins,
   QrCode,
   Smartphone,
   ShieldCheck,
   Wallet,
 } from 'lucide-react';
-import api, { getErrorMessage } from '../services/api.js';
+import LeadForm, { CATEGORIES } from '../components/LeadForm.jsx';
 
 // Public marketing landing — intentionally NOT the mobile app shell
 // (page-shell / bottom nav / phone-width). This is a real, wide, scrollable
@@ -20,12 +13,6 @@ import api, { getErrorMessage } from '../services/api.js';
 // how-it-works, who-it's-for, and a lead-capture form. It creates NO
 // account and grants NO access — /register (inside the app) still does
 // that, in person. Real onboarding happens later, one-on-one.
-const CATEGORIES = [
-  { id: 'barbero_estilista', label: 'Barbero / estilista', icon: Scissors },
-  { id: 'musico_artista', label: 'Músico / artista callejero', icon: Mic2 },
-  { id: 'puesto_comida', label: 'Puesto de comida', icon: UtensilsCrossed },
-  { id: 'otro', label: 'Otro servicio', icon: HandCoins },
-];
 
 const STEPS = [
   {
@@ -36,7 +23,7 @@ const STEPS = [
   {
     icon: QrCode,
     title: 'Te configuramos tu QR en persona',
-    body: 'Te contactamos por WhatsApp y te ayudamos a activar tu cuenta y tu código, en 10 minutos.',
+    body: 'Te contactamos por WhatsApp o correo y te ayudamos a activar tu cuenta y tu código, en 10 minutos.',
   },
   {
     icon: Wallet,
@@ -52,29 +39,6 @@ function scrollToForm() {
 export default function JoinInterest() {
   const [searchParams] = useSearchParams();
   const source = searchParams.get('src') || 'landing';
-
-  const [form, setForm] = useState({ name: '', phone: '', category: '', zone: '' });
-  const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
-
-  const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.category) {
-      toast.error('Elige a qué te dedicas');
-      return;
-    }
-    setSubmitting(true);
-    try {
-      await api.post('/leads', { ...form, source });
-      setDone(true);
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-punch-cream text-punch-ink">
@@ -152,91 +116,13 @@ export default function JoinInterest() {
 
       {/* Form */}
       <section id="registro-interes" className="mx-auto max-w-md px-5 py-16">
-        {done ? (
-          <div className="card text-center">
-            <CheckCircle2 size={48} className="mx-auto text-brand-400" />
-            <h3 className="mt-4 text-xl font-bold">¡Listo, {form.name.split(' ')[0]}!</h3>
-            <p className="mt-2 text-sm text-slate-400">
-              Ya quedaste en la lista. Te contactamos por WhatsApp para configurar tu QR en
-              persona — toma unos 10 minutos.
-            </p>
-            <Link to="/" className="btn-secondary mt-6 w-full">
-              Conocer la app
-            </Link>
-          </div>
-        ) : (
-          <>
-            <h2 className="text-center text-2xl font-bold">Regístrate para tu QR gratis</h2>
-            <p className="mt-2 text-center text-sm text-slate-400">
-              Sin compromiso. Solo para que te contactemos y coordinar la instalación en persona.
-            </p>
-            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-              <div>
-                <label className="text-xs text-slate-500">Tu nombre</label>
-                <input
-                  name="name"
-                  value={form.name}
-                  onChange={handleChange}
-                  required
-                  maxLength={100}
-                  placeholder="Como te dicen tus clientes"
-                  className="input-field mt-1"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs text-slate-500">WhatsApp</label>
-                <input
-                  name="phone"
-                  type="tel"
-                  value={form.phone}
-                  onChange={handleChange}
-                  required
-                  maxLength={30}
-                  placeholder="55 1234 5678"
-                  className="input-field mt-1"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs text-slate-500">¿A qué te dedicas?</label>
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  {CATEGORIES.map(({ id, label, icon: Icon }) => (
-                    <button
-                      type="button"
-                      key={id}
-                      onClick={() => setForm((f) => ({ ...f, category: id }))}
-                      className={`card flex flex-col items-center gap-1.5 !p-3 text-center text-xs font-semibold transition ${
-                        form.category === id
-                          ? 'border-brand-400 bg-brand-500/10 text-brand-300'
-                          : 'text-slate-300'
-                      }`}
-                    >
-                      <Icon size={20} />
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs text-slate-500">Zona o colonia (opcional)</label>
-                <input
-                  name="zone"
-                  value={form.zone}
-                  onChange={handleChange}
-                  maxLength={100}
-                  placeholder="Ej. Coyoacán centro"
-                  className="input-field mt-1"
-                />
-              </div>
-
-              <button type="submit" disabled={submitting} className="btn-primary w-full">
-                {submitting ? 'Enviando...' : 'Quiero mi QR'}
-              </button>
-            </form>
-          </>
-        )}
+        <h2 className="text-center font-display text-3xl font-extrabold">Te ayudamos con tu QR</h2>
+        <p className="mt-2 text-center text-sm font-medium text-slate-400">
+          Déjanos tu WhatsApp o tu correo y coordinamos la instalación en persona. Sin compromiso.
+        </p>
+        <div className="card mt-6">
+          <LeadForm source={source} />
+        </div>
       </section>
 
       <footer className="border-t-2 border-punch-ink bg-punch-ink py-8 text-center text-sm text-punch-cream/80">

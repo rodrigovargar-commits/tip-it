@@ -47,3 +47,27 @@ describe('GET/PATCH /api/admin/leads (contact list from the /unete landing)', ()
     res.body.leads.forEach((l) => expect(l.category).toBe('musico_artista'));
   });
 });
+
+describe('POST /api/leads contact rules', () => {
+  const base = { name: 'Luis Músico', category: 'musico_artista', zone: 'Coyoacán' };
+
+  it('accepts an email as the only way to reach them', async () => {
+    const res = await request(app).post('/api/leads').send({ ...base, email: 'luis@correo.com' });
+    expect(res.status).toBe(201);
+  });
+
+  it('accepts a WhatsApp as the only way to reach them', async () => {
+    const res = await request(app).post('/api/leads').send({ ...base, phone: '5511112222' });
+    expect(res.status).toBe(201);
+  });
+
+  it('rejects when neither a WhatsApp nor an email is given', async () => {
+    const res = await request(app).post('/api/leads').send(base);
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects a malformed email', async () => {
+    const res = await request(app).post('/api/leads').send({ ...base, email: 'no-es-correo' });
+    expect(res.status).toBe(400);
+  });
+});
