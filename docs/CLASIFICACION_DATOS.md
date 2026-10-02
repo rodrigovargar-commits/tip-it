@@ -60,3 +60,13 @@ No hay hoy ninguna política de borrado automático. Propuesta inicial, pendient
 - [ ] Decidir un plazo de retención real para transacciones y logs (hoy: transacciones
       indefinidas, logs de seguridad 12 meses según §8.4 del documento de mejores prácticas, pero
       sin un destino centralizado todavía que aplique ese plazo automáticamente).
+
+## Registros de interés (`/unete`) y aviso por correo
+
+- Los datos que deja una persona en `/unete` (nombre, WhatsApp, oficio, zona) se guardan en la
+  colección `leads` y son datos personales de contacto.
+- Si `RESEND_API_KEY` y `LEAD_NOTIFY_EMAIL` están configuradas, cada registro nuevo se envía
+  también por correo al dueño del proyecto a través de Resend (encargado del envío). El correo
+  contiene los mismos campos; el teléfono **no** se escribe en los logs de la aplicación.
+- El aviso es opcional y su falla nunca impide guardar el registro.
+- Pendiente: mencionar este envío en el Aviso de privacidad cuando se publique la versión final.
