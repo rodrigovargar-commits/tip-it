@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 import Landing from './pages/Landing.jsx';
+import Home from './pages/Home.jsx';
 import JoinInterest from './pages/JoinInterest.jsx';
 import Register from './pages/auth/Register.jsx';
 import Login from './pages/auth/Login.jsx';
@@ -23,7 +25,9 @@ export default function App() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<Landing />} />
+        {/* Web visitors get the public marketing page; the installed iOS/Android app
+            opens straight into the in-app home. */}
+        <Route path="/" element={Capacitor.isNativePlatform() ? <Landing /> : <Home />} />
         <Route path="/unete" element={<JoinInterest />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />

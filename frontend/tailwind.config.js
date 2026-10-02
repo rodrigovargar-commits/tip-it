@@ -4,23 +4,64 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Accent scale, remapped to the Tropical punch teal. 300/400 are the
+        // darker readable teals for TEXT on cream; 500/600 are the palette teal.
         brand: {
-          // Mint/teal — distinct from the emerald used for "success" status
-          // badges elsewhere, so the two don't visually collide.
-          50: '#f0fdfa',
-          100: '#ccfbf1',
-          200: '#99f6e4',
-          300: '#5eead4',
-          400: '#2dd4bf',
-          500: '#14b8a6',
-          600: '#0d9488',
-          700: '#0f766e',
-          800: '#115e59',
-          900: '#134e4a',
+          50: '#E6F6F5',
+          100: '#CDEDEC',
+          200: '#9ADAD8',
+          300: '#047676',
+          400: '#047676',
+          500: '#069494',
+          600: '#069494',
+          700: '#057A7A',
+          800: '#055F5F',
+          900: '#0A2F2F',
+        },
+        // The app was built dark-first with `slate-*` utilities everywhere
+        // (950 = page, 900 = card, 100 = main text...). Rather than rewrite
+        // ~25 files, the slate scale is re-pointed at the LIGHT theme: low
+        // numbers are now ink (text), high numbers are cream/white surfaces.
+        slate: {
+          50: '#0A2F2F',
+          100: '#0A2F2F',
+          200: '#0A2F2F',
+          300: '#1F4545',
+          400: '#3F5856',
+          500: '#5F7371',
+          600: '#8FA09D',
+          700: '#D9CCB0',
+          800: '#EADFC8',
+          900: '#FFFFFF',
+          950: '#FFF8EC',
+        },
+        // "Tropical punch" — used by the public marketing landing only.
+        punch: {
+          orange: '#FF8243',
+          pink: '#FFC0CB',
+          yellow: '#FCE883',
+          teal: '#069494',
+          ink: '#0A2F2F',
+          cream: '#FFF8EC',
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['"DM Sans"', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['"Bricolage Grotesque"', 'Inter', 'system-ui', 'sans-serif'],
+      },
+      keyframes: {
+        marquee: {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
+        floaty: {
+          '0%, 100%': { transform: 'translateY(0) rotate(var(--r, 0deg))' },
+          '50%': { transform: 'translateY(-10px) rotate(var(--r, 0deg))' },
+        },
+      },
+      animation: {
+        marquee: 'marquee 28s linear infinite',
+        floaty: 'floaty 5s ease-in-out infinite',
       },
     },
   },

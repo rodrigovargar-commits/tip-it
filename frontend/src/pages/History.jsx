@@ -25,7 +25,7 @@ export default function History() {
       <h1 className="text-2xl font-bold">Historial</h1>
 
       {worker && (
-        <div className="mt-4 flex gap-2 rounded-xl border border-slate-800 bg-slate-900 p-1">
+        <div className="mt-4 flex gap-2 rounded-2xl border-2 border-punch-ink/30 bg-white p-1">
           <button
             onClick={() => setRole('worker')}
             className={`flex-1 rounded-lg py-2 text-sm font-semibold transition ${

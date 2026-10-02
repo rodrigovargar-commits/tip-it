@@ -12,8 +12,8 @@ export default defineConfig({
         name: 'TIP-IT',
         short_name: 'TIP-IT',
         description: 'Propinas digitales, simples y directas.',
-        theme_color: '#0f172a',
-        background_color: '#0f172a',
+        theme_color: '#FF8243',
+        background_color: '#FFF8EC',
         display: 'standalone',
         start_url: '/',
         icons: [

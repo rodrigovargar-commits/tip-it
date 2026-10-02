@@ -95,7 +95,7 @@ export default function ScanQR() {
         <div id={containerId} className="aspect-square w-full" />
       </div>
       {cameraError && (
-        <p className="mt-2 text-center text-sm text-rose-400">
+        <p className="mt-2 text-center text-sm text-rose-600">
           No pudimos acceder a la cámara. Usa la búsqueda por username.
         </p>
       )}
@@ -107,7 +107,7 @@ export default function ScanQR() {
       </div>
 
       <form onSubmit={handleSearch} className="mt-6 flex gap-2">
-        <div className="flex flex-1 items-center rounded-xl border border-slate-700 bg-slate-900 px-4 focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500">
+        <div className="flex flex-1 items-center rounded-2xl border-2 border-punch-ink/30 bg-white px-4 focus-within:border-punch-ink focus-within:ring-2 focus-within:ring-punch-yellow">
           <span className="text-slate-500">@</span>
           <input
             value={username}

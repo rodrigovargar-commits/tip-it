@@ -98,7 +98,7 @@ export default function WorkerSetup() {
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <div>
-          <div className="flex items-center rounded-xl border border-slate-700 bg-slate-900 px-4 focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500">
+          <div className="flex items-center rounded-2xl border-2 border-punch-ink/30 bg-white px-4 focus-within:border-punch-ink focus-within:ring-2 focus-within:ring-punch-yellow">
             <span className="text-slate-500">@</span>
             <input
               name="username"

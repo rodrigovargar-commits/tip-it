@@ -101,7 +101,7 @@ export default function Profile() {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploadingPhoto}
-            className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-white ring-2 ring-slate-950"
+            className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-white ring-2 ring-punch-cream"
             aria-label="Cambiar foto"
           >
             <Camera size={14} />
@@ -140,7 +140,7 @@ export default function Profile() {
           />
         </div>
         {user?.isGuest ? (
-          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
+          <div className="rounded-2xl border-2 border-punch-ink/30 bg-white/60 p-3">
             <p className="text-sm text-slate-300">Estás usando una cuenta rápida, sin contraseña.</p>
             <Link to="/worker/setup" className="mt-1 inline-block text-sm font-semibold text-brand-400">
               Protégela con contraseña →
@@ -212,7 +212,7 @@ export default function Profile() {
 
       <button
         onClick={handleDeleteAccount}
-        className="mt-3 flex w-full items-center justify-center gap-2 text-sm text-slate-500 hover:text-rose-400"
+        className="mt-3 flex w-full items-center justify-center gap-2 text-sm text-slate-500 hover:text-rose-600"
       >
         <Trash2 size={14} />
         Eliminar mi cuenta y mis datos
@@ -220,7 +220,7 @@ export default function Profile() {
 
       <button
         onClick={handleLogout}
-        className="btn-secondary mt-4 flex w-full items-center justify-center gap-2 !border-rose-800 !text-rose-400"
+        className="btn-secondary mt-4 flex w-full items-center justify-center gap-2 !border-rose-300 !text-rose-600"
       >
         <LogOut size={16} />
         Cerrar sesión

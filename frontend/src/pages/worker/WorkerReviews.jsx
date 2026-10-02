@@ -36,8 +36,8 @@ export default function WorkerReviews() {
       </Link>
 
       <h1 className="mt-4 text-2xl font-bold">Mis reseñas</h1>
-      <div className="mt-2 flex items-center gap-2 text-amber-400">
-        <Star size={18} fill="#fbbf24" stroke="#fbbf24" />
+      <div className="mt-2 flex items-center gap-2 text-amber-700">
+        <Star size={18} fill="#FF8243" stroke="#FF8243" />
         <span className="font-semibold">
           {profile?.rating ? `${profile.rating} de 5` : 'Sin calificaciones aún'}
         </span>
@@ -59,7 +59,7 @@ export default function WorkerReviews() {
                 <p className="font-semibold text-slate-100">{r.clientName}</p>
                 <div className="flex gap-0.5">
                   {Array.from({ length: r.rating || 0 }).map((_, s) => (
-                    <Star key={s} size={14} fill="#fbbf24" stroke="#fbbf24" />
+                    <Star key={s} size={14} fill="#FF8243" stroke="#FF8243" />
                   ))}
                 </div>
               </div>

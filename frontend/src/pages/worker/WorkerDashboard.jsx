@@ -112,13 +112,13 @@ export default function WorkerDashboard() {
 
       {stripeStatus && !stripeStatus.onboardingComplete && (
         <div className="mt-6 card flex gap-3 border-amber-600/40 bg-amber-500/10">
-          <ShieldAlert size={20} className="mt-0.5 shrink-0 text-amber-400" />
+          <ShieldAlert size={20} className="mt-0.5 shrink-0 text-amber-700" />
           <div className="flex-1">
-            <p className="font-semibold text-amber-300">Activa tus pagos</p>
-            <p className="mt-1 text-sm text-amber-200/80">
+            <p className="font-semibold text-amber-700">Activa tus pagos</p>
+            <p className="mt-1 text-sm text-amber-800">
               Conecta tu cuenta de Stripe para poder recibir tus pagos directo a tu banco.
             </p>
-            <p className="mt-2 text-xs text-amber-200/60">
+            <p className="mt-2 text-xs text-amber-800">
               Tip: tus primeros pagos pueden tardar unos días en liberarse — es una verificación
               normal de Stripe para cuentas nuevas, no un error. Después de eso, cobras todos
               los días.
@@ -136,10 +136,10 @@ export default function WorkerDashboard() {
 
       {stripeStatus?.onboardingComplete && stripeStatus.requirementsDue?.length > 0 && (
         <div className="mt-6 card flex gap-3 border-red-600/40 bg-red-500/10">
-          <ShieldAlert size={20} className="mt-0.5 shrink-0 text-red-400" />
+          <ShieldAlert size={20} className="mt-0.5 shrink-0 text-red-600" />
           <div className="flex-1">
-            <p className="font-semibold text-red-300">Stripe necesita más información</p>
-            <p className="mt-1 text-sm text-red-200/80">
+            <p className="font-semibold text-red-600">Stripe necesita más información</p>
+            <p className="mt-1 text-sm text-red-800">
               Tus pagos están detenidos hasta que completes esto en Stripe:{' '}
               {stripeStatus.requirementsDue.join(', ')}
             </p>
@@ -211,7 +211,7 @@ export default function WorkerDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs uppercase tracking-wide text-slate-500">Reputación</p>
-              <p className="mt-1 text-2xl font-bold text-amber-400">
+              <p className="mt-1 text-2xl font-bold text-amber-700">
                 {stats?.rating ? `${stats.rating} ★` : 'Sin calificaciones aún'}
               </p>
               {stats?.ratingCount ? (

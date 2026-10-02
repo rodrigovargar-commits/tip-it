@@ -28,7 +28,20 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <AuthProvider>
         <App />
         <Analytics />
-        <Toaster position="top-center" toastOptions={{ duration: 3500 }} />
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            duration: 3500,
+            style: {
+              border: '2px solid #0A2F2F',
+              borderRadius: '9999px',
+              background: '#fff',
+              color: '#0A2F2F',
+              fontWeight: 600,
+              boxShadow: '3px 3px 0 0 #0A2F2F',
+            },
+          }}
+        />
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>

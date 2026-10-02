@@ -9,21 +9,28 @@ body,
 }
 
 body {
-  @apply bg-slate-950 text-slate-100 antialiased;
+  @apply bg-punch-cream font-sans text-punch-ink antialiased;
+}
+
+h1,
+h2,
+h3 {
+  @apply font-display tracking-tight;
 }
 
 @layer components {
+  /* Chunky "sticker" look shared by the whole app: ink outline + hard shadow. */
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl bg-brand-600 px-5 py-3 font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-full border-2 border-punch-ink bg-punch-orange px-6 py-3 font-display font-extrabold text-punch-ink shadow-[3px_3px_0_0_#0A2F2F] transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[1px_1px_0_0_#0A2F2F] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-xl border border-slate-700 bg-slate-900 px-5 py-3 font-semibold text-slate-100 transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center rounded-full border-2 border-punch-ink bg-white px-6 py-3 font-display font-extrabold text-punch-ink transition hover:bg-punch-yellow disabled:cursor-not-allowed disabled:opacity-50;
   }
   .input-field {
-    @apply w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-slate-100 placeholder-slate-500 outline-none transition focus:border-brand-500 focus:ring-1 focus:ring-brand-500;
+    @apply w-full rounded-2xl border-2 border-punch-ink/30 bg-white px-4 py-3 text-punch-ink placeholder-slate-500 outline-none transition focus:border-punch-ink focus:ring-2 focus:ring-punch-yellow;
   }
   .card {
-    @apply rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-lg shadow-black/20;
+    @apply rounded-3xl border-2 border-punch-ink bg-white p-5 shadow-[4px_4px_0_0_#0A2F2F];
   }
   .page-shell {
     @apply mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-28 pt-6;

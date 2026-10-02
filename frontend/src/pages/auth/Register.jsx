@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Wallet, HandCoins, ArrowLeftRight } from 'lucide-react';
 import api, { getErrorMessage } from '../../services/api.js';
@@ -15,7 +15,10 @@ const ROLES = [
 export default function Register() {
   const navigate = useNavigate();
   const { login, refreshMe } = useAuth();
-  const [role, setRole] = useState('client'); // client | worker | both
+  const [searchParams] = useSearchParams();
+  // The marketing landing links here with ?role=worker so people who come to
+  // receive tips start on the right option.
+  const [role, setRole] = useState(searchParams.get('role') === 'worker' ? 'worker' : 'client'); // client | worker | both
   const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', username: '' });
   const [loading, setLoading] = useState(false);
 
@@ -119,7 +122,7 @@ export default function Register() {
         />
 
         {needsUsername && (
-          <div className="flex items-center rounded-xl border border-slate-700 bg-slate-900 px-4 focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500">
+          <div className="flex items-center rounded-2xl border-2 border-punch-ink/30 bg-white px-4 focus-within:border-punch-ink focus-within:ring-2 focus-within:ring-punch-yellow">
             <span className="text-slate-500">@</span>
             <input
               name="username"

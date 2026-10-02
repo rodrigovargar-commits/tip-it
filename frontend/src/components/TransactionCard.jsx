@@ -1,9 +1,9 @@
 import { Star } from 'lucide-react';
 
 const statusLabel = {
-  succeeded: { text: 'Completada', className: 'bg-emerald-500/15 text-emerald-400' },
-  pending: { text: 'Pendiente', className: 'bg-amber-500/15 text-amber-400' },
-  failed: { text: 'Fallida', className: 'bg-rose-500/15 text-rose-400' },
+  succeeded: { text: 'Completada', className: 'bg-emerald-500/15 text-emerald-700' },
+  pending: { text: 'Pendiente', className: 'bg-amber-500/15 text-amber-700' },
+  failed: { text: 'Fallida', className: 'bg-rose-500/15 text-rose-600' },
   canceled: { text: 'Cancelada', className: 'bg-slate-500/15 text-slate-400' },
 };
 
@@ -37,7 +37,7 @@ export default function TransactionCard({ transaction, perspective }) {
         {transaction.rating ? (
           <div className="mt-1 flex gap-0.5">
             {Array.from({ length: transaction.rating }).map((_, i) => (
-              <Star key={i} size={14} fill="#fbbf24" stroke="#fbbf24" />
+              <Star key={i} size={14} fill="#FF8243" stroke="#FF8243" />
             ))}
           </div>
         ) : null}

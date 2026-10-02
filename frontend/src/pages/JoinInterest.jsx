@@ -153,13 +153,13 @@ export default function JoinInterest() {
           </div>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-slate-400">
             <span className="flex items-center gap-2">
-              <ShieldCheck size={18} className="text-emerald-400" /> Pagos seguros con Stripe
+              <ShieldCheck size={18} className="text-emerald-700" /> Pagos seguros con Stripe
             </span>
             <span className="flex items-center gap-2">
               <Wallet size={18} className="text-brand-400" /> Nada que comprar
             </span>
             <span className="flex items-center gap-2">
-              <QrCode size={18} className="text-amber-400" /> Tu QR queda listo el mismo día
+              <QrCode size={18} className="text-amber-700" /> Tu QR queda listo el mismo día
             </span>
           </div>
         </div>

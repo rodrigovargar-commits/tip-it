@@ -41,7 +41,7 @@ export default function Landing() {
             </div>
           </div>
           <div className="card flex items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-amber-400">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-amber-700">
               <Star size={20} strokeWidth={2} />
             </span>
             <div>
@@ -50,7 +50,7 @@ export default function Landing() {
             </div>
           </div>
           <div className="card flex items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-700">
               <ShieldCheck size={20} strokeWidth={2} />
             </span>
             <div>

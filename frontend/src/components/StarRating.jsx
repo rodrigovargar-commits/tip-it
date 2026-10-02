@@ -17,8 +17,8 @@ export default function StarRating({ value = 0, onChange, readOnly = false, icon
         >
           <Star
             size={iconSize}
-            fill={star <= value ? '#fbbf24' : 'none'}
-            stroke={star <= value ? '#fbbf24' : '#3f3f52'}
+            fill={star <= value ? '#FF8243' : 'none'}
+            stroke={star <= value ? '#FF8243' : '#C9BA97'}
             strokeWidth={1.5}
           />
         </button>

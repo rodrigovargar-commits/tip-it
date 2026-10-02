@@ -14,7 +14,7 @@ export default function Avatar({ src, name, size = 56, className = '' }) {
 
   return (
     <div
-      className={`flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 font-bold text-white ${className}`}
+      className={`flex shrink-0 items-center justify-center rounded-full border-2 border-punch-ink bg-punch-pink font-display font-extrabold text-punch-ink ${className}`}
       style={{ width: size, height: size, fontSize: size * 0.4 }}
     >
       {initial}

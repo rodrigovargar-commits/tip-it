@@ -227,7 +227,7 @@ export default function SendTip() {
             <p className="text-lg font-bold">{worker.name || `@${worker.username}`}</p>
             <p className="text-sm text-slate-400">@{worker.username}</p>
             {worker.rating ? (
-              <div className="mt-0.5 flex items-center gap-1 text-xs text-amber-400">
+              <div className="mt-0.5 flex items-center gap-1 text-xs text-amber-700">
                 <Star size={12} fill="#fbbf24" stroke="#fbbf24" />
                 {worker.rating} ({worker.ratingCount})
               </div>
@@ -257,8 +257,8 @@ export default function SendTip() {
       {worker.reviews?.length > 0 && (
         <div className="mt-3 space-y-2">
           {worker.reviews.slice(0, 2).map((r, i) => (
-            <div key={i} className="rounded-xl border border-slate-800 bg-slate-900/40 p-3">
-              <div className="flex items-center gap-1 text-amber-400">
+            <div key={i} className="rounded-2xl border-2 border-punch-ink/30 bg-white/40 p-3">
+              <div className="flex items-center gap-1 text-amber-700">
                 {Array.from({ length: r.rating || 0 }).map((_, s) => (
                   <Star key={s} size={12} fill="#fbbf24" stroke="#fbbf24" />
                 ))}
@@ -272,7 +272,7 @@ export default function SendTip() {
 
       {step === 'amount' && (
         <form onSubmit={handleContinue} className="mt-8 space-y-4">
-          <div className="flex gap-2 rounded-xl border border-slate-800 bg-slate-900 p-1">
+          <div className="flex gap-2 rounded-2xl border-2 border-punch-ink/30 bg-white p-1">
             <button
               type="button"
               onClick={() => setMode('fixed')}
@@ -298,7 +298,7 @@ export default function SendTip() {
           {mode === 'fixed' ? (
             <>
               <label className="text-sm text-slate-400">¿Cuánto quieres dar?</label>
-              <div className="flex items-center rounded-xl border border-slate-700 bg-slate-900 px-4 focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500">
+              <div className="flex items-center rounded-2xl border-2 border-punch-ink/30 bg-white px-4 focus-within:border-punch-ink focus-within:ring-2 focus-within:ring-punch-yellow">
                 <span className="text-2xl text-slate-500">$</span>
                 <input
                   type="number"
@@ -319,7 +319,7 @@ export default function SendTip() {
                     type="button"
                     key={val}
                     onClick={() => setAmount(String(val))}
-                    className="rounded-xl border border-slate-700 bg-slate-900 py-2 text-sm font-semibold hover:border-brand-500"
+                    className="rounded-2xl border-2 border-punch-ink/30 bg-white py-2 text-sm font-semibold hover:border-brand-500"
                   >
                     ${val}
                   </button>
@@ -329,7 +329,7 @@ export default function SendTip() {
           ) : (
             <>
               <label className="text-sm text-slate-400">¿De cuánto fue la cuenta?</label>
-              <div className="flex items-center rounded-xl border border-slate-700 bg-slate-900 px-4 focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500">
+              <div className="flex items-center rounded-2xl border-2 border-punch-ink/30 bg-white px-4 focus-within:border-punch-ink focus-within:ring-2 focus-within:ring-punch-yellow">
                 <span className="text-2xl text-slate-500">$</span>
                 <input
                   type="number"
@@ -357,14 +357,14 @@ export default function SendTip() {
                     className={`rounded-xl border py-2 text-sm font-semibold transition ${
                       !customPercent && percent === p
                         ? 'border-brand-500 bg-brand-500/10 text-brand-300'
-                        : 'border-slate-700 bg-slate-900 hover:border-brand-500'
+                        : 'border-punch-ink/30 bg-white hover:border-punch-ink'
                     }`}
                   >
                     {p}%
                   </button>
                 ))}
               </div>
-              <div className="flex items-center rounded-xl border border-slate-700 bg-slate-900 px-4">
+              <div className="flex items-center rounded-2xl border-2 border-punch-ink/30 bg-white px-4">
                 <input
                   type="number"
                   min="0"

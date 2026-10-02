@@ -3,19 +3,18 @@ import toast from 'react-hot-toast';
 import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 
-// Real TIP-IT brand tokens, pulled straight from tailwind.config.js and
-// index.css — not a made-up palette. brand-500/700 are the exact two
-// gradient stops the logo mark itself uses.
+// Tropical punch brand tokens (same values as tailwind.config.js `punch`).
 const BRAND = {
-  bg: '#020617', // slate-950
-  ink: '#f1f5f9', // slate-100
-  muted: '#94a3b8', // slate-400
-  brand400: '#2dd4bf',
-  brand500: '#14b8a6',
-  brand700: '#0f766e',
+  bg: '#FF8243', // orange
+  ink: '#0A2F2F',
+  muted: 'rgba(10,47,47,0.75)',
+  yellow: '#FCE883',
+  pink: '#FFC0CB',
+  teal: '#069494',
 };
 
-const FONT = 'Inter, system-ui, sans-serif';
+const FONT = '"DM Sans", Inter, system-ui, sans-serif';
+const DISPLAY = '"Bricolage Grotesque", "DM Sans", system-ui, sans-serif';
 
 function loadImage(src) {
   return new Promise((resolve, reject) => {
@@ -36,45 +35,44 @@ function roundRectPath(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// Draws the actual app logo (see Logo.jsx): a rounded square with a
-// brand-500 → brand-700 diagonal gradient, holding two overlapping circles
-// — one white outline, one solid white — same proportions as the SVG.
+// Draws the app logo (see Logo.jsx): a yellow disc with an ink outline
+// holding two overlapping coins — one outline, one solid orange.
 function drawLogo(ctx, x, y, size) {
-  roundRectPath(ctx, x, y, size, size, size * 0.22);
-  const gradient = ctx.createLinearGradient(x, y, x + size, y + size);
-  gradient.addColorStop(0, BRAND.brand500);
-  gradient.addColorStop(1, BRAND.brand700);
-  ctx.fillStyle = gradient;
-  ctx.fill();
-
-  // Icon is a 24x24 viewBox rendered at size*0.58, centered in the square.
-  const iconSize = size * 0.58;
-  const iconOffset = (size - iconSize) / 2;
-  const scale = iconSize / 24;
-  const ix = x + iconOffset;
-  const iy = y + iconOffset;
-
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 1.8 * scale;
+  const c = size / 2;
+  ctx.lineWidth = size * 0.04;
+  ctx.strokeStyle = BRAND.ink;
+  ctx.fillStyle = BRAND.yellow;
   ctx.beginPath();
-  ctx.arc(ix + 9 * scale, iy + 9 * scale, 6.5 * scale, 0, Math.PI * 2);
+  ctx.arc(x + c, y + c, c - ctx.lineWidth / 2, 0, Math.PI * 2);
+  ctx.fill();
   ctx.stroke();
 
-  ctx.fillStyle = 'rgba(255,255,255,0.95)';
+  // 24x24 viewBox rendered at size*0.62, centered.
+  const iconSize = size * 0.62;
+  const ix = x + (size - iconSize) / 2;
+  const iy = y + (size - iconSize) / 2;
+  const scale = iconSize / 24;
+  ctx.lineWidth = 2 * scale;
   ctx.beginPath();
-  ctx.arc(ix + 15 * scale, iy + 15 * scale, 6.5 * scale, 0, Math.PI * 2);
+  ctx.arc(ix + 9 * scale, iy + 9 * scale, 6 * scale, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = BRAND.bg;
+  ctx.beginPath();
+  ctx.arc(ix + 15 * scale, iy + 15 * scale, 6 * scale, 0, Math.PI * 2);
   ctx.fill();
+  ctx.stroke();
 }
 
 // Builds a printable card (logo, tagline, QR, name) instead of just the
 // bare QR — meant to be downloaded, printed, and displayed as-is, so it
 // needs to look finished and trustworthy on its own with no extra context.
 async function buildPrintableQR(worker) {
-  // Inter is loaded via Google Fonts in index.html — make sure it's actually
+  // The brand fonts are loaded via Google Fonts in index.html — make sure it's actually
   // ready before drawing text, or canvas silently falls back to a system
   // font on first load.
   if (document.fonts?.ready) {
-    await document.fonts.load(`700 64px ${FONT}`);
+    await document.fonts.load(`800 64px ${DISPLAY}`);
+    await document.fonts.load(`500 32px ${FONT}`);
     await document.fonts.ready;
   }
 
@@ -88,27 +86,26 @@ async function buildPrintableQR(worker) {
   ctx.fillStyle = BRAND.bg;
   ctx.fillRect(0, 0, W, H);
 
-  ctx.fillStyle = BRAND.brand400;
-  ctx.globalAlpha = 0.5;
+  ctx.fillStyle = BRAND.yellow;
   ctx.beginPath();
-  ctx.arc(890, 90, 26, 0, Math.PI * 2);
+  ctx.arc(900, 110, 70, 0, Math.PI * 2);
   ctx.fill();
+  ctx.fillStyle = BRAND.pink;
   ctx.beginPath();
-  ctx.arc(90, H - 90, 20, 0, Math.PI * 2);
+  ctx.arc(80, H - 120, 90, 0, Math.PI * 2);
   ctx.fill();
-  ctx.globalAlpha = 1;
 
   const logoSize = 130;
   drawLogo(ctx, W / 2 - logoSize / 2, 80, logoSize);
 
   ctx.textAlign = 'center';
   ctx.fillStyle = BRAND.ink;
-  ctx.font = `800 64px ${FONT}`;
-  ctx.fillText('TIP-IT', W / 2, 290);
+  ctx.font = `800 72px ${DISPLAY}`;
+  ctx.fillText('TIP-IT', W / 2, 295);
 
-  ctx.fillStyle = BRAND.brand400;
-  ctx.font = `600 38px ${FONT}`;
-  ctx.fillText('¿Te gustó el servicio?', W / 2, 345);
+  ctx.fillStyle = BRAND.ink;
+  ctx.font = `800 44px ${DISPLAY}`;
+  ctx.fillText('¿Te gustó el servicio?', W / 2, 350);
   ctx.fillText('¡Déjame una propina!', W / 2, 387);
   ctx.fillStyle = BRAND.muted;
   ctx.font = `500 32px ${FONT}`;
@@ -117,26 +114,32 @@ async function buildPrintableQR(worker) {
   const qrBox = 540;
   const qrX = W / 2 - qrBox / 2;
   const qrY = 475;
-  roundRectPath(ctx, qrX, qrY, qrBox, qrBox, 28);
+  roundRectPath(ctx, qrX + 12, qrY + 12, qrBox, qrBox, 40);
+  ctx.fillStyle = BRAND.ink;
+  ctx.fill();
+  roundRectPath(ctx, qrX, qrY, qrBox, qrBox, 40);
   ctx.fillStyle = '#FFFFFF';
   ctx.fill();
+  ctx.lineWidth = 6;
+  ctx.strokeStyle = BRAND.ink;
+  ctx.stroke();
 
   const qrImg = await loadImage(worker.qrCode);
   const pad = 40;
   ctx.drawImage(qrImg, qrX + pad, qrY + pad, qrBox - pad * 2, qrBox - pad * 2);
 
   ctx.fillStyle = BRAND.ink;
-  ctx.font = `700 44px ${FONT}`;
+  ctx.font = `800 52px ${DISPLAY}`;
   ctx.fillText(worker.name || `@${worker.username}`, W / 2, qrY + qrBox + 75);
   ctx.fillStyle = BRAND.muted;
-  ctx.font = `400 30px ${FONT}`;
+  ctx.font = `500 32px ${FONT}`;
   ctx.fillText(`@${worker.username}`, W / 2, qrY + qrBox + 120);
 
   ctx.fillStyle = BRAND.muted;
-  ctx.font = `400 26px ${FONT}`;
+  ctx.font = `500 26px ${FONT}`;
   ctx.fillText('Escanea y paga con tarjeta, Apple Pay o Google Pay', W / 2, H - 170);
   ctx.fillText('Scan and pay with card, Apple Pay or Google Pay', W / 2, H - 132);
-  ctx.fillText('Pagos seguros / Secure payments by Stripe', W / 2, H - 80);
+  ctx.fillText('Pagos seguros / Secure payments', W / 2, H - 80);
 
   return canvas.toDataURL('image/png');
 }
@@ -190,7 +193,7 @@ export default function QRDisplay() {
       <h1 className="mt-6 text-2xl font-bold">Tu código QR</h1>
       <p className="mt-1 text-sm text-slate-400">@{worker.username}</p>
 
-      <div className="mt-8 rounded-3xl bg-white p-6 shadow-xl">
+      <div className="mt-8 rounded-3xl bg-white p-6 shadow-none border-2 border-punch-ink">
         <img src={worker.qrCode} alt="Código QR" className="h-64 w-64" />
       </div>
 
