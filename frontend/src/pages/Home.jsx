@@ -231,7 +231,7 @@ function PhoneMock() {
               Barbero · Coyoacán
             </p>
             <p className="mt-1.5 text-xs leading-snug text-punch-ink/80">
-              Cada propina me acerca a mi propia barbería. ¡Gracias por pasar!
+              Cortes clásicos y fade, con buena onda. ¡Gracias por pasar!
             </p>
             <div className="mt-1.5 flex items-center gap-1 text-punch-orange">
               {[0, 1, 2, 3, 4].map((i) => (
