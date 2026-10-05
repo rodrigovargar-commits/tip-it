@@ -20,14 +20,14 @@ describe('GET/PATCH /api/admin/leads (contact list from the /unete landing)', ()
   it('lists a lead created from the landing, and lets it be marked contacted', async () => {
     await request(app).post('/api/leads').send({
       name: 'Ana Barbera',
-      phone: '5559998888',
+      email: 'ana@correo.com',
       category: 'barbero_estilista',
       zone: 'Coyoacán',
     });
 
     const list = await request(app).get('/api/admin/leads').set('x-admin-key', KEY);
     expect(list.status).toBe(200);
-    const created = list.body.leads.find((l) => l.phone === '5559998888');
+    const created = list.body.leads.find((l) => l.email === 'ana@correo.com');
     expect(created).toBeDefined();
     expect(created.contacted).toBe(false);
 
@@ -48,7 +48,7 @@ describe('GET/PATCH /api/admin/leads (contact list from the /unete landing)', ()
   });
 });
 
-describe('POST /api/leads contact rules', () => {
+describe('POST /api/leads contact rules (email required)', () => {
   const base = { name: 'Luis Músico', category: 'musico_artista', zone: 'Coyoacán' };
 
   it('accepts an email as the only way to reach them', async () => {
@@ -56,12 +56,12 @@ describe('POST /api/leads contact rules', () => {
     expect(res.status).toBe(201);
   });
 
-  it('accepts a WhatsApp as the only way to reach them', async () => {
+  it('rejects a phone number alone: the email is the way we reach people', async () => {
     const res = await request(app).post('/api/leads').send({ ...base, phone: '5511112222' });
-    expect(res.status).toBe(201);
+    expect(res.status).toBe(400);
   });
 
-  it('rejects when neither a WhatsApp nor an email is given', async () => {
+  it('rejects when no email is given', async () => {
     const res = await request(app).post('/api/leads').send(base);
     expect(res.status).toBe(400);
   });
@@ -84,7 +84,7 @@ describe('POST /api/leads honeypot (spam protection)', () => {
   it('answers success to a bot that fills the hidden field, but stores nothing', async () => {
     const res = await request(app)
       .post('/api/leads')
-      .send({ name: 'Bot', phone: '5500000000', category: 'otro', website: 'http://spam.example' });
+      .send({ name: 'Bot', email: 'bot@spam.example', category: 'otro', website: 'http://spam.example' });
     expect(res.status).toBe(201);
     const list = await request(app).get('/api/admin/leads').set('x-admin-key', 'test-admin-key');
     expect(list.body.leads.find((l) => l.name === 'Bot')).toBeUndefined();

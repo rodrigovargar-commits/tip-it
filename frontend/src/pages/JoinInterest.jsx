@@ -23,7 +23,7 @@ const STEPS = [
   {
     icon: QrCode,
     title: 'Te configuramos tu QR en persona',
-    body: 'Te contactamos por WhatsApp o correo y te ayudamos a activar tu cuenta y tu código, en 10 minutos.',
+    body: 'Te escribimos a tu correo y te ayudamos a activar tu cuenta y tu código, en 10 minutos.',
   },
   {
     icon: Wallet,
@@ -118,7 +118,7 @@ export default function JoinInterest() {
       <section id="registro-interes" className="mx-auto max-w-md px-5 py-16">
         <h2 className="text-center font-display text-3xl font-extrabold">Te ayudamos con tu QR</h2>
         <p className="mt-2 text-center text-sm font-medium text-slate-400">
-          Déjanos tu WhatsApp o tu correo y coordinamos la instalación en persona. Sin compromiso.
+          Déjanos tu correo y coordinamos la instalación en persona. Sin compromiso.
         </p>
         <div className="card mt-6">
           <LeadForm source={source} />

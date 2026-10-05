@@ -43,7 +43,7 @@ export default function PrivacyPolicy() {
               recibas.
             </li>
             <li>
-              Si usas el formulario “Quiero ayuda” o “Únete”: tu nombre, WhatsApp y/o correo, a qué
+              Si usas el formulario “Quiero ayuda” o “Únete”: tu nombre y correo, a qué
               te dedicas y tu zona. No crea una cuenta; solo sirve para contactarte.
             </li>
             <li>
@@ -65,7 +65,7 @@ export default function PrivacyPolicy() {
             <li>Generar tu código QR único para recibir pagos.</li>
             <li>Enviarte confirmaciones relacionadas con tus transacciones.</li>
             <li>
-              Contactarte por WhatsApp o correo cuando dejas tus datos en el formulario de ayuda,
+              Escribirte por correo cuando dejas tus datos en el formulario de ayuda,
               para ayudarte a crear tu cuenta y tu QR.
             </li>
             <li>Entender qué partes del sitio sirven y mejorarlas (analítica, solo con tu permiso).</li>

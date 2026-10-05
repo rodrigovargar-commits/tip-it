@@ -78,7 +78,7 @@ const FAQ = [
   { q: '¿Dónde encuentro mi QR?', a: 'En tu cuenta, en “Mi código QR”. Lo descargas listo para imprimir o lo compartes por WhatsApp.' },
   { q: '¿TIP-IT guarda mi tarjeta?', a: 'Nunca. El pago lo procesa Stripe directamente: TIP-IT no ve ni almacena números de tarjeta.' },
   { q: '¿Y si quiero recibir pagos más adelante?', a: 'Sin problema. Pones una contraseña para proteger tu cuenta y conectas tu banco cuando quieras desde tu perfil.' },
-  { q: 'No soy muy de apps… ¿me ayudan?', a: 'Claro. Déjanos tu WhatsApp y te ayudamos a armar tu cuenta y tu QR en persona, en unos 10 minutos.' },
+  { q: 'No soy muy de apps… ¿me ayudan?', a: 'Claro. Déjanos tu correo y te ayudamos a armar tu cuenta y tu QR en persona, en unos 10 minutos.' },
 ];
 
 /* ---------------------------------------------------------------- helpers */
@@ -219,7 +219,10 @@ function PhoneMock() {
       <div className="absolute -bottom-6 -right-8 h-40 w-40 rounded-full border-2 border-punch-ink bg-punch-pink" />
 
       <div className="relative rotate-2 rounded-[2.6rem] border-2 border-punch-ink bg-punch-ink p-2.5 shadow-[8px_8px_0_0_#0A2F2F]">
-        <div className="rounded-[2.1rem] bg-punch-cream px-5 pb-6 pt-7 text-punch-ink">
+        <div className="rounded-[2.1rem] bg-punch-cream px-5 pb-6 pt-5 text-punch-ink">
+          <p className="mb-2 text-center text-[10px] font-extrabold uppercase tracking-widest text-punch-ink/70">
+            Ejemplo de cómo se ve tu página
+          </p>
           <div className="flex flex-col items-center text-center">
             <span className="flex h-24 w-24 items-end justify-center overflow-hidden rounded-full border-2 border-punch-ink bg-punch-pink">
               <Person kind="stylist" size={92} />
@@ -231,7 +234,7 @@ function PhoneMock() {
               Barbero · Coyoacán
             </p>
             <p className="mt-1.5 text-xs leading-snug text-punch-ink/80">
-              Cortes clásicos y fade, con buena onda. ¡Gracias por pasar!
+              Gracias por tu visita.
             </p>
             <div className="mt-1.5 flex items-center gap-1 text-punch-orange">
               {[0, 1, 2, 3, 4].map((i) => (
@@ -555,7 +558,7 @@ export default function Home() {
                 <div className="flex-1">
                   <p className="font-display text-2xl font-extrabold">¿Te late pero no te animas solo?</p>
                   <p className="mt-1 font-medium text-slate-400">
-                    Déjanos tu WhatsApp o tu correo y te ayudamos a armar tu cuenta y tu QR en
+                    Déjanos tu correo y te ayudamos a armar tu cuenta y tu QR en
                     persona, en unos 10 minutos.
                   </p>
                 </div>
@@ -777,7 +780,7 @@ export default function Home() {
                     <>
                       <p className="mt-5 font-display text-2xl font-extrabold">Te ayudamos en persona</p>
                       <p className="mt-1 text-sm font-medium text-punch-ink/70">
-                        Déjanos un WhatsApp o un correo y coordinamos para armar tu cuenta y tu QR.
+                        Déjanos tu correo y coordinamos para armar tu cuenta y tu QR.
                       </p>
                       <div className="mt-5">
                         <LeadForm source="landing_ayuda" />

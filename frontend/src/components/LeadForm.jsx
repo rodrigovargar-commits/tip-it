@@ -4,8 +4,7 @@ import { CheckCircle2, HandCoins, Mic2, Scissors, UtensilsCrossed } from 'lucide
 import api, { getErrorMessage } from '../services/api.js';
 import { trackEvent } from '../utils/analytics.js';
 
-// "Quiero que me ayuden" form: someone leaves a WhatsApp and/or an email and
-// gets help setting up their account and QR in person. It creates NO account.
+// "Quiero que me ayuden" form: someone leaves their email and gets help setting up their account and QR in person. It creates NO account.
 // Used on /unete and inside the landing's sign-up section.
 export const CATEGORIES = [
   { id: 'barbero_estilista', label: 'Barbero / estilista', icon: Scissors },
@@ -15,7 +14,7 @@ export const CATEGORIES = [
 ];
 
 export default function LeadForm({ source = 'landing' }) {
-  const [form, setForm] = useState({ name: '', phone: '', email: '', category: '', zone: '', website: '' });
+  const [form, setForm] = useState({ name: '', email: '', category: '', zone: '', website: '' });
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -25,10 +24,6 @@ export default function LeadForm({ source = 'landing' }) {
     e.preventDefault();
     if (!form.category) {
       toast.error('Elige a qué te dedicas');
-      return;
-    }
-    if (!form.phone.trim() && !form.email.trim()) {
-      toast.error('Déjanos un WhatsApp o un correo para contactarte');
       return;
     }
     setSubmitting(true);
@@ -51,7 +46,7 @@ export default function LeadForm({ source = 'landing' }) {
           ¡Listo, {form.name.split(' ')[0]}!
         </h3>
         <p className="mt-2 font-medium text-slate-400">
-          Ya quedaste en la lista. Te contactamos pronto para armar tu cuenta y tu QR en persona
+          Ya quedaste en la lista. Te escribimos al correo que dejaste para armar tu cuenta y tu QR
           — toma unos 10 minutos.
         </p>
       </div>
@@ -80,39 +75,23 @@ export default function LeadForm({ source = 'landing' }) {
         />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label className="text-xs font-bold text-slate-500" htmlFor="lead-phone">WhatsApp</label>
-          <input
-            id="lead-phone"
-            name="phone"
-            type="tel"
-            autoComplete="tel"
-            inputMode="tel"
-            value={form.phone}
-            onChange={handleChange}
-            maxLength={30}
-            placeholder="55 1234 5678"
-            className="input-field mt-1"
-          />
-        </div>
-        <div>
-          <label className="text-xs font-bold text-slate-500" htmlFor="lead-email">O tu correo</label>
-          <input
-            id="lead-email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            inputMode="email"
-            value={form.email}
-            onChange={handleChange}
-            maxLength={120}
-            placeholder="tucorreo@gmail.com"
-            className="input-field mt-1"
-          />
-        </div>
+      <div>
+        <label className="text-xs font-bold text-slate-500" htmlFor="lead-email">Tu correo</label>
+        <input
+          id="lead-email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          inputMode="email"
+          value={form.email}
+          onChange={handleChange}
+          required
+          maxLength={120}
+          placeholder="tucorreo@gmail.com"
+          className="input-field mt-1"
+        />
+        <p className="mt-1 text-xs font-medium text-slate-500">Ahí te escribimos para ayudarte con tu cuenta y tu QR.</p>
       </div>
-      <p className="-mt-2 text-xs font-medium text-slate-500">Con uno de los dos basta.</p>
 
       <div>
         <label className="text-xs font-bold text-slate-500">¿A qué te dedicas?</label>

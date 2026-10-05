@@ -4,6 +4,7 @@ const User = require('../models/User');
 const Worker = require('../models/Worker');
 const Transaction = require('../models/Transaction');
 const Lead = require('../models/Lead');
+const { sendLeadEmail } = require('../utils/notifyLead');
 
 const getStats = asyncHandler(async (req, res) => {
   const [
@@ -121,4 +122,28 @@ const updateLead = asyncHandler(async (req, res) => {
   res.json({ success: true, lead });
 });
 
-module.exports = { getStats, getLeads, updateLead };
+// Sends one sample "new registration" email right now and returns what the
+// email provider answered (no secrets), so a setup problem can be diagnosed
+// from the browser: /api/admin/test-email?key=...
+const testEmail = asyncHandler(async (req, res) => {
+  const result = await sendLeadEmail({
+    name: 'Prueba de TIP-IT',
+    email: 'prueba@example.com',
+    category: 'barbero_estilista',
+    zone: 'Coyoacán',
+    source: 'prueba_admin',
+    createdAt: new Date(),
+  });
+  res.json({
+    success: result.ok,
+    configured: {
+      RESEND_API_KEY: Boolean(process.env.RESEND_API_KEY),
+      LEAD_NOTIFY_EMAIL: Boolean(process.env.LEAD_NOTIFY_EMAIL),
+      LEAD_NOTIFY_FROM: process.env.LEAD_NOTIFY_FROM || 'TIP-IT <onboarding@resend.dev> (por defecto)',
+    },
+    result,
+  });
+});
+
+module.exports = {
+  testEmail, getStats, getLeads, updateLead };

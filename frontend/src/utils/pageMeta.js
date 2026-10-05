@@ -12,7 +12,7 @@ const PUBLIC = {
   '/unete': {
     title: 'Quiero mi QR gratis — TIP-IT',
     description:
-      'Barberos, músicos de calle y puestos de comida: déjanos tu WhatsApp o correo y te ayudamos a armar tu cuenta y tu QR en persona.',
+      'Barberos, músicos de calle y puestos de comida: déjanos tu correo y te ayudamos a armar tu cuenta y tu QR en persona.',
   },
   '/como-funciona': {
     title: 'Cómo funciona TIP-IT — Guía de la app',
