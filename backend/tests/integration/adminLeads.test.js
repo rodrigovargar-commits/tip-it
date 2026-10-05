@@ -71,3 +71,22 @@ describe('POST /api/leads contact rules', () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe('POST /api/leads honeypot (spam protection)', () => {
+  const OLD_KEY = process.env.ADMIN_STATS_KEY;
+  beforeAll(() => {
+    process.env.ADMIN_STATS_KEY = 'test-admin-key';
+  });
+  afterAll(() => {
+    process.env.ADMIN_STATS_KEY = OLD_KEY;
+  });
+
+  it('answers success to a bot that fills the hidden field, but stores nothing', async () => {
+    const res = await request(app)
+      .post('/api/leads')
+      .send({ name: 'Bot', phone: '5500000000', category: 'otro', website: 'http://spam.example' });
+    expect(res.status).toBe(201);
+    const list = await request(app).get('/api/admin/leads').set('x-admin-key', 'test-admin-key');
+    expect(list.body.leads.find((l) => l.name === 'Bot')).toBeUndefined();
+  });
+});

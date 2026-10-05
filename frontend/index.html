@@ -6,6 +6,8 @@
     <meta name="theme-color" content="#FF8243" />
     <meta name="description" content="Cada vez hay menos cash. Con tu QR de TIP-IT, tus clientes te dejan propina con tarjeta o Apple Pay y te llega directo a tu banco. Para barberos, estilistas, músicos y puestos de comida." />
     <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_MX" />
+    <meta property="og:url" content="https://www.tipit.com.mx/" />
     <meta property="og:site_name" content="TIP-IT" />
     <meta property="og:title" content="TIP-IT — Que no se te vayan tus propinas" />
     <meta property="og:description" content="Cada vez hay menos cash. Con tu QR de TIP-IT, tus clientes te dejan propina en segundos y te llega directo a tu banco." />
@@ -17,31 +19,15 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="64x64" href="/icons/favicon-64.png" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap"
-    />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap"
-    />
+    <link rel="preload" href="/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossorigin />
     <title>TIP-IT — Propinas digitales por QR, sin efectivo</title>
 
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-3WX1CMDGKW"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
-      gtag('js', new Date());
-      gtag('config', 'G-3WX1CMDGKW');
-    </script>
+    <!-- Analytics (GA4) is loaded only after the visitor accepts cookies: see src/utils/consent.js -->
   </head>
   <body>
     <div id="root"></div>
+    <noscript>TIP-IT necesita JavaScript para funcionar. Actívalo en tu navegador e intenta de nuevo.</noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

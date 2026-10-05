@@ -233,7 +233,7 @@ export default function Profile() {
 
       <button
         onClick={handleDeleteAccount}
-        className="mt-3 flex w-full items-center justify-center gap-2 text-sm text-slate-500 hover:text-rose-600"
+        className="mt-3 flex w-full items-center justify-center gap-2 text-sm text-slate-500 hover:text-rose-700"
       >
         <Trash2 size={14} />
         Eliminar mi cuenta y mis datos
@@ -241,7 +241,7 @@ export default function Profile() {
 
       <button
         onClick={handleLogout}
-        className="btn-secondary mt-4 flex w-full items-center justify-center gap-2 !border-rose-300 !text-rose-600"
+        className="btn-secondary mt-4 flex w-full items-center justify-center gap-2 !border-rose-300 !text-rose-700"
       >
         <LogOut size={16} />
         Cerrar sesión

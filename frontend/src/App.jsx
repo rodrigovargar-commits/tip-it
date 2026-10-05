@@ -1,31 +1,44 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import Landing from './pages/Landing.jsx';
 import Home from './pages/Home.jsx';
-import JoinInterest from './pages/JoinInterest.jsx';
-import Register from './pages/auth/Register.jsx';
-import Login from './pages/auth/Login.jsx';
-import WorkerDashboard from './pages/worker/WorkerDashboard.jsx';
-import WorkerSetup from './pages/worker/WorkerSetup.jsx';
-import WorkerOnboarding from './pages/worker/WorkerOnboarding.jsx';
-import QRDisplay from './pages/worker/QRDisplay.jsx';
-import WorkerReviews from './pages/worker/WorkerReviews.jsx';
-import ScanQR from './pages/client/ScanQR.jsx';
-import SendTip from './pages/client/SendTip.jsx';
-import History from './pages/History.jsx';
-import Profile from './pages/Profile.jsx';
-import Contacts from './pages/Contacts.jsx';
-import PrivacyPolicy from './pages/PrivacyPolicy.jsx';
-import Terms from './pages/Terms.jsx';
-import HowItWorks from './pages/HowItWorks.jsx';
+const JoinInterest = lazy(() => import('./pages/JoinInterest.jsx'));
+const Register = lazy(() => import('./pages/auth/Register.jsx'));
+const Login = lazy(() => import('./pages/auth/Login.jsx'));
+const WorkerDashboard = lazy(() => import('./pages/worker/WorkerDashboard.jsx'));
+const WorkerSetup = lazy(() => import('./pages/worker/WorkerSetup.jsx'));
+const WorkerOnboarding = lazy(() => import('./pages/worker/WorkerOnboarding.jsx'));
+const QRDisplay = lazy(() => import('./pages/worker/QRDisplay.jsx'));
+const WorkerReviews = lazy(() => import('./pages/worker/WorkerReviews.jsx'));
+const ScanQR = lazy(() => import('./pages/client/ScanQR.jsx'));
+const SendTip = lazy(() => import('./pages/client/SendTip.jsx'));
+const History = lazy(() => import('./pages/History.jsx'));
+const Profile = lazy(() => import('./pages/Profile.jsx'));
+const Contacts = lazy(() => import('./pages/Contacts.jsx'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy.jsx'));
+const Terms = lazy(() => import('./pages/Terms.jsx'));
+const HowItWorks = lazy(() => import('./pages/HowItWorks.jsx'));
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import BottomNav from './components/BottomNav.jsx';
+import CookieBanner from './components/CookieBanner.jsx';
+import RouteMeta from './components/RouteMeta.jsx';
+import NotFound from './pages/NotFound.jsx';
+import Spinner from './components/Spinner.jsx';
 import TopBar from './components/TopBar.jsx';
 
 export default function App() {
   return (
     <>
+      <RouteMeta />
       <TopBar />
+      <Suspense
+        fallback={
+          <div className="flex min-h-[60vh] items-center justify-center">
+            <Spinner />
+          </div>
+        }
+      >
       <Routes>
         {/* Web visitors get the public marketing page; the installed iOS/Android app
             opens straight into the in-app home. */}
@@ -108,9 +121,11 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
+      </Suspense>
       <BottomNav />
+      <CookieBanner />
     </>
   );
 }

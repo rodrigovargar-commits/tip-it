@@ -81,6 +81,7 @@ export default function RegisterForm({ defaultRole = 'client' }) {
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <input
           name="name"
+          autoComplete="name"
           value={form.name}
           onChange={handleChange}
           placeholder="Nombre completo"
@@ -90,6 +91,8 @@ export default function RegisterForm({ defaultRole = 'client' }) {
         <input
           type="email"
           name="email"
+          autoComplete="email"
+          inputMode="email"
           value={form.email}
           onChange={handleChange}
           placeholder="Email"
@@ -98,6 +101,9 @@ export default function RegisterForm({ defaultRole = 'client' }) {
         />
         <input
           name="phone"
+          type="tel"
+          autoComplete="tel"
+          inputMode="tel"
           value={form.phone}
           onChange={handleChange}
           placeholder="Teléfono"
@@ -107,6 +113,7 @@ export default function RegisterForm({ defaultRole = 'client' }) {
         <input
           type="password"
           name="password"
+          autoComplete="new-password"
           value={form.password}
           onChange={handleChange}
           placeholder="Contraseña (mín. 8 caracteres)"
@@ -120,6 +127,9 @@ export default function RegisterForm({ defaultRole = 'client' }) {
             <span className="text-slate-500">@</span>
             <input
               name="username"
+              autoComplete="username"
+              autoCapitalize="none"
+              autoCorrect="off"
               value={form.username}
               onChange={handleChange}
               placeholder="tu_username"

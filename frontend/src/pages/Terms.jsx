@@ -10,7 +10,7 @@ export default function Terms() {
       </Link>
 
       <h1 className="mt-4 text-2xl font-bold">Términos y condiciones</h1>
-      <p className="mt-1 text-sm text-slate-500">Última actualización: agosto de 2026</p>
+      <p className="mt-1 text-sm text-slate-500">Última actualización: octubre de 2026</p>
 
       <div className="mt-6 space-y-6 text-sm leading-relaxed text-slate-300">
         <section>

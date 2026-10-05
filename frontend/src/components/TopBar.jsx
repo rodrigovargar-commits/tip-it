@@ -174,7 +174,7 @@ export default function TopBar() {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className={`${mobileItem} flex items-center gap-2 text-left text-rose-600`}
+                  className={`${mobileItem} flex items-center gap-2 text-left text-rose-700`}
                 >
                   <LogOut size={18} /> Cerrar sesión
                 </button>

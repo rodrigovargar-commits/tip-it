@@ -6,7 +6,12 @@ const { notifyLead } = require('../utils/notifyLead');
 // only success/failure, never the stored document (no reason for the
 // public internet to read back what it just sent).
 const createLead = asyncHandler(async (req, res) => {
-  const { name, phone, email, category, zone, source } = req.body;
+  const { name, phone, email, category, zone, source, website } = req.body;
+  // Honeypot: real people never see this field. Answer "success" so a bot
+  // gets no signal to adapt to, but store and email nothing.
+  if (typeof website === 'string' && website.trim() !== '') {
+    return res.status(201).json({ success: true, message: 'Gracias, te contactaremos pronto.' });
+  }
   const lead = await Lead.create({ name, phone, email, category, zone, source });
   // Fire-and-forget: the email is a convenience, never a reason to fail the request.
   notifyLead(lead).catch(() => {});

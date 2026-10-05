@@ -97,12 +97,12 @@ export default function ScanQR() {
         <div id={containerId} className="aspect-square w-full" />
       </div>
       {cameraError && (
-        <p className="mt-2 text-center text-sm text-rose-600">
+        <p className="mt-2 text-center text-sm text-rose-700">
           No pudimos acceder a la cámara. Usa la búsqueda por username.
         </p>
       )}
 
-      <div className="mx-auto mt-6 flex w-full max-w-sm items-center gap-3 text-punch-ink/60 md:max-w-md">
+      <div className="mx-auto mt-6 flex w-full max-w-sm items-center gap-3 text-punch-ink/70 md:max-w-md">
         <div className="h-0.5 flex-1 rounded bg-punch-ink/20" />
         <span className="font-display text-xs font-extrabold uppercase">o búscalo</span>
         <div className="h-0.5 flex-1 rounded bg-punch-ink/20" />

@@ -1,7 +1,13 @@
-import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 
 export default function PrivacyPolicy() {
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (hash) setTimeout(() => document.getElementById(hash.slice(1))?.scrollIntoView(), 60);
+  }, [hash]);
+
   return (
     <div className="page-shell">
       <Link to="/" className="flex items-center gap-1 text-sm text-slate-400">
@@ -10,7 +16,7 @@ export default function PrivacyPolicy() {
       </Link>
 
       <h1 className="mt-4 text-2xl font-bold">Aviso de privacidad</h1>
-      <p className="mt-1 text-sm text-slate-500">Última actualización: agosto de 2026</p>
+      <p className="mt-1 text-sm text-slate-500">Última actualización: octubre de 2026</p>
 
       <div className="mt-6 space-y-6 text-sm leading-relaxed text-slate-300">
         <section>
@@ -37,6 +43,14 @@ export default function PrivacyPolicy() {
               recibas.
             </li>
             <li>
+              Si usas el formulario “Quiero ayuda” o “Únete”: tu nombre, WhatsApp y/o correo, a qué
+              te dedicas y tu zona. No crea una cuenta; solo sirve para contactarte.
+            </li>
+            <li>
+              Datos de uso de la página (páginas vistas y clics en botones) si aceptas las cookies
+              de analítica.
+            </li>
+            <li>
               Datos de pago: TIP-IT nunca almacena el número completo de tu tarjeta. El
               procesamiento de pagos lo hace Stripe, un proveedor certificado PCI-DSS.
             </li>
@@ -50,6 +64,11 @@ export default function PrivacyPolicy() {
             <li>Identificarte en la app y mostrar tu perfil público si eres trabajador.</li>
             <li>Generar tu código QR único para recibir pagos.</li>
             <li>Enviarte confirmaciones relacionadas con tus transacciones.</li>
+            <li>
+              Contactarte por WhatsApp o correo cuando dejas tus datos en el formulario de ayuda,
+              para ayudarte a crear tu cuenta y tu QR.
+            </li>
+            <li>Entender qué partes del sitio sirven y mejorarlas (analítica, solo con tu permiso).</li>
             <li>Cumplir obligaciones legales y de prevención de fraude.</li>
           </ul>
           <p className="mt-2">No vendemos ni rentamos tus datos personales a terceros.</p>
@@ -72,6 +91,21 @@ export default function PrivacyPolicy() {
             <li>
               <strong>Render y Vercel</strong> — infraestructura donde corre la aplicación.
             </li>
+            <li>
+              <strong>Cloudflare</strong> — servicio de nombres de dominio (DNS) de tipit.com.mx.
+            </li>
+            <li>
+              <strong>Resend</strong> — envío del correo de aviso interno cuando alguien deja sus
+              datos en el formulario de ayuda; ese correo llega solo al equipo de TIP-IT.
+            </li>
+            <li>
+              <strong>Google Analytics</strong> — estadísticas de uso del sitio, únicamente si
+              aceptas las cookies de analítica.
+            </li>
+            <li>
+              <strong>Vercel Analytics</strong> — conteo de visitas sin cookies ni identificación
+              de personas.
+            </li>
           </ul>
         </section>
 
@@ -86,14 +120,31 @@ export default function PrivacyPolicy() {
           </p>
         </section>
 
+        <section id="cookies">
+          <h2 className="text-base font-semibold text-slate-100">Cookies y almacenamiento</h2>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            <li>
+              <strong>Necesarias</strong>: guardan tu sesión (para que no tengas que iniciar
+              sesión cada vez) y tu elección sobre las cookies. No necesitan tu permiso.
+            </li>
+            <li>
+              <strong>Analítica (Google Analytics)</strong>: solo se activa si tocas “Aceptar” en
+              el aviso de cookies. Con “Solo necesarias” no se carga. Puedes borrar tu elección
+              limpiando los datos del sitio en tu navegador y el aviso volverá a aparecer.
+            </li>
+          </ul>
+        </section>
+
         <section>
           <h2 className="text-base font-semibold text-slate-100">6. Tus derechos (ARCO)</h2>
           <p className="mt-2">
             Puedes solicitar en cualquier momento el Acceso, Rectificación, Cancelación u
             Oposición al tratamiento de tus datos personales, así como pedir que eliminemos tu
-            cuenta. Escríbenos a{' '}
+            cuenta. Puedes eliminar tu cuenta y tus datos tú mismo desde Perfil ▸ “Eliminar mi
+            cuenta y mis datos”, o escribirnos al{' '}
             <span className="font-semibold text-slate-100">55 8007 5613</span> para ejercer estos
-            derechos.
+            derechos. Si dejaste tus datos en el formulario de ayuda y quieres que los borremos,
+            avísanos por el mismo medio.
           </p>
         </section>
 

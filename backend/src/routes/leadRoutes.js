@@ -32,6 +32,7 @@ router.post(
       .withMessage('Categoría inválida'),
     body('zone').optional({ checkFalsy: true }).trim().isLength({ max: 100 }),
     body('source').optional({ checkFalsy: true }).trim().isLength({ max: 50 }),
+    body('website').optional().isString().isLength({ max: 200 }),
   ],
   validate,
   createLead

@@ -38,7 +38,7 @@ const PAINS = [
 const STEPS = [
   { n: '1', title: 'Crea tu cuenta', body: 'Elige tu username único. Con él generamos tu código QR automáticamente.', bg: 'bg-punch-orange' },
   { n: '2', title: 'Conecta tu banco', body: 'Una sola vez, con una verificación rápida, para que el dinero llegue directo a tu cuenta.', bg: 'bg-punch-pink' },
-  { n: '3', title: 'Comparte tu QR', body: 'Imprímelo, pégalo donde chambeas o compártelo por WhatsApp. Cada pago te llega directo.', bg: 'bg-punch-teal text-white' },
+  { n: '3', title: 'Comparte tu QR', body: 'Imprímelo, pégalo donde chambeas o compártelo por WhatsApp. Cada pago te llega directo.', bg: 'bg-punch-tealdark text-white' },
   { n: '4', title: 'Cobra y crece', body: 'Ve tu total recibido, tus reseñas y tu reputación desde un solo panel.', bg: 'bg-white' },
 ];
 
@@ -53,7 +53,7 @@ const WHO = [
   { person: 'stylist', label: 'Barberos y estilistas', bg: 'bg-punch-orange' },
   { person: 'musician', label: 'Músicos y artistas de calle', bg: 'bg-punch-pink' },
   { person: 'cook', label: 'Puestos de comida', bg: 'bg-punch-yellow' },
-  { person: 'waiter', label: 'Meseros y bartenders', bg: 'bg-punch-teal text-white' },
+  { person: 'waiter', label: 'Meseros y bartenders', bg: 'bg-punch-tealdark text-white' },
   { person: 'rider', label: 'Repartidores', bg: 'bg-punch-pink' },
   { person: null, label: 'Todo el que recibe propinas', bg: 'bg-white' },
 ];
@@ -224,7 +224,7 @@ function PhoneMock() {
             <span className="flex h-24 w-24 items-end justify-center overflow-hidden rounded-full border-2 border-punch-ink bg-punch-pink">
               <Person kind="stylist" size={92} />
             </span>
-            <p className="mt-3 rounded-full border-2 border-punch-ink bg-punch-teal px-4 py-0.5 font-display text-lg font-extrabold text-white">
+            <p className="mt-3 rounded-full border-2 border-punch-ink bg-punch-tealdark px-4 py-0.5 font-display text-lg font-extrabold text-white">
               Rafa
             </p>
             <p className="mt-1.5 text-[11px] font-bold uppercase tracking-wider text-punch-ink/70">
@@ -256,7 +256,7 @@ function PhoneMock() {
             Ayúdale a recibir el 100%
           </p>
 
-          <div className="mt-3 rounded-full border-2 border-punch-ink bg-punch-teal py-2.5 text-center font-display text-base font-extrabold text-white">
+          <div className="mt-3 rounded-full border-2 border-punch-ink bg-punch-tealdark py-2.5 text-center font-display text-base font-extrabold text-white">
             Dejar propina
           </div>
         </div>
@@ -272,7 +272,7 @@ function PhoneMock() {
         <span className="font-display text-sm font-extrabold leading-tight text-punch-ink">
           +$50
           <br />
-          <span className="font-sans text-[11px] font-medium text-punch-ink/60">propina nueva</span>
+          <span className="font-sans text-[11px] font-medium text-punch-ink/70">propina nueva</span>
         </span>
       </div>
       <div
@@ -338,8 +338,8 @@ function PayBox() {
         </div>
         <form onSubmit={go} className="flex flex-1 flex-col gap-3 sm:flex-row">
           <div className="flex flex-1 items-center rounded-full border-2 border-punch-ink bg-punch-cream px-4 focus-within:ring-2 focus-within:ring-punch-yellow">
-            <Search size={18} className="shrink-0 text-punch-ink/60" />
-            <span className="pl-2 text-punch-ink/50">@</span>
+            <Search size={18} className="shrink-0 text-punch-ink/70" />
+            <span className="pl-2 text-punch-ink/70">@</span>
             <input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -347,7 +347,7 @@ function PayBox() {
               aria-label="Username de quien quieres apoyar"
               autoCapitalize="none"
               autoCorrect="off"
-              className="w-full bg-transparent px-1.5 py-3 text-punch-ink outline-none placeholder:text-punch-ink/40"
+              className="w-full bg-transparent px-1.5 py-3 text-punch-ink outline-none placeholder:text-punch-ink/70"
             />
           </div>
           <button
@@ -575,7 +575,7 @@ export default function Home() {
         <Reveal>
           <SectionTitle eyebrow="¿Para quién?">
             Si das buen servicio,{' '}
-            <span className="relative inline-block text-punch-teal">
+            <span className="relative inline-block text-punch-tealdark">
               es para ti.
               <Squiggle className="text-punch-orange" />
             </span>
@@ -634,7 +634,7 @@ export default function Home() {
       </section>
 
       {/* ---------- Los números ---------- */}
-      <section className="bg-punch-teal py-16 text-white sm:py-24">
+      <section className="bg-punch-tealdark py-16 text-white sm:py-24">
         <div className="mx-auto max-w-6xl px-5">
           <Reveal>
             <Eyebrow>Los números</Eyebrow>
@@ -645,16 +645,16 @@ export default function Home() {
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {NUMBERS.map((c, i) => (
               <Reveal key={c.big} delay={i * 90}>
-                <div className="h-full rounded-3xl border-2 border-punch-ink bg-punch-teal p-7 shadow-[6px_6px_0_0_#0A2F2F] ring-2 ring-white/20">
+                <div className="h-full rounded-3xl border-2 border-punch-ink bg-punch-tealdark p-7 shadow-[6px_6px_0_0_#0A2F2F] ring-2 ring-white/20">
                   <p className="font-display text-5xl font-extrabold text-punch-yellow sm:text-6xl">{c.big}</p>
                   <p className="mt-2 font-display text-xl font-extrabold">{c.title}</p>
-                  <p className="mt-3 text-lg leading-relaxed text-white/90">{c.body}</p>
+                  <p className="mt-3 text-lg leading-relaxed text-white">{c.body}</p>
                 </div>
               </Reveal>
             ))}
           </div>
 
-          <p className="mt-8 text-center text-xs font-medium text-white/80">
+          <p className="mt-8 text-center text-xs font-medium text-white">
             Solo ganamos cuando tú ganas: cobramos una comisión pequeña por propina recibida,
             siempre visible antes de pagar.{' '}
             <Link to="/#preguntas" className="font-extrabold underline underline-offset-2">
@@ -664,7 +664,7 @@ export default function Home() {
         </div>
       </section>
 
-      <Wave above="bg-punch-teal" below="text-punch-cream" />
+      <Wave above="bg-punch-tealdark" below="text-punch-cream" />
 
       {/* ---------- FAQ ---------- */}
       <section id="preguntas" className="mx-auto max-w-3xl px-5 py-14 sm:py-20">

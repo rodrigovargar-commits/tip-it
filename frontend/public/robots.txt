@@ -1,2 +1,11 @@
 User-agent: *
 Allow: /
+# Cuentas y pantallas privadas de la app: no tienen nada que indexar
+Disallow: /worker/
+Disallow: /profile
+Disallow: /history
+Disallow: /contacts
+Disallow: /tip/
+Disallow: /login
+
+Sitemap: https://www.tipit.com.mx/sitemap.xml

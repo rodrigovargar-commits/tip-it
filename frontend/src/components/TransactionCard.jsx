@@ -3,7 +3,7 @@ import { Star } from 'lucide-react';
 const statusLabel = {
   succeeded: { text: 'Completada', className: 'bg-emerald-500/15 text-emerald-700' },
   pending: { text: 'Pendiente', className: 'bg-amber-500/15 text-amber-700' },
-  failed: { text: 'Fallida', className: 'bg-rose-500/15 text-rose-600' },
+  failed: { text: 'Fallida', className: 'bg-rose-500/15 text-rose-700' },
   canceled: { text: 'Cancelada', className: 'bg-slate-500/15 text-slate-400' },
 };
 

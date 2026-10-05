@@ -15,7 +15,7 @@ export const CATEGORIES = [
 ];
 
 export default function LeadForm({ source = 'landing' }) {
-  const [form, setForm] = useState({ name: '', phone: '', email: '', category: '', zone: '' });
+  const [form, setForm] = useState({ name: '', phone: '', email: '', category: '', zone: '', website: '' });
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -60,11 +60,17 @@ export default function LeadForm({ source = 'landing' }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Honeypot: invisible to people, tempting to bots. Anything typed here is discarded server-side. */}
+      <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
+        <label htmlFor="lead-website">Sitio web</label>
+        <input id="lead-website" name="website" tabIndex={-1} autoComplete="off" value={form.website} onChange={handleChange} />
+      </div>
       <div>
         <label className="text-xs font-bold text-slate-500" htmlFor="lead-name">Tu nombre</label>
         <input
           id="lead-name"
           name="name"
+          autoComplete="name"
           value={form.name}
           onChange={handleChange}
           required
@@ -81,6 +87,8 @@ export default function LeadForm({ source = 'landing' }) {
             id="lead-phone"
             name="phone"
             type="tel"
+            autoComplete="tel"
+            inputMode="tel"
             value={form.phone}
             onChange={handleChange}
             maxLength={30}
@@ -94,6 +102,8 @@ export default function LeadForm({ source = 'landing' }) {
             id="lead-email"
             name="email"
             type="email"
+            autoComplete="email"
+            inputMode="email"
             value={form.email}
             onChange={handleChange}
             maxLength={120}

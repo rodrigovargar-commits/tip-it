@@ -154,11 +154,11 @@ export default function WorkerDashboard() {
       )}
 
       {stripeStatus?.onboardingComplete && balance && (
-        <div className="mt-6 card !bg-punch-teal !text-white">
-          <p className="text-xs font-bold uppercase tracking-wide text-white/80">Saldo disponible</p>
+        <div className="mt-6 card !bg-punch-tealdark !text-white">
+          <p className="text-xs font-bold uppercase tracking-wide text-white">Saldo disponible</p>
           <p className="mt-1 font-display text-4xl font-extrabold text-punch-yellow">{formatMXN(balance.available)}</p>
           {balance.pending > 0 && (
-            <p className="mt-1 text-sm text-white/90">
+            <p className="mt-1 text-sm text-white">
               + {formatMXN(balance.pending)} pendiente de liberarse
               {balance.nextAvailableAt && (
                 <> — el próximo cae el {formatDate(balance.nextAvailableAt)}</>
@@ -177,14 +177,14 @@ export default function WorkerDashboard() {
                 : `Retirar ${formatMXN(balance.instantAvailable)} ahora (comisión extra)`}
             </button>
           ) : (
-            <p className="mt-2 text-xs text-white/80">
+            <p className="mt-2 text-xs text-white">
               {balance.pending > 0
                 ? 'Sin retiro instantáneo disponible todavía para ese monto pendiente.'
                 : 'Se deposita solo, todos los días — no hay nada pendiente ahora mismo.'}
             </p>
           )}
           {stats?.tipCount > 0 && stats.tipCount <= 3 && (
-            <p className="mt-2 text-xs text-white/80">
+            <p className="mt-2 text-xs text-white">
               Tus primeros pagos tardan un poco más en liberarse (verificación de cuenta nueva).
               Después de eso, todo cae diario.
             </p>

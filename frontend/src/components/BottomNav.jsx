@@ -29,7 +29,7 @@ export default function BottomNav() {
                 </span>
                 <span
                   className={`font-display text-[11px] font-extrabold ${
-                    isActive ? 'text-punch-ink' : 'text-punch-ink/60'
+                    isActive ? 'text-punch-ink' : 'text-punch-ink/70'
                   }`}
                 >
                   {label}

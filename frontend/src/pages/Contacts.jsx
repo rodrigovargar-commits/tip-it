@@ -64,7 +64,7 @@ export default function Contacts() {
               </Link>
               <button
                 onClick={() => handleRemove(c.id)}
-                className="rounded-lg p-2 text-slate-500 hover:bg-slate-800 hover:text-rose-600"
+                className="rounded-lg p-2 text-slate-500 hover:bg-slate-800 hover:text-rose-700"
                 aria-label="Quitar contacto"
               >
                 <Trash2 size={18} />
