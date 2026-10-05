@@ -43,7 +43,7 @@ export default function CookieBanner() {
             Usamos cookies de analítica (Google Analytics) para saber qué páginas sirven. Sin
             ellas todo funciona igual.{' '}
             <Link to="/privacidad#cookies" className="font-bold underline underline-offset-2">
-              Más información
+              Cómo usamos las cookies
             </Link>
           </p>
           <div className="mt-3 flex flex-wrap gap-2">

@@ -658,7 +658,7 @@ export default function Home() {
             Solo ganamos cuando tú ganas: cobramos una comisión pequeña por propina recibida,
             siempre visible antes de pagar.{' '}
             <Link to="/#preguntas" className="font-extrabold underline underline-offset-2">
-              Ver detalles
+              Ver cómo cobramos
             </Link>
           </p>
         </div>
