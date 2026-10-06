@@ -73,7 +73,7 @@ Lo que esto resuelve: no pasamos por la regulación de manejar fondos, el alta s
 
 La especificación pública (`orchestrator-openapi.json` y `link-product-openapi.json`) no incluye subcomercios, split, saldo ni retiros. Esos endpoints vendrán con las credenciales. Hay que pedir:
 
-1. **Quién paga la tasa de Cheqpay (3.3% + $1.30):** ¿se descuenta al trabajador en su liquidación, o la absorbe TIP-IT? Define cuánto recibe el trabajador y cuánto debe ser nuestra comisión.
+1. **Cuánto de la tasa (3.3% + $1.30) se queda TIP-IT:** la tasa ya incluye nuestra parte (confirmado por Rodrigo), así que falta saber el desglose: cuánto es costo de Cheqpay y cuánto es de TIP-IT, por porcentaje y por cuota fija.
 2. **Cómo se expresa el split** en la creación del cobro (campo y formato) y si es porcentaje, monto fijo o ambos.
 3. **Alta de subcomercio por API:** endpoint, datos y documentos requeridos, estados de la verificación y cómo avisan cuando queda aprobado.
 4. **`x-merchant-id` por trabajador:** la especificación lo marca obligatorio en las órdenes de pago; confirmar que es el identificador del subcomercio.
@@ -86,16 +86,19 @@ La especificación pública (`orchestrator-openapi.json` y `link-product-openapi
 
 ## 7. Efecto en la comisión de TIP-IT
 
-Hoy TIP-IT cobra **6% + $4** y con eso cubría el costo de Stripe. Con Cheqpay el costo baja a **3.3% + $1.30**, pero falta saber quién lo paga (pregunta 1). Ejemplo con una propina de $50, si la tasa de Cheqpay se descuenta al trabajador y TIP-IT mantiene 6% + $4:
+La tasa de **3.3% + $1.30 ya incluye la parte de TIP-IT** (confirmado). Por lo tanto **desaparece la comisión adicional de 6% + $4**: el trabajador paga una sola tasa, y Cheqpay reparte esa tasa entre su costo y nuestra parte con el split.
 
-| Concepto | Monto |
-|---|---|
-| Propina | $50.00 |
-| Comisión de TIP-IT (6% + $4) | −$7.00 |
-| Tasa de Cheqpay (3.3% + $1.30) | −$2.95 |
-| Recibe el trabajador | **$40.05 (80%)** |
+| Propina | Tasa total (3.3% + $1.30) | Recibe el trabajador | Antes con Stripe (6% + $4) |
+|---|---|---|---|
+| $20 | $1.96 | **$18.04 (90.2%)** | $14.80 (74.0%) |
+| $50 | $2.95 | **$47.05 (94.1%)** | $43.00 (86.0%) |
+| $100 | $4.60 | **$95.40 (95.4%)** | $90.00 (90.0%) |
 
-En propinas chicas la cuota fija pesa mucho: en una de $20 el trabajador recibiría **$12.84 (64%)**. Si la tasa la descuenta Cheqpay al trabajador, conviene **bajar la comisión de TIP-IT**, sobre todo la cuota fija, para que el trabajador se quede con más. Es una decisión de negocio pendiente.
+Si el cliente decide cubrir la comisión, el trabajador recibe el 100% de lo que quiso dar. En ese caso la tasa se calcula sobre el total cobrado (propina + comisión), así que el monto a cobrar es `(propina + 1.30) ÷ (1 − 0.033)` para que el trabajador reciba exactamente la propina.
+
+**Lo que falta saber** es cuánto de esa tasa nos toca a nosotros. Si Cheqpay se queda con casi todo en las propinas chicas, el margen de TIP-IT en una propina de $20 sería de centavos; conviene pedirles el desglose antes de fijar precios y revisar si el modelo se sostiene con el volumen esperado.
+
+Cambios que implica en el código cuando se integre: `PLATFORM_FEE_PERCENT` pasa a 3.3 y `PLATFORM_FEE_FIXED_CENTS` a 130, y el texto de "6% + $4" en las preguntas frecuentes, los términos y la landing se cambia a la nueva tasa.
 
 ## 8. Plan de trabajo
 
