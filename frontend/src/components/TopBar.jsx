@@ -62,6 +62,7 @@ export default function TopBar() {
         ? 'border-punch-ink bg-punch-yellow text-punch-ink shadow-[2px_2px_0_0_#0A2F2F]'
         : 'border-transparent text-punch-ink/80 hover:border-punch-ink/30 hover:text-punch-ink'
     }`;
+  const payingTip = pathname.startsWith('/tip/');
   const mobileItem =
     'rounded-2xl px-4 py-3 font-display text-lg font-extrabold hover:bg-punch-yellow';
 
@@ -73,8 +74,8 @@ export default function TopBar() {
           <span className="font-display text-xl font-extrabold tracking-tight md:text-2xl">TIP-IT</span>
         </Link>
 
-        {/* Desktop options */}
-        <nav className="hidden items-center gap-1 md:flex" aria-label="Principal">
+        {/* Desktop options (not while paying a tip: keep it simple) */}
+        <nav className={`hidden items-center gap-1 ${payingTip ? '' : 'md:flex'}`} aria-label="Principal">
           {user ? (
             <>
               {links.map(({ to, label, icon: Icon }) => (
@@ -122,7 +123,7 @@ export default function TopBar() {
           )}
         </nav>
 
-        <div className="flex items-center gap-2 md:gap-3">
+        <div className={`flex items-center gap-2 md:gap-3 ${payingTip ? 'hidden' : ''}`}>
           {user ? (
             <Link to="/profile" aria-label="Mi perfil" className="flex items-center gap-2">
               <Avatar src={user.avatarUrl} name={user.name} size={36} />

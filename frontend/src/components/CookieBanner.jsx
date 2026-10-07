@@ -17,7 +17,9 @@ export default function CookieBanner() {
     if (choice === 'granted') loadAnalytics();
   }, [choice]);
 
-  if (choice) return null;
+  // Someone paying a tip is focused on that: no banner there (and no analytics
+  // unless they already accepted earlier).
+  if (choice || pathname.startsWith('/tip/')) return null;
 
   const decide = (value) => {
     setConsent(value);
