@@ -144,11 +144,11 @@ export default function RegisterForm({ defaultRole = 'client' }) {
 
         <p className="text-center text-xs text-slate-500">
           Al crear tu cuenta aceptas los{' '}
-          <Link to="/terminos" className="text-brand-400" target="_blank">
+          <Link to="/terminos" className="text-brand-400 underline underline-offset-2" target="_blank">
             Términos
           </Link>{' '}
           y el{' '}
-          <Link to="/privacidad" className="text-brand-400" target="_blank">
+          <Link to="/privacidad" className="text-brand-400 underline underline-offset-2" target="_blank">
             Aviso de privacidad
           </Link>
           .

@@ -11,7 +11,14 @@ import Avatar from '../../components/Avatar.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { trackEvent } from '../../utils/analytics.js';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
+// Stripe's script is only fetched when the payment step actually renders, not
+// the moment someone scans a QR: the first screen opens faster and without
+// third-party requests.
+let stripePromise;
+const getStripe = () => {
+  if (!stripePromise) stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
+  return stripePromise;
+};
 const QUICK_AMOUNTS = [20, 50, 100, 200];
 const PERCENT_PRESETS = [10, 15, 20];
 
@@ -470,11 +477,11 @@ export default function SendTip() {
           </button>
           <p className="text-center text-xs text-slate-500">
             Al continuar aceptas los{' '}
-            <Link to="/terminos" className="text-brand-400" target="_blank">
+            <Link to="/terminos" className="text-brand-400 underline underline-offset-2" target="_blank">
               Términos
             </Link>{' '}
             y el{' '}
-            <Link to="/privacidad" className="text-brand-400" target="_blank">
+            <Link to="/privacidad" className="text-brand-400 underline underline-offset-2" target="_blank">
               Aviso de privacidad
             </Link>
             .
@@ -483,7 +490,7 @@ export default function SendTip() {
       )}
 
       {step === 'payment' && clientSecret && (
-        <Elements stripe={stripePromise} options={{ clientSecret }}>
+        <Elements stripe={getStripe()} options={{ clientSecret }}>
           <PaymentStep
             worker={worker}
             chargeAmount={chargeAmount}
