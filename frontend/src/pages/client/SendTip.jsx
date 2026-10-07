@@ -235,7 +235,7 @@ export default function SendTip() {
       <div className="page-shell items-center text-center">
         <h1 className="mt-10 text-xl font-bold">@{worker.username}</h1>
         <p className="mt-4 text-slate-400">
-          Este trabajador todavía no puede recibir pagos. Inténtalo más tarde.
+          Este Tip-er todavía no puede recibir pagos. Inténtalo más tarde.
         </p>
         <Link to="/scan" className="btn-secondary mt-8">
           Volver
@@ -442,7 +442,7 @@ export default function SendTip() {
               </label>
               <div className="space-y-1 border-t border-slate-800 pt-3 text-sm">
                 <div className="flex justify-between text-slate-400">
-                  <span>Trabajador recibe</span>
+                  <span>Tip-er recibe</span>
                   <span className="font-semibold text-slate-100">
                     ${previewWorkerReceives.toFixed(2)}
                   </span>

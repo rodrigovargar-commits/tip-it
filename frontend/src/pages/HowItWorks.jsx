@@ -6,7 +6,7 @@ const forClients = [
   {
     icon: QrCode,
     title: 'Escanea o busca',
-    desc: 'Apunta la cámara al QR del trabajador, o busca su username. No hace falta descargar nada.',
+    desc: 'Apunta la cámara al QR del Tip-er, o busca su username. No hace falta descargar nada.',
   },
   {
     icon: Calculator,
@@ -21,7 +21,7 @@ const forClients = [
   {
     icon: Star,
     title: 'Califica (opcional)',
-    desc: 'Deja estrellas y una reseña — ayuda al trabajador a construir su reputación.',
+    desc: 'Deja estrellas y una reseña — ayuda al Tip-er a construir su reputación.',
   },
 ];
 
@@ -52,7 +52,7 @@ const faqs = [
   ['¿Necesito crear una cuenta para pagar?', 'No. Basta con tu nombre y teléfono la primera vez — no pedimos contraseña. Si vuelves a pagar desde el mismo teléfono, te reconocemos automáticamente.'],
   ['¿TIP-IT guarda mi tarjeta?', 'Nunca. El pago lo procesa Stripe directamente — TIP-IT no ve ni almacena números de tarjeta.'],
   ['¿Cuánto cobra TIP-IT?', 'Una comisión pequeña por transacción, siempre visible antes de pagar. Quien envía el pago puede elegir cubrirla para que el trabajador reciba el 100%.'],
-  ['¿Cómo recibo mi dinero si soy trabajador?', 'Se transfiere directo a tu cuenta bancaria a través de Stripe Connect — TIP-IT no retiene el dinero en ningún momento.'],
+  ['¿Cómo recibo mi dinero si soy Tip-er?', 'Se transfiere directo a tu cuenta bancaria a través de Stripe Connect — TIP-IT no retiene el dinero en ningún momento.'],
   ['¿Qué pasa si quiero recibir pagos más adelante?', 'Solo necesitas poner una contraseña para proteger tu cuenta y conectar tu banco — lo puedes hacer cuando quieras desde tu perfil.'],
 ];
 

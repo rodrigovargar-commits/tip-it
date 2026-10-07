@@ -27,7 +27,7 @@ export default function WorkerSetup() {
     try {
       await api.post('/workers/register', form);
       await refreshMe();
-      toast.success('¡Tu perfil de trabajador está listo!');
+      toast.success('¡Tu perfil de Tip-er está listo!');
       navigate('/worker/onboarding');
     } catch (err) {
       toast.error(getErrorMessage(err));

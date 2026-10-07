@@ -28,10 +28,10 @@ const createIntent = asyncHandler(async (req, res) => {
 
   const worker = await Worker.findOne({ username: String(username).toLowerCase() });
   if (!worker) {
-    throw new AppError('Trabajador no encontrado', 404);
+    throw new AppError('No encontramos a ese Tip-er', 404);
   }
   if (!worker.stripeAccountId || !worker.stripeOnboardingComplete) {
-    throw new AppError('Este trabajador aún no puede recibir propinas', 400);
+    throw new AppError('Este Tip-er todavía no puede recibir pagos. Inténtalo más tarde.', 400);
   }
   if (req.user && String(worker.user) === String(req.user._id)) {
     throw new AppError('No puedes enviarte propina a ti mismo', 400);

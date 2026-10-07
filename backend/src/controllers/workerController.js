@@ -6,6 +6,7 @@ const Transaction = require('../models/Transaction');
 const stripe = require('../config/stripe');
 const { generateWorkerQR } = require('../utils/generateQR');
 const { workerTipUrl } = require('../utils/publicUrl');
+const refreshStripeReadiness = require('../utils/refreshStripeReadiness');
 const { logSecurityEvent } = require('../utils/logger');
 
 // Explicit output DTO — never hand back the raw Mongo document. It carries
@@ -76,8 +77,10 @@ const getByUsername = asyncHandler(async (req, res) => {
   );
 
   if (!worker) {
-    throw new AppError('Trabajador no encontrado', 404);
+    throw new AppError('No encontramos a ese Tip-er', 404);
   }
+
+  await refreshStripeReadiness(worker);
 
   const reviews = await Transaction.find({
     worker: worker._id,
