@@ -7,6 +7,7 @@ const Lead = require('../models/Lead');
 const { sendLeadEmail } = require('../utils/notifyLead');
 const ensureWorkerQRs = require('../utils/ensureWorkerQRs');
 const { publicBaseUrl } = require('../utils/publicUrl');
+const stripe = require('../config/stripe');
 
 const getStats = asyncHandler(async (req, res) => {
   const [
@@ -154,6 +155,43 @@ const regenerateQrs = asyncHandler(async (req, res) => {
   res.json({ success: true, publicUrl: publicBaseUrl(), ...result });
 });
 
+// What the app and Stripe each think about one person's ability to get tips.
+// /api/admin/worker-status?username=rovargas&key=...   (no account ids or secrets in the answer)
+const workerStatus = asyncHandler(async (req, res) => {
+  const username = String(req.query.username || '').toLowerCase();
+  const worker = await Worker.findOne({ username });
+  if (!worker) throw new AppError('No existe ese username', 404);
+
+  const key = process.env.STRIPE_SECRET_KEY || '';
+  const out = {
+    success: true,
+    username,
+    serverStripeMode: key.startsWith('sk_live') ? 'live' : key.startsWith('sk_test') ? 'test' : 'no configurada',
+    appSaysReady: Boolean(worker.stripeOnboardingComplete),
+    hasStripeAccount: Boolean(worker.stripeAccountId),
+    tipCount: worker.tipCount,
+  };
+
+  if (worker.stripeAccountId) {
+    try {
+      const a = await stripe.accounts.retrieve(worker.stripeAccountId);
+      out.stripe = {
+        details_submitted: a.details_submitted,
+        charges_enabled: a.charges_enabled,
+        payouts_enabled: a.payouts_enabled,
+        disabled_reason: a.requirements?.disabled_reason || null,
+        requirements_due: a.requirements?.currently_due || [],
+        pending_verification: a.requirements?.pending_verification || [],
+      };
+      out.stripeSaysReady = Boolean(a.details_submitted && a.charges_enabled);
+    } catch (err) {
+      out.stripeError = err.message;
+    }
+  }
+  res.json(out);
+});
+
 module.exports = {
+  workerStatus,
   regenerateQrs,
   testEmail, getStats, getLeads, updateLead };
