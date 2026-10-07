@@ -1,6 +1,6 @@
 const express = require('express');
 const requireAdminKey = require('../middleware/adminKey');
-const { getStats, getLeads, updateLead, testEmail } = require('../controllers/adminController');
+const { getStats, getLeads, updateLead, testEmail, regenerateQrs } = require('../controllers/adminController');
 
 const router = express.Router();
 
@@ -10,5 +10,6 @@ router.get('/stats', getStats);
 router.get('/leads', getLeads);
 router.patch('/leads/:id', updateLead);
 router.get('/test-email', testEmail);
+router.get('/regenerate-qrs', regenerateQrs);
 
 module.exports = router;

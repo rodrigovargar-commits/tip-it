@@ -5,6 +5,7 @@ const User = require('../models/User');
 const Transaction = require('../models/Transaction');
 const stripe = require('../config/stripe');
 const { generateWorkerQR } = require('../utils/generateQR');
+const { workerTipUrl } = require('../utils/publicUrl');
 const { logSecurityEvent } = require('../utils/logger');
 
 // Explicit output DTO — never hand back the raw Mongo document. It carries
@@ -50,6 +51,7 @@ const registerWorker = asyncHandler(async (req, res) => {
     username: username.toLowerCase(),
     bio: bio || '',
     qrCode,
+    qrUrl: workerTipUrl(username),
   });
 
   req.user.isWorker = true;

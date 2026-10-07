@@ -34,6 +34,11 @@ const workerSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    qrUrl: {
+      // The exact address encoded in qrCode, so a stale QR can be detected and rebuilt
+      type: String,
+      default: null,
+    },
     stripeAccountId: {
       type: String,
       default: null,

@@ -5,6 +5,8 @@ const Worker = require('../models/Worker');
 const Transaction = require('../models/Transaction');
 const Lead = require('../models/Lead');
 const { sendLeadEmail } = require('../utils/notifyLead');
+const ensureWorkerQRs = require('../utils/ensureWorkerQRs');
+const { publicBaseUrl } = require('../utils/publicUrl');
 
 const getStats = asyncHandler(async (req, res) => {
   const [
@@ -145,5 +147,13 @@ const testEmail = asyncHandler(async (req, res) => {
   });
 });
 
+// Rebuilds every worker's QR from the current public address.
+// /api/admin/regenerate-qrs?key=...  (add &force=1 to rebuild even the ones that look right)
+const regenerateQrs = asyncHandler(async (req, res) => {
+  const result = await ensureWorkerQRs({ force: req.query.force === '1' });
+  res.json({ success: true, publicUrl: publicBaseUrl(), ...result });
+});
+
 module.exports = {
+  regenerateQrs,
   testEmail, getStats, getLeads, updateLead };

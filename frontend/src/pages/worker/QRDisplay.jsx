@@ -198,6 +198,14 @@ export default function QRDisplay() {
       </div>
 
       <p className="mt-6 break-all text-sm text-slate-500">{tipUrl}</p>
+      <a
+        href={tipUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-2 text-sm font-extrabold underline underline-offset-2"
+      >
+        Probar cómo lo ve tu cliente
+      </a>
 
       <div className="mt-8 grid w-full grid-cols-2 gap-3">
         <button onClick={handleDownload} className="btn-secondary">

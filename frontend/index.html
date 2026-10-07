@@ -19,8 +19,33 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="64x64" href="/icons/favicon-64.png" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <!-- Start talking to the API server right away (it can be asleep): -->
+    <link rel="preconnect" href="%VITE_API_URL%" crossorigin />
     <link rel="preload" href="/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <script>
+      // Someone scanned a QR (/tip/:username): ask the API for that worker NOW,
+      // in parallel with downloading the app, instead of after it boots.
+      (function () {
+        try {
+          var api = '%VITE_API_URL%';
+          var m = location.pathname.match(/^\/tip\/([^\/?#]+)/);
+          if (!m || !api || api.indexOf('%') !== -1) return;
+          var u = decodeURIComponent(m[1]).toLowerCase();
+          window.__tipPrefetch = {
+            username: u,
+            p: fetch(api + '/workers/' + encodeURIComponent(u), { headers: { Accept: 'application/json' } }).then(
+              function (r) {
+                return r.json().then(function (j) {
+                  return { ok: r.ok, data: j };
+                });
+              }
+            ),
+          };
+          window.__tipPrefetch.p.catch(function () {});
+        } catch (e) {}
+      })();
+    </script>
     <title>TIP-IT — Propinas digitales por QR, sin efectivo</title>
 
     <!-- Analytics (GA4) is loaded only after the visitor accepts cookies: see src/utils/consent.js -->

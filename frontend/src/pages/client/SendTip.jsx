@@ -102,6 +102,21 @@ export default function SendTip() {
   useEffect(() => {
     (async () => {
       try {
+        // The page's own <script> in index.html already started this request
+        // when the QR was opened; reuse it so we don't wait twice.
+        const pre = window.__tipPrefetch;
+        if (pre && pre.username === String(username).toLowerCase()) {
+          window.__tipPrefetch = null;
+          try {
+            const r = await pre.p;
+            if (r.ok && r.data?.worker) {
+              setWorker(r.data.worker);
+              return;
+            }
+          } catch {
+            // fall through to the normal request below
+          }
+        }
         const { data } = await api.get(`/workers/${username}`);
         setWorker(data.worker);
       } catch (err) {
@@ -190,9 +205,25 @@ export default function SendTip() {
   };
 
   if (loading) {
+    // A skeleton of the page, so something friendly shows instantly even if the
+    // server is still waking up.
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Spinner />
+      <div className="page-shell md:!max-w-5xl" aria-busy="true" aria-label="Cargando perfil">
+        <div className="mt-6 flex items-center gap-3">
+          <div className="h-14 w-14 animate-pulse rounded-full border-2 border-punch-ink/20 bg-punch-pink/60" />
+          <div className="flex-1 space-y-2">
+            <div className="h-4 w-40 animate-pulse rounded-full bg-punch-ink/10" />
+            <div className="h-3 w-24 animate-pulse rounded-full bg-punch-ink/10" />
+          </div>
+        </div>
+        <div className="mt-8 h-14 animate-pulse rounded-2xl bg-punch-ink/10" />
+        <div className="mt-4 grid grid-cols-4 gap-2">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="h-10 animate-pulse rounded-full bg-punch-ink/10" />
+          ))}
+        </div>
+        <div className="mt-6 h-12 animate-pulse rounded-full bg-punch-orange/40" />
+        <p className="mt-6 text-center text-sm font-medium text-slate-400">Abriendo el perfil…</p>
       </div>
     );
   }
