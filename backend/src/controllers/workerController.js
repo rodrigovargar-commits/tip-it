@@ -31,7 +31,7 @@ const registerWorker = asyncHandler(async (req, res) => {
   const { username, bio } = req.body;
 
   if (req.user.isWorker) {
-    throw new AppError('Ya tienes una cuenta de trabajador', 409);
+    throw new AppError('Ya tienes una cuenta para recibir propinas', 409);
   }
   if (req.user.isGuest) {
     throw new AppError(
@@ -131,11 +131,11 @@ const getStats = asyncHandler(async (req, res) => {
       target: `worker:${req.params.id}`,
       reason: 'owner_mismatch',
     });
-    throw new AppError('Trabajador no encontrado', 404);
+    throw new AppError('Persona no encontrada', 404);
   }
   const worker = await Worker.findById(req.params.id);
   if (!worker) {
-    throw new AppError('Trabajador no encontrado', 404);
+    throw new AppError('Persona no encontrada', 404);
   }
 
   res.json({
@@ -152,7 +152,7 @@ const getStats = asyncHandler(async (req, res) => {
 
 const updateWorkerProfile = asyncHandler(async (req, res) => {
   const worker = await Worker.findById(req.user.worker);
-  if (!worker) throw new AppError('Perfil de trabajador no encontrado', 404);
+  if (!worker) throw new AppError('Perfil no encontrado', 404);
 
   if (req.body.bio !== undefined) worker.bio = req.body.bio;
   if (req.body.experience !== undefined) worker.experience = req.body.experience;
@@ -172,7 +172,7 @@ async function createFreshStripeAccount(worker, email) {
     // description up front satisfies that requirement instead, so Stripe
     // skips asking for a URL at all.
     business_profile: {
-      product_description: 'Recibe propinas digitales como trabajador independiente en TIP-IT',
+      product_description: 'Recibe propinas digitales como persona independiente en TIP-IT',
     },
     capabilities: {
       transfers: { requested: true },
@@ -219,7 +219,7 @@ async function ensureDailyPayoutSchedule(account) {
 
 const createStripeOnboardingLink = asyncHandler(async (req, res) => {
   const worker = await Worker.findById(req.user.worker);
-  if (!worker) throw new AppError('Perfil de trabajador no encontrado', 404);
+  if (!worker) throw new AppError('Perfil no encontrado', 404);
 
   if (!worker.stripeAccountId) {
     await createFreshStripeAccount(worker, req.user.email);
@@ -252,7 +252,7 @@ const createStripeOnboardingLink = asyncHandler(async (req, res) => {
 
 const getStripeAccountStatus = asyncHandler(async (req, res) => {
   const worker = await Worker.findById(req.user.worker);
-  if (!worker) throw new AppError('Perfil de trabajador no encontrado', 404);
+  if (!worker) throw new AppError('Perfil no encontrado', 404);
 
   if (!worker.stripeAccountId) {
     return res.json({ success: true, connected: false, onboardingComplete: false });
@@ -290,7 +290,7 @@ const getStripeAccountStatus = asyncHandler(async (req, res) => {
 
 const getConnectedBalance = asyncHandler(async (req, res) => {
   const worker = await Worker.findById(req.user.worker);
-  if (!worker) throw new AppError('Perfil de trabajador no encontrado', 404);
+  if (!worker) throw new AppError('Perfil no encontrado', 404);
 
   if (!worker.stripeAccountId) {
     return res.json({
@@ -348,7 +348,7 @@ const getConnectedBalance = asyncHandler(async (req, res) => {
 
 const createInstantPayout = asyncHandler(async (req, res) => {
   const worker = await Worker.findById(req.user.worker);
-  if (!worker) throw new AppError('Perfil de trabajador no encontrado', 404);
+  if (!worker) throw new AppError('Perfil no encontrado', 404);
   if (!worker.stripeAccountId) {
     throw new AppError('No tienes una cuenta de Stripe conectada', 400);
   }

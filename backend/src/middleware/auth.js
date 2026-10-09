@@ -44,7 +44,7 @@ const requireWorker = asyncHandler(async (req, res, next) => {
       target: `route:${req.originalUrl}`,
       reason: 'not_a_worker',
     });
-    throw new AppError('Esta acción requiere una cuenta de trabajador', 403);
+    throw new AppError('Esta acción requiere una cuenta para recibir propinas', 403);
   }
   next();
 });

@@ -11,7 +11,7 @@ const forClients = [
   {
     icon: Calculator,
     title: 'Elige el monto',
-    desc: 'Monto fijo o % de la cuenta — tú decides. No pedimos nombre ni ningún dato.',
+    desc: 'Elige cuánto quieres dar, tú decides. No pedimos nombre ni ningún dato.',
   },
   {
     icon: ShieldCheck,
@@ -51,7 +51,7 @@ const forWorkers = [
 const faqs = [
   ['¿Necesito crear una cuenta para pagar?', 'No. Basta con tu nombre y teléfono la primera vez — no pedimos contraseña. Si vuelves a pagar desde el mismo teléfono, te reconocemos automáticamente.'],
   ['¿TIP-IT guarda mi tarjeta?', 'Nunca. El pago lo procesa Stripe directamente — TIP-IT no ve ni almacena números de tarjeta.'],
-  ['¿Cuánto cobra TIP-IT?', 'Una comisión pequeña por transacción, siempre visible antes de pagar. Quien envía el pago puede elegir cubrirla para que el trabajador reciba el 100%.'],
+  ['¿Cuánto cobra TIP-IT?', 'Una comisión pequeña por transacción, siempre visible antes de pagar. Quien envía el pago puede elegir cubrirla para que la persona reciba el 100%.'],
   ['¿Cómo recibo mi dinero si soy Tip-er?', 'Se transfiere directo a tu cuenta bancaria a través de Stripe Connect — TIP-IT no retiene el dinero en ningún momento.'],
   ['¿Qué pasa si quiero recibir pagos más adelante?', 'Solo necesitas poner una contraseña para proteger tu cuenta y conectar tu banco — lo puedes hacer cuando quieras desde tu perfil.'],
 ];

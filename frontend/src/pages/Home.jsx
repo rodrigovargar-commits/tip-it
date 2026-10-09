@@ -44,7 +44,7 @@ const STEPS = [
 
 const CLIENT_STEPS = [
   { icon: ScanLine, title: 'Escanea o busca', body: 'Apunta la cámara al QR o busca el username. No hace falta descargar nada.' },
-  { icon: Calculator, title: 'Elige el monto', body: 'Monto fijo o % de la cuenta, tú decides. No pedimos nombre ni ningún dato.' },
+  { icon: Calculator, title: 'Elige el monto', body: 'Elige cuánto quieres dar, tú decides. No pedimos nombre ni ningún dato.' },
   { icon: ShieldCheck, title: 'Paga seguro', body: 'Con tarjeta o Apple Pay. TIP-IT nunca ve ni guarda tu tarjeta.' },
   { icon: Star, title: 'Califica (opcional)', body: 'Deja estrellas y una reseña: le ayudas a construir su reputación.' },
 ];
@@ -73,7 +73,7 @@ const FEATURES = [
 
 const FAQ = [
   { q: '¿Necesito crear una cuenta para pagar?', a: 'No. Escaneas, eliges el monto y pagas. No pedimos nombre ni ningún dato.' },
-  { q: '¿Cuánto cobra TIP-IT?', a: 'Una comisión pequeña por transacción (6% + $4), siempre visible antes de pagar. Quien envía el pago puede elegir cubrirla para que el trabajador reciba el 100%.' },
+  { q: '¿Cuánto cobra TIP-IT?', a: 'Una comisión pequeña por transacción (6% + $4), siempre visible antes de pagar. Quien envía el pago puede elegir cubrirla para que la persona reciba el 100%.' },
   { q: '¿Cómo recibo mi dinero?', a: 'Se transfiere directo a tu cuenta bancaria. TIP-IT no retiene el dinero en ningún momento. Tus primeros pagos pueden tardar unos días en liberarse; es normal en toda cuenta nueva.' },
   { q: '¿Dónde encuentro mi QR?', a: 'En tu cuenta, en “Mi código QR”. Lo descargas listo para imprimir o lo compartes por WhatsApp.' },
   { q: '¿TIP-IT guarda mi tarjeta?', a: 'Nunca. El pago lo procesa Stripe directamente: TIP-IT no ve ni almacena números de tarjeta.' },

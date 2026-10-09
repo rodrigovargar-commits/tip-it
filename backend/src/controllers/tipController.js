@@ -127,7 +127,7 @@ const getHistory = asyncHandler(async (req, res) => {
   let filter = { status: 'succeeded' };
   if (role === 'worker') {
     if (!req.user.isWorker || !req.user.worker) {
-      throw new AppError('No tienes una cuenta de trabajador', 403);
+      throw new AppError('No tienes una cuenta para recibir propinas', 403);
     }
     filter.worker = req.user.worker;
   } else {

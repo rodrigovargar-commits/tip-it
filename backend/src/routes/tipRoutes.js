@@ -14,7 +14,7 @@ router.post(
   optionalAuth,
   tipLimiter,
   [
-    body('username').trim().notEmpty().withMessage('El username del trabajador es obligatorio'),
+    body('username').trim().notEmpty().withMessage('El username es obligatorio'),
     body('amount').isFloat({ min: 1 }).withMessage('El monto mínimo es 1.00'),
     body('comment').optional().isLength({ max: 500 }),
     body('coverFee').optional().isBoolean(),

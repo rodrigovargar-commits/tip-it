@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { ArrowLeft, UserPlus, PartyPopper, Star, Calculator, Wallet, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, UserPlus, PartyPopper, Star, ShieldCheck } from 'lucide-react';
 import api, { getErrorMessage } from '../../services/api.js';
 import Spinner from '../../components/Spinner.jsx';
 import StarRating from '../../components/StarRating.jsx';
@@ -20,7 +20,6 @@ const getStripe = () => {
   return stripePromise;
 };
 const QUICK_AMOUNTS = [20, 50, 100, 200];
-const PERCENT_PRESETS = [10, 15, 20];
 
 function PaymentStep({ worker, chargeAmount, netAmount, onSuccess, user }) {
   const stripe = useStripe();
@@ -88,11 +87,7 @@ export default function SendTip() {
   const [worker, setWorker] = useState(null);
   const [loading, setLoading] = useState(true);
   const [step, setStep] = useState('amount'); // amount -> payment -> rating -> done
-  const [mode, setMode] = useState('fixed'); // fixed | percent
   const [amount, setAmount] = useState('');
-  const [billTotal, setBillTotal] = useState('');
-  const [percent, setPercent] = useState(15);
-  const [customPercent, setCustomPercent] = useState('');
   const [comment, setComment] = useState('');
   const [coverFee, setCoverFee] = useState(false);
   const [feeInfo, setFeeInfo] = useState({ feePercent: 6, feeFixedCents: 400 });
@@ -142,10 +137,7 @@ export default function SendTip() {
       .catch(() => {});
   }, []);
 
-  const effectivePercent = customPercent ? Number(customPercent) : percent;
-  const computedTip =
-    mode === 'percent' && billTotal ? (Number(billTotal) * effectivePercent) / 100 : 0;
-  const finalAmount = mode === 'percent' ? computedTip : Number(amount) || 0;
+  const finalAmount = Number(amount) || 0;
 
   const feeAmount =
     finalAmount > 0
@@ -294,143 +286,44 @@ export default function SendTip() {
           <p className="mt-1 text-sm text-slate-300">{worker.experience}</p>
         </div>
       )}
-      {worker.reviews?.length > 0 && (
-        <div className="mt-3 space-y-2">
-          {worker.reviews.slice(0, 2).map((r, i) => (
-            <div key={i} className="rounded-2xl border-2 border-punch-ink/30 bg-white/40 p-3">
-              <div className="flex items-center gap-1 text-amber-700">
-                {Array.from({ length: r.rating || 0 }).map((_, s) => (
-                  <Star key={s} size={12} fill="#fbbf24" stroke="#fbbf24" />
-                ))}
-                <span className="ml-1 text-xs text-slate-500">{r.clientName}</span>
-              </div>
-              {r.review && <p className="mt-1 text-sm italic text-slate-400">“{r.review}”</p>}
-            </div>
-          ))}
-        </div>
-      )}
 
         </div>
         <div>
       {step === 'amount' && (
         <form onSubmit={handleContinue} className="mt-8 space-y-4 lg:mt-0">
-          <div className="flex gap-2 rounded-2xl border-2 border-punch-ink/30 bg-white p-1">
-            <button
-              type="button"
-              onClick={() => setMode('fixed')}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-semibold transition ${
-                mode === 'fixed' ? 'bg-brand-600 text-white' : 'text-slate-400'
-              }`}
-            >
-              <Wallet size={14} />
-              Monto fijo
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode('percent')}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-semibold transition ${
-                mode === 'percent' ? 'bg-brand-600 text-white' : 'text-slate-400'
-              }`}
-            >
-              <Calculator size={14} />
-              % de la cuenta
-            </button>
+          <label className="font-display text-lg font-extrabold">¿Cuánto quieres dar?</label>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {QUICK_AMOUNTS.map((val) => (
+              <button
+                type="button"
+                key={val}
+                onClick={() => setAmount(String(val))}
+                aria-pressed={Number(amount) === val}
+                className={`rounded-3xl border-2 py-6 font-display text-3xl font-extrabold transition active:scale-95 ${
+                  Number(amount) === val
+                    ? 'border-punch-ink bg-punch-yellow text-punch-ink shadow-[3px_3px_0_0_#0A2F2F]'
+                    : 'border-punch-ink/30 bg-white hover:border-punch-ink'
+                }`}
+              >
+                ${val}
+              </button>
+            ))}
           </div>
-
-          {mode === 'fixed' ? (
-            <>
-              <label className="text-sm text-slate-400">¿Cuánto quieres dar?</label>
-              <div className="flex items-center rounded-2xl border-2 border-punch-ink/30 bg-white px-4 focus-within:border-punch-ink focus-within:ring-2 focus-within:ring-punch-yellow">
-                <span className="text-2xl text-slate-500">$</span>
-                <input
-                  type="number"
-                  min="1"
-                  step="0.5"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="0.00"
-                  className="w-full bg-transparent px-2 py-3 text-2xl font-bold text-slate-100 outline-none"
-                  required
-                />
-                <span className="text-slate-500">MXN</span>
-              </div>
-
-              <div className="grid grid-cols-4 gap-2">
-                {QUICK_AMOUNTS.map((val) => (
-                  <button
-                    type="button"
-                    key={val}
-                    onClick={() => setAmount(String(val))}
-                    className="rounded-2xl border-2 border-punch-ink/30 bg-white py-2 text-sm font-semibold hover:border-brand-500"
-                  >
-                    ${val}
-                  </button>
-                ))}
-              </div>
-            </>
-          ) : (
-            <>
-              <label className="text-sm text-slate-400">¿De cuánto fue la cuenta?</label>
-              <div className="flex items-center rounded-2xl border-2 border-punch-ink/30 bg-white px-4 focus-within:border-punch-ink focus-within:ring-2 focus-within:ring-punch-yellow">
-                <span className="text-2xl text-slate-500">$</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.5"
-                  value={billTotal}
-                  onChange={(e) => setBillTotal(e.target.value)}
-                  placeholder="0.00"
-                  className="w-full bg-transparent px-2 py-3 text-2xl font-bold text-slate-100 outline-none"
-                  required
-                />
-                <span className="text-slate-500">MXN</span>
-              </div>
-
-              <label className="text-sm text-slate-400">¿Qué porcentaje quieres dejar?</label>
-              <div className="grid grid-cols-3 gap-2">
-                {PERCENT_PRESETS.map((p) => (
-                  <button
-                    type="button"
-                    key={p}
-                    onClick={() => {
-                      setPercent(p);
-                      setCustomPercent('');
-                    }}
-                    className={`rounded-xl border py-2 text-sm font-semibold transition ${
-                      !customPercent && percent === p
-                        ? 'border-brand-500 bg-brand-500/10 text-brand-300'
-                        : 'border-punch-ink/30 bg-white hover:border-punch-ink'
-                    }`}
-                  >
-                    {p}%
-                  </button>
-                ))}
-              </div>
-              <div className="flex items-center rounded-2xl border-2 border-punch-ink/30 bg-white px-4">
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={customPercent}
-                  onChange={(e) => setCustomPercent(e.target.value)}
-                  placeholder="Otro porcentaje"
-                  className="w-full bg-transparent py-3 text-slate-100 outline-none"
-                />
-                <span className="text-slate-500">%</span>
-              </div>
-
-              {billTotal && (
-                <div className="card !bg-brand-500/10 text-center">
-                  <p className="text-xs uppercase tracking-wide text-slate-400">
-                    Vas a dejar ({effectivePercent}% de ${Number(billTotal).toFixed(2)})
-                  </p>
-                  <p className="mt-1 text-3xl font-bold text-brand-300">
-                    ${computedTip.toFixed(2)} MXN
-                  </p>
-                </div>
-              )}
-            </>
-          )}
+          <label className="block text-sm text-slate-400">¿Otro monto?</label>
+          <div className="flex items-center rounded-2xl border-2 border-punch-ink/30 bg-white px-4 focus-within:border-punch-ink focus-within:ring-2 focus-within:ring-punch-yellow">
+            <span className="text-2xl text-slate-500">$</span>
+            <input
+              type="number"
+              min="1"
+              step="0.5"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0.00"
+              className="w-full bg-transparent px-2 py-3 text-2xl font-bold text-slate-100 outline-none"
+              required
+            />
+            <span className="text-slate-500">MXN</span>
+          </div>
 
           {finalAmount > 0 && (
             <div className="card space-y-3 !bg-slate-900/60">
@@ -542,6 +435,25 @@ export default function SendTip() {
       )}
         </div>
       </div>
+
+      {step === 'amount' && worker.reviews?.length > 0 && (
+        <section className="mt-10 border-t-2 border-punch-ink/15 pt-6 lg:mx-auto lg:max-w-3xl">
+          <h2 className="font-display text-lg font-extrabold">Lo que dicen de esta persona</h2>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            {worker.reviews.slice(0, 4).map((r, i) => (
+              <div key={i} className="rounded-2xl border-2 border-punch-ink/30 bg-white/40 p-3">
+                <div className="flex items-center gap-1 text-amber-700">
+                  {Array.from({ length: r.rating || 0 }).map((_, st) => (
+                    <Star key={st} size={12} fill="#fbbf24" stroke="#fbbf24" />
+                  ))}
+                  <span className="ml-1 text-xs text-slate-500">{r.clientName}</span>
+                </div>
+                {r.review && <p className="mt-1 text-sm italic text-slate-400">“{r.review}”</p>}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
