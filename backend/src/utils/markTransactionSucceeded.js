@@ -7,6 +7,22 @@ const { logSecurityEvent } = require('./logger');
 // own confirm() call arrive within milliseconds of each other. The
 // status-check happens inside the update filter itself, so only one caller
 // can ever win the transition — the other gets `null` back and does nothing.
+// Adds a succeeded transaction's rating to the worker's average, exactly once.
+// The rating can arrive before or after the payment is confirmed (the review
+// step comes after paying), so both paths call this and the flag decides.
+async function countRating(transactionId) {
+  const counted = await Transaction.findOneAndUpdate(
+    { _id: transactionId, status: 'succeeded', rating: { $ne: null }, ratingCounted: false },
+    { ratingCounted: true },
+    { new: true }
+  );
+  if (!counted) return null;
+  await Worker.findByIdAndUpdate(counted.worker, {
+    $inc: { ratingSum: counted.rating, ratingCount: 1 },
+  });
+  return counted;
+}
+
 async function markTransactionSucceeded(transactionId) {
   const updated = await Transaction.findOneAndUpdate(
     { _id: transactionId, status: { $ne: 'succeeded' } },
@@ -15,12 +31,10 @@ async function markTransactionSucceeded(transactionId) {
   );
   if (!updated) return null;
 
-  const update = { $inc: { totalReceived: updated.netAmount, tipCount: 1 } };
-  if (updated.rating) {
-    update.$inc.ratingSum = updated.rating;
-    update.$inc.ratingCount = 1;
-  }
-  await Worker.findByIdAndUpdate(updated.worker, update);
+  await Worker.findByIdAndUpdate(updated.worker, {
+    $inc: { totalReceived: updated.netAmount, tipCount: 1 },
+  });
+  await countRating(updated._id);
 
   // Never the amount or any party's identity in the log line itself — just
   // that a payment succeeded and which transaction/worker it was, so this
@@ -37,3 +51,4 @@ async function markTransactionSucceeded(transactionId) {
 }
 
 module.exports = markTransactionSucceeded;
+module.exports.countRating = countRating;

@@ -66,6 +66,16 @@ const transactionSchema = new mongoose.Schema(
       maxlength: 500,
       default: '',
     },
+    ratingCounted: {
+      // True once this transaction's rating has been added to the worker's average
+      type: Boolean,
+      default: false,
+    },
+    thanked: {
+      // The payer pressed "Enviar agradecimiento" without stars or words
+      type: Boolean,
+      default: false,
+    },
     reviewAlias: {
       // Optional nickname shown instead of "Anónimo" next to the review
       type: String,

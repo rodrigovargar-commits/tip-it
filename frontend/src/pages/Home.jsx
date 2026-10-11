@@ -21,7 +21,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { trackEvent } from '../utils/analytics.js';
 import Logo from '../components/Logo.jsx';
 import Person from '../components/Person.jsx';
-import RegisterForm from '../components/RegisterForm.jsx';
+import SignupSwitch from '../components/SignupSwitch.jsx';
 import LeadForm from '../components/LeadForm.jsx';
 
 // TIP-IT's public site AND front door of the app, all in one: marketing on
@@ -767,7 +767,7 @@ export default function Home() {
                         Gratis. Sin terminal. Sin compromiso.
                       </p>
                       <div className="mt-5">
-                        <RegisterForm defaultRole="worker" />
+                        <SignupSwitch defaultRole="worker" />
                       </div>
                       <p className="mt-5 text-center text-sm font-medium">
                         ¿Ya tienes cuenta?{' '}

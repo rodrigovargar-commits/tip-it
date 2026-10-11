@@ -4,8 +4,10 @@ const stripe = require('../config/stripe');
 const Worker = require('../models/Worker');
 const Transaction = require('../models/Transaction');
 const markTransactionSucceeded = require('../utils/markTransactionSucceeded');
+const { countRating } = markTransactionSucceeded;
 
 const FEE_PERCENT = Number(process.env.PLATFORM_FEE_PERCENT || 8);
+const MAX_TIP_CENTS = 500000; // $5,000.00
 const FEE_FIXED_CENTS = Math.round(Number(process.env.PLATFORM_FEE_FIXED_CENTS || 300));
 
 // Fee is charged on the tip amount the client intends to give, not on the
@@ -42,6 +44,10 @@ const createIntent = asyncHandler(async (req, res) => {
     throw new AppError('El monto mínimo es de 1.00', 400);
   }
 
+  if (tipCents > MAX_TIP_CENTS) {
+    throw new AppError('El importe máximo es de 5,000.00', 400);
+  }
+
   const platformFeeCents = calculateFee(tipCents);
 
   // Sin "cubrir comisión": el trabajador recibe la propina menos la comisión.
@@ -50,12 +56,24 @@ const createIntent = asyncHandler(async (req, res) => {
   const amountCents = coverFee ? tipCents + platformFeeCents : tipCents;
   const netAmountCents = amountCents - platformFeeCents;
 
+  // If the commission would eat the whole tip, refuse instead of charging
+  // someone for nothing. The person can raise the amount or cover the cost —
+  // the app never switches that on for them.
+  if (netAmountCents <= 0) {
+    throw new AppError(
+      'Con ese importe no alcanza para cubrir el procesamiento. Elige un monto mayor o cubre el costo.',
+      400
+    );
+  }
+
   const paymentIntent = await stripe.paymentIntents.create({
     amount: amountCents,
     currency: 'mxn',
     application_fee_amount: platformFeeCents,
     transfer_data: { destination: worker.stripeAccountId },
-    automatic_payment_methods: { enabled: true },
+    // Cards only (Apple Pay and Google Pay are card wallets). Must match the
+    // payment method types the checkout page asks Stripe Elements for.
+    payment_method_types: ['card'],
     metadata: {
       workerId: String(worker._id),
       clientId: req.user ? String(req.user._id) : 'anonymous',
@@ -85,7 +103,7 @@ const createIntent = asyncHandler(async (req, res) => {
 });
 
 const confirm = asyncHandler(async (req, res) => {
-  const { paymentIntentId, rating, review, alias } = req.body;
+  const { paymentIntentId, rating, review, alias, thanks } = req.body;
 
   const transaction = await Transaction.findOne({ stripePaymentIntentId: paymentIntentId });
   if (!transaction) {
@@ -101,8 +119,10 @@ const confirm = asyncHandler(async (req, res) => {
 
   const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
-  if (rating !== undefined) transaction.rating = rating;
+  // Once a rating has been added to the person's average it is final.
+  if (rating !== undefined && !transaction.ratingCounted) transaction.rating = rating;
   if (review !== undefined) transaction.review = review;
+  if (thanks === true) transaction.thanked = true;
   if (alias !== undefined) transaction.reviewAlias = String(alias).trim().slice(0, 30);
   await transaction.save();
 
@@ -110,6 +130,8 @@ const confirm = asyncHandler(async (req, res) => {
     // Stripe's webhook may be racing to mark this same transaction succeeded
     // right now — the shared helper guarantees only one of them counts it.
     await markTransactionSucceeded(transaction._id);
+    // Already succeeded (e.g. the webhook was first) but the rating only came now.
+    await countRating(transaction._id);
   }
 
   const fresh = await Transaction.findById(transaction._id);

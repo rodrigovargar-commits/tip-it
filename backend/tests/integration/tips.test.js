@@ -91,6 +91,46 @@ describe('POST /api/tips/create-intent — validation and business rules', () =>
     expect(stripe.paymentIntents.create).not.toHaveBeenCalled();
   });
 
+  it('refuses a tip the commission would swallow, unless the payer covers it', async () => {
+    const worker = await createReadyWorker('6');
+    const tooSmall = await request(app)
+      .post('/api/tips/create-intent')
+      .send({ username: worker.username, amount: 3 });
+    expect(tooSmall.status).toBe(400);
+    expect(stripe.paymentIntents.create).not.toHaveBeenCalled();
+
+    // Covering the cost always leaves the full tip for the person.
+    const covered = await request(app)
+      .post('/api/tips/create-intent')
+      .send({ username: worker.username, amount: 3, coverFee: true });
+    expect(covered.status).toBe(201);
+    expect(covered.body.netAmount).toBe(300);
+    expect(covered.body.amount).toBe(300 + covered.body.platformFee);
+  });
+
+  it('never charges the 20 / 50 / 100 presets less than the preview promises', async () => {
+    const worker = await createReadyWorker('7');
+    for (let i = 0; i < 6; i += 1) {
+      stripe.paymentIntents.create.mockResolvedValueOnce({ id: `pi_preset_${i}`, client_secret: `secret_${i}` });
+    }
+    for (const [tip, fee] of [[20, 520], [50, 700], [100, 1000]]) {
+      const off = await request(app).post('/api/tips/create-intent').send({ username: worker.username, amount: tip });
+      expect(off.body.amount).toBe(tip * 100);
+      expect(off.body.netAmount).toBe(tip * 100 - fee);
+      const on = await request(app).post('/api/tips/create-intent').send({ username: worker.username, amount: tip, coverFee: true });
+      expect(on.body.amount).toBe(tip * 100 + fee);
+      expect(on.body.netAmount).toBe(tip * 100);
+    }
+  });
+
+  it('rejects a tip above the maximum', async () => {
+    const worker = await createReadyWorker('8');
+    const res = await request(app).post('/api/tips/create-intent').send({ username: worker.username, amount: 5000.01 });
+    expect(res.status).toBe(400);
+    const edge = await request(app).post('/api/tips/create-intent').send({ username: worker.username, amount: 5000 });
+    expect(edge.status).toBe(201);
+  });
+
   it('a logged-in worker cannot tip themselves', async () => {
     const worker = await createReadyWorker('3');
     const res = await request(app)

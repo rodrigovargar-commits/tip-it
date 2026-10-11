@@ -44,6 +44,7 @@ const PRIVATE_TITLES = [
   ['/contacts', 'Contactos — TIP-IT'],
   ['/scan', 'Escanear un QR — TIP-IT'],
   ['/tip/', 'Dejar propina — TIP-IT'],
+  ['/p/', 'Perfil — TIP-IT'],
 ];
 
 export function metaFor(pathname) {

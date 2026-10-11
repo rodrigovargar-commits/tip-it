@@ -123,6 +123,7 @@ const getByUsername = asyncHandler(async (req, res) => {
       rating: worker.rating,
       ratingCount: worker.ratingCount,
       tipCount: worker.tipCount,
+      thanksCount: await Transaction.countDocuments({ worker: worker._id, status: 'succeeded', thanked: true }),
       name: worker.publicName || worker.user?.name,
       avatarUrl: worker.user?.avatarUrl,
       readyForTips: Boolean(worker.stripeOnboardingComplete),

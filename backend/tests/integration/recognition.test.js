@@ -165,3 +165,32 @@ describe('paid reviews', () => {
     expect((await Transaction.findOne({ stripePaymentIntentId: 'pi_rec_1' })).reviewAlias).toBe('Caro');
   });
 });
+
+describe('a rating that arrives after the payment is confirmed', () => {
+  it('still counts once in the average, and cannot be changed afterwards', async () => {
+    const { user } = await makeWorker();
+    const worker = await Worker.findById(user.worker);
+    await Transaction.create({
+      worker: worker._id, amount: 5000, platformFee: 700, netAmount: 4300, status: 'pending', stripePaymentIntentId: 'pi_rec_1',
+    });
+
+    // 1) payment confirmed with no rating yet (the review step comes after)
+    await request(app).post('/api/tips/confirm').send({ paymentIntentId: 'pi_rec_1' });
+    let w = await Worker.findById(worker._id);
+    expect(w.tipCount).toBe(1);
+    expect(w.ratingCount).toBe(0);
+
+    // 2) the review arrives afterwards
+    await request(app).post('/api/tips/confirm').send({ paymentIntentId: 'pi_rec_1', rating: 4, review: 'Bien' });
+    w = await Worker.findById(worker._id);
+    expect(w.ratingCount).toBe(1);
+    expect(w.ratingSum).toBe(4);
+    expect(w.tipCount).toBe(1); // the tip was not counted twice
+
+    // 3) sending it again, even with another rating, changes nothing
+    await request(app).post('/api/tips/confirm').send({ paymentIntentId: 'pi_rec_1', rating: 1 });
+    w = await Worker.findById(worker._id);
+    expect(w.ratingCount).toBe(1);
+    expect(w.ratingSum).toBe(4);
+  });
+});

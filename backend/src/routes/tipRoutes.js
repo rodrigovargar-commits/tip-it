@@ -31,6 +31,7 @@ router.post(
     body('rating').optional().isInt({ min: 1, max: 5 }),
     body('review').optional().isLength({ max: 200 }).withMessage('La reseña puede tener hasta 200 caracteres'),
     body('alias').optional({ checkFalsy: true }).trim().isLength({ max: 30 }),
+    body('thanks').optional().isBoolean(),
   ],
   validate,
   confirm
