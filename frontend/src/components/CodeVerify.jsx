@@ -69,7 +69,7 @@ export default function CodeVerify({ purpose, channels, onVerified, onPhase, hea
         <IconBadge icon={channel === 'email' ? Mail : MessageCircle} tone="pink" size={64} className="mx-auto" />
         <h1 className="mt-5 text-3xl font-extrabold">Ingresa el código</h1>
         <p className="mt-2 text-sm text-slate-400">
-          Te lo enviamos a <span className="font-bold text-punch-ink">{sentTo}</span>.
+          Te enviamos un código de 6 dígitos a <span className="font-bold text-punch-ink">{sentTo}</span>.
         </p>
 
         <div className="mt-6">
@@ -91,7 +91,7 @@ export default function CodeVerify({ purpose, channels, onVerified, onPhase, hea
         <p className="mt-5 text-sm text-slate-400">
           ¿No te llegó?{' '}
           {wait > 0 ? (
-            <span>Puedes pedir otro en {wait} s</span>
+            <span>Reenviar en {String(Math.floor(wait / 60)).padStart(2, '0')}:{String(wait % 60).padStart(2, '0')}</span>
           ) : (
             <button type="button" onClick={send} disabled={busy} className="font-bold text-brand-400 underline underline-offset-2">
               Reenviar código

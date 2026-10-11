@@ -7,7 +7,8 @@ import {
   HandCoins,
   Heart,
   LifeBuoy,
-  MessageSquareQuote,
+  HeartHandshake,
+  TrendingUp,
   Plus,
   QrCode,
   ScanLine,
@@ -19,7 +20,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { trackEvent } from '../utils/analytics.js';
-import Logo from '../components/Logo.jsx';
+import Logo, { Wordmark } from '../components/Logo.jsx';
 import IconBadge from '../components/IconBadge.jsx';
 import Person from '../components/Person.jsx';
 import SignupSwitch from '../components/SignupSwitch.jsx';
@@ -44,10 +45,10 @@ const STEPS = [
 ];
 
 const CLIENT_STEPS = [
-  { icon: ScanLine, title: 'Escanea o busca', body: 'Apunta la cámara al QR o busca el username. No hace falta descargar nada.' },
-  { icon: Calculator, title: 'Elige el monto', body: 'Elige cuánto quieres dar, tú decides. No pedimos nombre ni ningún dato.' },
-  { icon: ShieldCheck, title: 'Paga seguro', body: 'Con tarjeta o Apple Pay. TIP-IT nunca ve ni guarda tu tarjeta.' },
-  { icon: Star, title: 'Califica (opcional)', body: 'Deja estrellas y una reseña: le ayudas a construir su reputación.' },
+  { icon: ScanLine, title: 'Escanea o busca', body: 'El perfil de la persona, con la cámara o por su usuario. No hace falta descargar nada.' },
+  { icon: HeartHandshake, title: 'Reconoce su servicio', body: 'Y/o deja una propina. Tú decides cuánto; no pedimos tu nombre.' },
+  { icon: ShieldCheck, title: 'Paga de forma segura', body: 'Con Apple Pay, Google Pay o tarjeta. TIP-IT nunca ve ni guarda tu tarjeta.' },
+  { icon: Check, title: '¡Listo!', body: 'Tu pago queda confirmado y, si quieres, dejas tu reseña.' },
 ];
 
 const WHO = [
@@ -66,8 +67,10 @@ const NUMBERS = [
 ];
 
 const FEATURES = [
-  { icon: Star, title: 'Reseñas y estrellas', body: 'Cada servicio bien calificado suma a tu perfil público. Con el tiempo es tu currículum.' },
-  { icon: MessageSquareQuote, title: 'Tu bio, a tu modo', body: 'Cuéntale a la gente a qué te dedicas y para qué juntas tus propinas.' },
+  { icon: Heart, title: 'Reconocimiento', body: 'Deja valoraciones y comentarios cuando alguien te atienda bien.' },
+  { icon: HandCoins, title: 'Recompensas', body: 'Propinas de forma rápida y segura, con tarjeta o con tu celular.' },
+  { icon: Star, title: 'Reputación', body: 'Cada reconocimiento suma a tu perfil público. Con el tiempo es tu currículum.' },
+  { icon: TrendingUp, title: 'Oportunidades', body: 'Tus valoraciones pueden darte más visibilidad y nuevos clientes.' },
   { icon: QrCode, title: 'Un QR que es tuyo', body: 'Descárgalo listo para imprimir, en español e inglés, o mándalo por WhatsApp.' },
   { icon: Wallet, title: 'Tu lana, a tu banco', body: 'Ves tu saldo y tus pagos en un solo panel. TIP-IT no retiene tu dinero.' },
 ];
@@ -237,12 +240,9 @@ function PhoneMock() {
             <p className="mt-1.5 text-xs leading-snug text-punch-ink/80">
               Gracias por tu visita.
             </p>
-            <div className="mt-1.5 flex items-center gap-1 text-punch-orange">
-              {[0, 1, 2, 3, 4].map((i) => (
-                <Star key={i} size={14} fill="currentColor" strokeWidth={0} />
-              ))}
-              <span className="ml-1 text-xs font-semibold text-punch-ink/70">4.9</span>
-            </div>
+            <p className="mt-1.5 text-[11px] font-semibold italic text-punch-ink/60">
+              Un buen servicio merece ser reconocido.
+            </p>
           </div>
 
           <div className="mt-4 grid grid-cols-3 gap-2 text-center font-display text-base font-extrabold">
@@ -253,12 +253,10 @@ function PhoneMock() {
             <span className="rounded-2xl border-2 border-punch-ink bg-white py-1.5">$100</span>
           </div>
 
-          <p className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-medium text-punch-ink/70">
-            <span className="flex h-4 w-4 items-center justify-center rounded border-2 border-punch-ink bg-punch-yellow">
-              <Check size={10} strokeWidth={4} />
-            </span>
-            Ayúdale a recibir el 100%
-          </p>
+          <div className="mt-3 grid grid-cols-2 gap-1 rounded-full border-2 border-punch-ink/30 bg-white p-0.5 text-center font-display text-[11px] font-extrabold">
+            <span className="rounded-full bg-punch-yellow py-1">Dejar propina</span>
+            <span className="py-1 text-punch-ink/70">Reconocer</span>
+          </div>
 
           <div className="mt-3 rounded-full border-2 border-punch-ink bg-punch-tealdark py-2.5 text-center font-display text-base font-extrabold text-white">
             Dejar propina
@@ -413,17 +411,18 @@ export default function Home() {
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border-2 border-punch-ink bg-punch-yellow px-4 py-1.5 font-display text-sm font-extrabold">
               <HandCoins size={16} />{' '}
-              {user ? `Hola, ${user.name?.split(' ')[0] || 'bienvenido'}` : 'Únete a la revolución de las propinas'}
+              {user ? `Hola, ${user.name?.split(' ')[0] || 'bienvenido'}` : 'Tu servicio vale'}
             </span>
             <h1 className="mt-6 font-display text-[2.6rem] font-extrabold leading-[0.97] tracking-tight sm:text-6xl lg:text-7xl">
-              Cada vez hay menos cash.{' '}
+              Que se{' '}
               <span className="relative inline-block -rotate-1 rounded-2xl bg-punch-yellow px-3 pb-1">
-                Que no se te vayan tus propinas.
+                reconozca.
               </span>
             </h1>
             <p className="mt-7 max-w-xl text-lg font-medium leading-relaxed sm:text-xl">
-              Propinas digitales, simples y directas. Hoy casi nadie carga cambio: con tu QR único
-              de TIP-IT tus clientes te dejan propina en segundos y tú ganas más.
+              TIP-IT es la plataforma de reconocimiento digital para personas que brindan servicios.
+              Recibe propinas, valoraciones y comentarios que fortalecen tu reputación, aunque nadie
+              traiga efectivo.
             </p>
             <div className="mt-9 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
               {user ? (
@@ -437,14 +436,14 @@ export default function Home() {
                 </>
               ) : (
                 <Cta to={signup} where="hero" tone="ink" className="text-lg">
-                  Crea tu cuenta <ArrowRight size={20} />
+                  Crear mi QR gratis <ArrowRight size={20} />
                 </Cta>
               )}
               <a
                 href="#como-funciona"
                 className="font-display text-base font-extrabold underline decoration-2 underline-offset-4"
               >
-                Ver cómo funciona
+                Conoce cómo funciona
               </a>
             </div>
             <p className="mt-5 text-sm font-semibold">Gratis · Sin efectivo, sin fricción · Hecho en CDMX</p>
@@ -612,9 +611,11 @@ export default function Home() {
       <section className="border-y-2 border-punch-ink bg-punch-pink py-16 sm:py-24">
         <div className="mx-auto max-w-6xl px-5">
           <Reveal>
-            <SectionTitle eyebrow="Tu página">Tu perfil, tu estilo.</SectionTitle>
+            <SectionTitle eyebrow="Más que propinas">Una plataforma de reconocimiento.</SectionTitle>
             <p className="mt-6 max-w-2xl text-lg font-medium leading-relaxed">
-              Cuando alguien escanea tu QR no ve un formulario aburrido: ve a ti.
+              TIP-IT te permite agradecer, recompensar y construir la reputación de las personas que
+              hacen mejores experiencias en tu día a día. Cuando alguien escanea tu QR no ve un
+              formulario aburrido: ve a ti.
             </p>
           </Reveal>
           <div className="mt-10 grid gap-5 sm:grid-cols-2">
@@ -795,10 +796,10 @@ export default function Home() {
       <footer className="bg-punch-ink text-punch-cream">
         <div className="mx-auto grid max-w-6xl gap-10 px-5 py-14 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
-            <div className="flex items-center gap-2.5">
-              <Logo size={40} />
-              <span className="font-display text-2xl font-extrabold text-punch-yellow">TIP-IT</span>
-            </div>
+            <span className="inline-flex items-center gap-2.5">
+              <Logo size={40} onDark />
+              <Wordmark onDark className="text-2xl" />
+            </span>
             <p className="mt-4 max-w-xs font-display text-lg font-extrabold text-punch-cream">
               Únete a la revolución de las propinas.
             </p>

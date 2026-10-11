@@ -33,7 +33,7 @@ const createIntent = asyncHandler(async (req, res) => {
     throw new AppError('No encontramos a ese Tip-er', 404);
   }
   if (!worker.stripeAccountId || !worker.stripeOnboardingComplete) {
-    throw new AppError('Este Tip-er todavía no puede recibir pagos. Inténtalo más tarde.', 400);
+    throw new AppError('Esta persona no puede recibir propinas por ahora.', 400);
   }
   if (req.user && String(worker.user) === String(req.user._id)) {
     throw new AppError('No puedes enviarte propina a ti mismo', 400);

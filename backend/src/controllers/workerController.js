@@ -104,6 +104,16 @@ const getByUsername = asyncHandler(async (req, res) => {
     .limit(10)
     .select('rating review comment reviewAlias createdAt');
 
+  const paidWithWords = {
+    worker: worker._id,
+    status: 'succeeded',
+    $or: [{ review: { $ne: '' } }, { comment: { $ne: '' } }, { rating: { $ne: null } }],
+  };
+  const [paidCount, unpaidCount] = await Promise.all([
+    Transaction.countDocuments(paidWithWords),
+    Recognition.countDocuments({ worker: worker._id, status: 'published' }),
+  ]);
+
   const recognitions = await Recognition.find({ worker: worker._id, status: 'published' })
     .sort({ createdAt: -1 })
     .limit(10)
@@ -123,6 +133,7 @@ const getByUsername = asyncHandler(async (req, res) => {
       rating: worker.rating,
       ratingCount: worker.ratingCount,
       tipCount: worker.tipCount,
+      recognitionCount: paidCount + unpaidCount,
       thanksCount: await Transaction.countDocuments({ worker: worker._id, status: 'succeeded', thanked: true }),
       name: worker.publicName || worker.user?.name,
       avatarUrl: worker.user?.avatarUrl,

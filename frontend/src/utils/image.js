@@ -3,7 +3,7 @@
  * returns a compressed JPEG data URL. Keeps avatars small before they're
  * sent to the API and stored in MongoDB.
  */
-export function fileToResizedDataUrl(file, maxSize = 320, quality = 0.85) {
+export function fileToResizedDataUrl(file, maxSize = 640, quality = 0.85) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = () => reject(new Error('No se pudo leer el archivo'));

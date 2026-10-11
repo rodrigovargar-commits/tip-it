@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { QrCode, ScanLine, Star, Wallet } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
-import Logo from '../components/Logo.jsx';
+import { LogoFull } from '../components/Logo.jsx';
 import Person from '../components/Person.jsx';
 
 // Home of the installed iOS/Android app (the web gets the full marketing page
@@ -18,10 +18,7 @@ export default function Landing() {
   return (
     <div className="mx-auto flex min-h-[calc(100dvh-3.5rem)] w-full max-w-md flex-col">
       <section className="border-b-2 border-punch-ink bg-punch-orange px-5 pb-10 pt-8">
-        <div className="flex items-center gap-2.5">
-          <Logo size={40} />
-          <span className="font-display text-2xl font-extrabold">TIP-IT</span>
-        </div>
+        <LogoFull size={40} />
         <h1 className="mt-8 font-display text-[2.6rem] font-extrabold leading-[0.97]">
           Propinas digitales,{' '}
           <span className="inline-block -rotate-1 rounded-2xl bg-punch-yellow px-2.5 pb-0.5">

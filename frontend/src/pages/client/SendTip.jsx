@@ -164,7 +164,7 @@ function Checkout({ worker, username, user, onPaid }) {
           setSubmitting(false);
           return;
         }
-        intent = { key: quoteKey, clientSecret: data.clientSecret };
+        intent = { key: quoteKey, clientSecret: data.clientSecret, transactionId: data.transactionId };
         intentRef.current = intent;
       }
 
@@ -190,10 +190,26 @@ function Checkout({ worker, username, user, onPaid }) {
       }
 
       // Never trust the browser's word that it worked: the server asks Stripe itself.
-      const { data: confirmed } = await api.post('/tips/confirm', { paymentIntentId: paymentIntent.id });
+      // If we can't reach it right now, the payment may still be going through:
+      // show "estamos confirmando" with a way to check, never "failed" and never a second charge.
+      let transaction;
+      try {
+        const { data: confirmed } = await api.post('/tips/confirm', { paymentIntentId: paymentIntent.id });
+        transaction = confirmed.transaction;
+        trackEvent('payment_succeeded', { currency: 'MXN' });
+      } catch {
+        transaction = {
+          _id: intent.transactionId,
+          status: 'processing',
+          amount: q.total,
+          platformFee: q.fee,
+          netAmount: q.net,
+          coverFee,
+          createdAt: new Date().toISOString(),
+        };
+      }
       intentRef.current = null;
-      trackEvent('payment_succeeded', { currency: 'MXN' });
-      onPaid({ transaction: confirmed.transaction, paymentIntentId: paymentIntent.id });
+      onPaid({ transaction, paymentIntentId: paymentIntent.id });
     } catch (err) {
       trackEvent('checkout_error', { screen: 'pay' });
       toast.error(getErrorMessage(err));
@@ -295,6 +311,7 @@ function Checkout({ worker, username, user, onPaid }) {
               trackEvent('payment_method_available', { wallet: any });
             }}
             onConfirm={pay}
+            onCancel={() => toast('Cancelaste la autorización.')}
             options={{ paymentMethods: { link: 'never', amazonPay: 'never', paypal: 'never' }, buttonHeight: 52 }}
           />
         </div>
@@ -398,21 +415,29 @@ function Confirmation({ worker, receipt, user }) {
       <div className="text-center">
         <PartyPopper size={44} className="mx-auto text-brand-400" aria-hidden />
         <h1 className="mt-2 text-3xl font-extrabold">{ok ? 'Pago confirmado' : 'Estamos confirmando tu pago'}</h1>
-        {!ok && <p className="mt-1 text-sm text-slate-400">Puede tardar unos segundos. No vuelvas a pagar.</p>}
+        {!ok && <p className="mt-1 text-sm text-slate-400">No pudimos confirmar el estado todavía. No vuelvas a pagar: toca “Consultar estado”.</p>}
+        {ok && <p className="mt-1 text-sm font-semibold text-slate-400">¡Gracias!</p>}
       </div>
 
       <dl className="card space-y-2">
         <SummaryRow label="Destinatario" value={name} />
         <SummaryRow label="Propina" value={formatCents(tip)} />
         {tx.coverFee && <SummaryRow label="Procesamiento cubierto" value={formatCents(tx.platformFee)} />}
-        <SummaryRow label="Total pagado" value={`${formatCents(tx.amount)} MXN`} strong />
+        <SummaryRow label="Total pagado" value={`${formatCents(tx.amount)} MXN`} strong note={tx.coverFee ? 'Incluye el costo de procesamiento' : undefined} />
         <SummaryRow label={`Neto estimado para ${firstName}`} value={formatCents(tx.netAmount)} />
         <SummaryRow label="Fecha" value={when} />
         <SummaryRow label="Referencia" value={String(tx._id).slice(-8).toUpperCase()} />
       </dl>
-      <p className="text-xs text-slate-500">
-        El pago está confirmado; el depósito a la cuenta de {firstName} puede tardar unos días.
-      </p>
+      {ok && tx.coverFee && (
+        <p className="rounded-2xl bg-punch-tealdark/10 p-3 text-center text-sm font-bold">
+          {firstName} recibirá {formatCents(tip)} completos. ¡Gracias por apoyar!
+        </p>
+      )}
+      {ok && (
+        <p className="text-xs text-slate-500">
+          El pago está confirmado; el depósito a la cuenta de {firstName} puede tardar unos días.
+        </p>
+      )}
 
       {!ok && (
         <button type="button" onClick={recheck} className="btn-secondary w-full">
@@ -425,6 +450,7 @@ function Confirmation({ worker, receipt, user }) {
           <h2 id="review-title" className="font-display text-xl font-extrabold">
             ¿Cómo fue el servicio?
           </h2>
+          <p className="-mt-2 text-sm text-slate-500">Calificar es opcional.</p>
           <StarRating value={rating} onChange={setRating} label="¿Cómo fue el servicio?" />
           <FormField label="Comentario" optional hint={`${review.length}/200`}>
             {(p) => (
@@ -605,6 +631,15 @@ export default function SendTip() {
                 <UserPlus size={17} />
               </button>
             )}
+          </div>
+
+          <div className="mt-5 grid grid-cols-2 gap-1 rounded-full border-2 border-punch-ink/25 bg-white p-1 text-center font-display text-sm font-extrabold">
+            <span aria-current="page" className="rounded-full border-2 border-punch-ink bg-punch-yellow py-2">
+              Dejar propina
+            </span>
+            <Link to={`/p/${worker.username}/reconocer`} className="rounded-full border-2 border-transparent py-2 text-punch-ink/80 hover:text-punch-ink">
+              Reconocer
+            </Link>
           </div>
 
           <div className="mt-6">

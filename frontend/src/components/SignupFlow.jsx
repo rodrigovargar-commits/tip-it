@@ -5,7 +5,7 @@ import { ArrowLeft, Camera, Check, Landmark, Share2, ShieldCheck } from 'lucide-
 import api, { getErrorMessage } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { trackEvent } from '../utils/analytics.js';
-import { ACTIVITIES } from '../utils/activities.js';
+import { ACTIVITIES, activityLabel } from '../utils/activities.js';
 import { fileToResizedDataUrl } from '../utils/image.js';
 import Avatar from './Avatar.jsx';
 import CodeVerify from './CodeVerify.jsx';
@@ -208,10 +208,10 @@ export default function SignupFlow({ channels, defaultRole = 'worker' }) {
           onPhase={setCodePhase}
           heading={
             <>
-              <Logo size={44} className="mb-4" />
+              <Logo size={48} className="mb-4" />
               <Heading
                 title="Crea tu cuenta"
-                subtitle={role === 'worker' ? 'Empieza a recibir reconocimientos y propinas por tu trabajo.' : 'Para guardar tu historial y tus contactos.'}
+                subtitle={role === 'worker' ? 'Comienza a recibir reconocimientos y propinas por tu trabajo.' : 'Para guardar tu historial y tus contactos.'}
               />
             </>
           }
@@ -219,9 +219,9 @@ export default function SignupFlow({ channels, defaultRole = 'worker' }) {
         {codePhase === 'contact' && (
           <>
             <p className="mt-4 text-center text-xs text-slate-500">
-              Al continuar aceptas los{' '}
+              Al continuar aceptas nuestros{' '}
               <Link to="/terminos" className="text-brand-400 underline underline-offset-2" target="_blank">
-                Términos
+                Términos de uso
               </Link>{' '}
               y el{' '}
               <Link to="/privacidad" className="text-brand-400 underline underline-offset-2" target="_blank">
@@ -270,7 +270,7 @@ export default function SignupFlow({ channels, defaultRole = 'worker' }) {
       <div>
         <Progress steps={steps} step={step} />
         <BackButton onClick={() => setStep('contact')} />
-        <Heading title="¿A qué te dedicas?" subtitle="Así se muestra en tu perfil." />
+        <Heading title="Tu actividad" subtitle="Cuéntanos a qué te dedicas para mostrarlo en tu perfil." />
         <div className="mt-5 grid grid-cols-2 gap-3" role="radiogroup" aria-label="Actividad">
           {ACTIVITIES.map(({ id, label, icon, tone }) => {
             const on = activity === id;
@@ -311,7 +311,7 @@ export default function SignupFlow({ channels, defaultRole = 'worker' }) {
       <form onSubmit={handleProfile}>
         <Progress steps={steps} step={step} />
         <BackButton onClick={() => setStep('activity')} />
-        <Heading title="Crea tu perfil" subtitle="Así te van a ver tus clientes." />
+        <Heading title="Crea tu perfil" subtitle="Muéstrate como profesional." />
 
         <div className="mt-5 flex justify-center">
           <button type="button" onClick={() => photoInput.current?.click()} className="relative" aria-label="Agregar foto de perfil">
@@ -347,7 +347,7 @@ export default function SignupFlow({ channels, defaultRole = 'worker' }) {
               </div>
             )}
           </FormField>
-          <FormField label="Sobre ti" optional hint={`${bio.length}/200`}>
+          <FormField label="Bio" optional hint={`${bio.length}/200`}>
             {(p) => (
               <textarea
                 {...p}
@@ -405,11 +405,12 @@ export default function SignupFlow({ channels, defaultRole = 'worker' }) {
         </div>
       )}
       <p className="mt-4 font-display text-2xl font-extrabold">{name || worker?.name}</p>
+      <p className="text-sm font-semibold text-slate-400">{[activityLabel(worker?.activity), worker?.occupation].filter(Boolean).join(' · ')}</p>
       <p className="text-sm text-slate-400">@{worker?.username}</p>
 
       {!worker?.stripeOnboardingComplete && (
         <div className="card mt-5 !bg-punch-yellow/50 text-left">
-          <p className="font-display font-extrabold">Pagos pendientes de verificación</p>
+          <p className="font-display font-extrabold">Propinas pendientes de verificación</p>
           <p className="mt-1 text-sm">Conecta tu banco para empezar a recibir propinas.</p>
           <button type="button" onClick={connectBank} disabled={busy} className="btn-secondary mt-3 w-full">
             Conectar mi banco
@@ -417,10 +418,14 @@ export default function SignupFlow({ channels, defaultRole = 'worker' }) {
         </div>
       )}
 
-      <button type="button" onClick={shareProfile} className="btn-secondary mt-6 w-full gap-2">
+      <button
+        type="button"
+        onClick={shareProfile}
+        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-punch-ink bg-punch-ink px-6 py-3 font-display font-extrabold text-punch-yellow"
+      >
         <Share2 size={16} /> Compartir mi perfil
       </button>
-      <button type="button" onClick={() => navigate('/worker/dashboard')} className="btn-primary mt-3 w-full">
+      <button type="button" onClick={() => navigate('/worker/dashboard')} className="btn-secondary mt-3 w-full">
         Ir a mi panel
       </button>
     </div>
