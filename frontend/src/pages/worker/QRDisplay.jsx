@@ -169,6 +169,20 @@ export default function QRDisplay() {
     }
   };
 
+  const profileUrl = `${window.location.origin}/p/${worker.username}`;
+
+  const handleShareProfile = async () => {
+    try {
+      if (navigator.share) await navigator.share({ title: 'Mi perfil en TIP-IT', url: profileUrl });
+      else {
+        await navigator.clipboard.writeText(profileUrl);
+        toast.success('Enlace de tu perfil copiado');
+      }
+    } catch {
+      // share sheet closed
+    }
+  };
+
   const handleShare = async () => {
     if (navigator.share) {
       try {
@@ -214,6 +228,20 @@ export default function QRDisplay() {
         <button onClick={handleShare} className="btn-primary">
           Compartir
         </button>
+      </div>
+
+      <div className="mt-6 w-full rounded-2xl border-2 border-punch-ink/25 bg-white p-4 text-left">
+        <p className="font-display font-extrabold">Tu perfil público</p>
+        <p className="mt-0.5 text-sm text-slate-400">Con tus reseñas y dos botones: dejar propina o reconocer sin pago.</p>
+        <p className="mt-2 break-all text-xs text-slate-500">{profileUrl}</p>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <a href={profileUrl} target="_blank" rel="noreferrer" className="btn-secondary !py-2 text-sm">
+            Verlo
+          </a>
+          <button onClick={handleShareProfile} className="btn-secondary !py-2 text-sm">
+            Compartir perfil
+          </button>
+        </div>
       </div>
     </div>
   );

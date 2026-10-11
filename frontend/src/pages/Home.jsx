@@ -20,6 +20,7 @@ import {
 import { useAuth } from '../context/AuthContext.jsx';
 import { trackEvent } from '../utils/analytics.js';
 import Logo from '../components/Logo.jsx';
+import IconBadge from '../components/IconBadge.jsx';
 import Person from '../components/Person.jsx';
 import SignupSwitch from '../components/SignupSwitch.jsx';
 import LeadForm from '../components/LeadForm.jsx';
@@ -533,11 +534,9 @@ export default function Home() {
             <p className="font-display text-2xl font-extrabold sm:text-3xl">Y tu cliente, ¿qué hace?</p>
             <p className="mt-1 font-medium">Menos de un minuto, sin app y sin cuenta.</p>
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {CLIENT_STEPS.map(({ icon: Icon, title, body }) => (
+              {CLIENT_STEPS.map(({ icon: Icon, title, body }, ci) => (
                 <div key={title} className="rounded-3xl border-2 border-punch-ink bg-punch-cream p-5">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-punch-ink bg-punch-pink">
-                    <Icon size={20} />
-                  </span>
+                  <IconBadge icon={Icon} tone={['yellow', 'pink', 'orange', 'teal'][ci % 4]} size={48} />
                   <p className="mt-3 font-display text-lg font-extrabold">{title}</p>
                   <p className="mt-1 text-sm font-medium leading-relaxed">{body}</p>
                 </div>
@@ -622,9 +621,7 @@ export default function Home() {
             {FEATURES.map(({ icon: Icon, title, body }, i) => (
               <Reveal key={title} delay={i * 80}>
                 <div className="flex h-full items-start gap-4 rounded-3xl border-2 border-punch-ink bg-white p-5 shadow-[5px_5px_0_0_#0A2F2F]">
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-punch-ink bg-punch-yellow">
-                    <Icon size={22} />
-                  </span>
+                  <IconBadge icon={Icon} tone={['yellow', 'orange', 'pink', 'teal'][i % 4]} size={52} />
                   <div>
                     <p className="font-display text-xl font-extrabold">{title}</p>
                     <p className="mt-1 font-medium leading-relaxed text-punch-ink/80">{body}</p>

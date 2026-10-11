@@ -9,12 +9,17 @@ puñado de usuarios reales, el riesgo es bajo — pero la lista debe quedar corr
 
 | Campo | Modelo | Es dato personal | Por qué se recolecta | Quién lo ve |
 |---|---|---|---|---|
-| `name` | User | Sí | Identificar a la persona en la app y en recibos | El propio usuario; el trabajador ve el primer nombre de quien lo calificó |
+| `name` | User | Sí | Identificar a la persona en la app y en recibos | El propio usuario. Quien deja una reseña sale como “Anónimo” o con el alias que elija; su nombre real no se muestra |
 | `email` | User | Sí | Login, recuperación de cuenta | Nadie más que el propio usuario (nunca se muestra a otros) |
 | `phone` | User | Sí | Login de invitados (pago rápido sin contraseña) | Nadie más que el propio usuario |
 | `document` (INE/pasaporte) | User | Sí, sensible | Verificación de identidad básica (KYC) antes de operar como trabajador | Solo el propio usuario lo edita; no se muestra a nadie más ni se regresa en ninguna respuesta de la API |
 | `avatarUrl` | User | Sí (imagen) | Foto de perfil | Pública en el perfil del trabajador |
 | `comment` / `review` | Transaction | Potencialmente — es texto libre que el cliente escribe | Comentario sobre el servicio, mostrado como reseña | Público en el perfil del trabajador que recibió la propina |
+| `phoneVerified` / `emailVerified` | User | Indicador, no dato nuevo | Saber que la persona demostró ser dueña del teléfono o correo (con un código) | Nadie más que el propio usuario |
+| Código de verificación | OtpChallenge | Temporal | Comprobar teléfono o correo al crear cuenta o entrar. No se guarda el código, solo una huella cifrada; se borra al usarse o a la hora de vencer | Nadie |
+| `reviewAlias` | Transaction | Potencialmente — es un apodo elegido | Mostrar la reseña con un nombre distinto a “Anónimo” | Público en el perfil |
+| Reconocimiento sin pago (`rating`, `comment`, `alias`) | Recognition | Potencialmente — texto libre | Dejar agradecimiento sin pagar; se revisa antes de publicarse. Se guarda una huella cifrada de la IP solo para evitar repeticiones | Público en el perfil, ya aprobado |
+| `publicName`, `activity`, `occupation`, `establishment` | Worker | No identifican por sí solos (los elige la persona) | Perfil público de quien recibe propinas | Público |
 | `username`, `bio`, `experience` | Worker | No es dato personal identificable por sí solo (es un alias elegido) | Perfil público del trabajador | Público |
 
 **Nota sobre `comment`/`review`:** al ser texto libre, un cliente podría escribir información

@@ -21,7 +21,10 @@ function twilioConfigured() {
 
 function providerFor(channel) {
   if (channel === 'email') {
-    if (process.env.RESEND_API_KEY) return 'resend';
+    // Resend only delivers to anyone once a domain is verified, and that is what
+    // OTP_EMAIL_FROM stands for. Without it (the free sandbox sender) codes would
+    // reach only the account owner, so email codes stay off instead of failing for everyone else.
+    if (process.env.RESEND_API_KEY && process.env.OTP_EMAIL_FROM) return 'resend';
   } else if (twilioConfigured()) {
     if (channel === 'sms') return 'twilio';
     if (channel === 'whatsapp' && process.env.OTP_WHATSAPP === 'true') return 'twilio';
@@ -83,7 +86,7 @@ async function deliver({ channel, destination, code }) {
   }
 
   if (provider === 'resend') {
-    const from = process.env.OTP_EMAIL_FROM || process.env.LEAD_NOTIFY_FROM || 'TIP-IT <onboarding@resend.dev>';
+    const from = process.env.OTP_EMAIL_FROM;
     const { text, html } = emailBody(code);
     const r = await post(
       'https://api.resend.com/emails',

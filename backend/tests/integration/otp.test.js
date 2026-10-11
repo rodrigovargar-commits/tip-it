@@ -217,25 +217,38 @@ describe('signing in with a code', () => {
 describe('providers', () => {
   afterEach(() => {
     delete process.env.RESEND_API_KEY;
+    delete process.env.OTP_EMAIL_FROM;
     delete process.env.TWILIO_ACCOUNT_SID;
     delete process.env.TWILIO_AUTH_TOKEN;
     delete process.env.TWILIO_VERIFY_SID;
     jest.restoreAllMocks();
   });
 
+  it('keeps email codes off until a verified sending address is set', async () => {
+    process.env.RESEND_API_KEY = 're_test';
+    delete process.env.OTP_EMAIL_FROM;
+    process.env.NODE_ENV = 'production';
+    const res = await request(app).get('/api/auth/otp/config');
+    process.env.NODE_ENV = 'test';
+    expect(res.body.channels).not.toContain('email');
+  });
+
   it('emails the code through Resend when configured', async () => {
     process.env.RESEND_API_KEY = 're_test';
+    process.env.OTP_EMAIL_FROM = 'TIP-IT <codigo@tipit.com.mx>';
     const spy = jest.spyOn(global, 'fetch').mockResolvedValue({ ok: true, status: 200, json: async () => ({ id: 'x' }) });
     const res = await request(app).post('/api/auth/otp/send').send({ channel: 'email', destination: 'a@b.co', purpose: 'register' });
     expect(res.status).toBe(200);
     expect(spy.mock.calls[0][0]).toBe('https://api.resend.com/emails');
     const sent = JSON.parse(spy.mock.calls[0][1].body);
     expect(sent.to).toEqual(['a@b.co']);
+    expect(sent.from).toBe('TIP-IT <codigo@tipit.com.mx>');
     expect(sent.text).toMatch(/\b\d{6}\b/);
   });
 
   it('answers 502 when the provider refuses, instead of pretending it sent', async () => {
     process.env.RESEND_API_KEY = 're_test';
+    process.env.OTP_EMAIL_FROM = 'TIP-IT <codigo@tipit.com.mx>';
     jest.spyOn(global, 'fetch').mockResolvedValue({ ok: false, status: 403, json: async () => ({ message: 'domain' }) });
     const res = await request(app).post('/api/auth/otp/send').send({ channel: 'email', destination: 'a@b.co', purpose: 'register' });
     expect(res.status).toBe(502);

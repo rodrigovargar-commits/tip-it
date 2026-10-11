@@ -579,7 +579,7 @@ export default function SendTip() {
   }
 
   return (
-    <div className="page-shell">
+    <div className="page-shell md:!max-w-xl">
       {!receipt && (
         <Link to="/scan" className="flex items-center gap-1 text-sm text-slate-400">
           <ArrowLeft size={16} />
