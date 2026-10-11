@@ -36,4 +36,24 @@ const guestLimiter = rateLimit({
   message: { success: false, message: 'Demasiados intentos, intenta más tarde.' },
 });
 
-module.exports = { authLimiter, tipLimiter, guestLimiter };
+// Asking for codes costs money (SMS) and can be used to pester someone, so it
+// is limited per IP on top of the per-address limits inside the service.
+const otpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 15,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: skipInTest,
+  message: { success: false, message: 'Demasiados intentos, intenta más tarde.' },
+});
+
+const recognitionLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: skipInTest,
+  message: { success: false, message: 'Demasiados envíos, intenta más tarde.' },
+});
+
+module.exports = { authLimiter, tipLimiter, guestLimiter, otpLimiter, recognitionLimiter };

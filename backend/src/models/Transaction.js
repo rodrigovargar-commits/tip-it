@@ -66,6 +66,12 @@ const transactionSchema = new mongoose.Schema(
       maxlength: 500,
       default: '',
     },
+    reviewAlias: {
+      // Optional nickname shown instead of "Anónimo" next to the review
+      type: String,
+      maxlength: 30,
+      default: '',
+    },
     review: {
       // Written review left after the service, alongside the rating.
       // Shown publicly on the worker's profile as their track record.
