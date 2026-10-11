@@ -33,3 +33,18 @@ services:
         value: 6
       - key: PLATFORM_FEE_FIXED_CENTS
         value: 400
+      # Sign-up and login with a code (all optional; see docs/REGISTRO_CON_CODIGO.md)
+      - key: OTP_REQUIRED
+        value: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: OTP_EMAIL_FROM
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_VERIFY_SID
+        sync: false
+      - key: OTP_WHATSAPP
+        value: false

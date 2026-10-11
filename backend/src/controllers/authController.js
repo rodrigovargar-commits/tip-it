@@ -3,16 +3,45 @@ const AppError = require('../utils/AppError');
 const generateToken = require('../utils/generateToken');
 const { logSecurityEvent } = require('../utils/logger');
 const User = require('../models/User');
+const { readVerificationToken } = require('../utils/otp/service');
+const { otpRequired } = require('./otpController');
+const { normalizeEmail } = require('../utils/otp/normalize');
 
 const register = asyncHandler(async (req, res) => {
-  const { name, email, phone, password } = req.body;
+  const { name, email, phone, password, verificationToken } = req.body;
 
-  const existing = await User.findOne({ email: email.toLowerCase() });
-  if (existing) {
-    throw new AppError('Ya existe una cuenta con ese email', 409);
+  let data;
+  if (verificationToken) {
+    // The person already proved they own this phone/email with a code.
+    const proof = readVerificationToken(verificationToken, 'register');
+    if (!proof) throw new AppError('La verificación venció. Pide un código nuevo.', 400);
+    if (proof.channel === 'email') {
+      data = { name, email: proof.destination, emailVerified: true };
+      if (phone) data.phone = phone;
+    } else {
+      data = { name, phone: proof.destination, phoneVerified: true };
+      const optionalEmail = email ? normalizeEmail(email) : null;
+      if (optionalEmail) data.email = optionalEmail;
+    }
+    if (password) {
+      if (String(password).length < 8) throw new AppError('La contraseña debe tener al menos 8 caracteres', 400);
+      data.password = password;
+    }
+  } else {
+    if (otpRequired()) throw new AppError('Primero verifica tu teléfono o correo con el código.', 403);
+    data = { name, email, phone, password };
   }
 
-  const user = await User.create({ name, email, phone, password });
+  if (data.email) {
+    const existing = await User.findOne({ email: data.email.toLowerCase() });
+    if (existing) throw new AppError('Ya existe una cuenta con ese email', 409);
+  }
+  if (data.phoneVerified) {
+    const existingPhone = await User.findOne({ phone: data.phone, phoneVerified: true });
+    if (existingPhone) throw new AppError('Ya existe una cuenta con ese teléfono', 409);
+  }
+
+  const user = await User.create(data);
   const token = generateToken(user._id);
 
   logSecurityEvent({
@@ -64,7 +93,8 @@ const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
-  const validPassword = user && (await user.comparePassword(password));
+  // Accounts created with a code have no password: they can only sign in with one.
+  const validPassword = user && user.password && (await user.comparePassword(password));
 
   if (!user || !validPassword) {
     // actorId stays "anonymous" — we never log an email/identifier for a

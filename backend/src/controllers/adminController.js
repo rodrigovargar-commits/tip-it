@@ -8,6 +8,9 @@ const { sendLeadEmail } = require('../utils/notifyLead');
 const ensureWorkerQRs = require('../utils/ensureWorkerQRs');
 const { publicBaseUrl } = require('../utils/publicUrl');
 const stripe = require('../config/stripe');
+const Recognition = require('../models/Recognition');
+const { availableChannels, providerFor } = require('../utils/otp/providers');
+const { sendCode } = require('../utils/otp/service');
 
 const getStats = asyncHandler(async (req, res) => {
   const [
@@ -191,7 +194,57 @@ const workerStatus = asyncHandler(async (req, res) => {
   res.json(out);
 });
 
+// Recognitions left without paying wait here until someone approves them.
+const getRecognitions = asyncHandler(async (req, res) => {
+  const status = ['pending', 'published', 'rejected'].includes(req.query.status) ? req.query.status : 'pending';
+  const items = await Recognition.find({ status })
+    .sort({ createdAt: -1 })
+    .limit(100)
+    .populate('worker', 'username');
+  res.json({
+    success: true,
+    status,
+    recognitions: items.map((r) => ({
+      id: r._id,
+      worker: r.worker?.username,
+      rating: r.rating,
+      comment: r.comment,
+      alias: r.alias,
+      createdAt: r.createdAt,
+    })),
+  });
+});
+
+const moderateRecognition = asyncHandler(async (req, res) => {
+  const status = req.body?.status || req.query.status;
+  if (!['published', 'rejected'].includes(status)) {
+    throw new AppError('status debe ser published o rejected', 400);
+  }
+  const rec = await Recognition.findByIdAndUpdate(req.params.id, { status }, { new: true });
+  if (!rec) throw new AppError('No encontrado', 404);
+  res.json({ success: true, id: rec._id, status: rec.status });
+});
+
+// Which ways of sending a code are configured, and (with ?to=) a real test
+// send, without ever revealing a key or the code itself.
+const otpStatus = asyncHandler(async (req, res) => {
+  const channels = ['email', 'sms', 'whatsapp'].map((c) => ({ channel: c, provider: providerFor(c) || 'not_configured' }));
+  const out = { success: true, available: availableChannels(), channels, required: process.env.OTP_REQUIRED === 'true' };
+  if (req.query.to && req.query.channel) {
+    try {
+      const r = await sendCode({ channel: req.query.channel, destination: req.query.to, purpose: 'register' });
+      out.test = { sent: true, to: r.destination };
+    } catch (err) {
+      out.test = { sent: false, error: err.message };
+    }
+  }
+  res.json(out);
+});
+
 module.exports = {
+  getRecognitions,
+  moderateRecognition,
+  otpStatus,
   workerStatus,
   regenerateQrs,
   testEmail, getStats, getLeads, updateLead };

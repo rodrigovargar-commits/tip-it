@@ -31,4 +31,8 @@ function workerTipUrl(username) {
   return `${publicBaseUrl()}/tip/${encodeURIComponent(String(username).toLowerCase())}`;
 }
 
-module.exports = { publicBaseUrl, workerTipUrl, PRODUCTION_URL };
+function workerProfileUrl(username) {
+  return `${publicBaseUrl()}/p/${encodeURIComponent(String(username).toLowerCase())}`;
+}
+
+module.exports = { publicBaseUrl, workerTipUrl, workerProfileUrl, PRODUCTION_URL };
