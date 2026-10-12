@@ -62,10 +62,7 @@ export default function Recognize() {
           {result === 'published' ? `Ya se ve en el perfil de ${firstName}.` : `Lo revisamos antes de publicarlo en el perfil de ${firstName}. Gracias por tomarte el tiempo.`}
         </p>
         <Link to="/" className="btn-primary mt-8 w-full">
-          Ir al inicio
-        </Link>
-        <Link to={`/p/${worker.username}`} className="mt-3 text-sm font-bold underline underline-offset-2">
-          Volver al perfil
+          Volver a la página principal
         </Link>
       </div>
     );

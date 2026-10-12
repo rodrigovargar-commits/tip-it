@@ -438,13 +438,9 @@ function Confirmation({ worker, receipt, user }) {
   const name = worker.name || `@${worker.username}`;
   const firstName = name.split(' ')[0];
   const confirmed = transaction?.status === 'succeeded';
-  const navigate = useNavigate();
   const [state, setState] = useState(confirmed ? 'review' : 'checking'); // checking | review | sent
-  // Once the person has rated (or skipped it), they go back to the main page.
-  const finish = (message) => {
-    if (message) toast.success(message);
-    navigate('/');
-  };
+  // Rated or skipped: show a thank-you with one button back to the main page.
+  const finish = () => setState('sent');
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState('');
   const [alias, setAlias] = useState('');
@@ -477,7 +473,7 @@ function Confirmation({ worker, receipt, user }) {
         ...(thanks ? { thanks: true } : {}),
       });
       trackEvent('recognition_submitted', { paid: true, rating: Boolean(rating), comment: Boolean(review.trim()) });
-      finish(thanks ? '¡Gracias!' : '¡Gracias! Tu comentario fue publicado.');
+      finish();
     } catch (err) {
       toast.error('Tu pago está confirmado. No pudimos guardar tu comentario; puedes intentar de nuevo.');
     } finally {
@@ -567,29 +563,17 @@ function Confirmation({ worker, receipt, user }) {
           <button type="button" onClick={() => send({ thanks: true })} disabled={saving || Boolean(rating || review.trim())} className="btn-secondary w-full">
             Enviar agradecimiento
           </button>
-          <button type="button" onClick={() => finish('¡Gracias!')} className="w-full text-center text-sm font-bold underline underline-offset-2">
+          <button type="button" onClick={() => finish()} className="w-full text-center text-sm font-bold underline underline-offset-2">
             Ahora no
           </button>
         </section>
       )}
 
       {ok && state === 'sent' && (
-        <div className="space-y-3 text-center">
-          <p className="font-display text-xl font-extrabold">¡Gracias!</p>
-          <Link to={`/p/${worker.username}`} className="btn-secondary w-full">
-            Ver perfil de {firstName}
-          </Link>
-          {user ? (
-            <Link to="/history" className="btn-secondary w-full">
-              Ver historial
-            </Link>
-          ) : (
-            <Link to="/register?role=client" className="btn-secondary w-full">
-              Crear cuenta gratis (guarda tu historial)
-            </Link>
-          )}
-          <Link to="/scan" className="btn-accent w-full">
-            Dejar otra propina
+        <div className="space-y-4 text-center">
+          <p className="font-display text-2xl font-extrabold">¡Gracias!</p>
+          <Link to="/" className="btn-primary w-full">
+            Volver a la página principal
           </Link>
         </div>
       )}
