@@ -85,7 +85,8 @@ export default function PublicProfile() {
   const firstName = name.split(' ')[0];
   const detail = [activityLabel(worker.activity), worker.occupation].filter(Boolean).join(' · ');
   const reviews = worker.reviews || [];
-  const shown = showAll ? reviews : reviews.slice(0, 3);
+  const latest = reviews.find((r) => r.review || r.comment) || reviews[0] || {};
+  const latestText = latest.review || latest.comment || '';
   // Only real numbers: each one appears when there is data behind it.
   const stats = [
     worker.recognitionCount > 0 && { icon: Users, value: worker.recognitionCount, label: 'comentarios' },
@@ -173,33 +174,35 @@ export default function PublicProfile() {
           </dl>
         )}
 
-        <div className="mt-6">
-          {worker.readyForTips ? (
-            <Link to={`/pagar/${worker.username}`} className="btn-accent w-full gap-2.5 !py-4 text-xl">
-              <HandCoins size={24} /> Dejar propina
-            </Link>
-          ) : (
-            <Link to={`/p/${worker.username}/comentar`} className="btn-primary w-full gap-2.5 !py-4 text-lg">
-              <Star size={22} fill="#FCE883" stroke="#FCE883" /> Dejar un comentario
-            </Link>
-          )}
-        </div>
-
         <section className="mt-6" aria-labelledby="reviews-title">
           <div className="flex items-baseline justify-between">
             <h2 id="reviews-title" className="font-display text-2xl font-extrabold">
               Lo que dicen de {firstName}
             </h2>
-            {reviews.length > 3 && (
+            {reviews.length > 1 && (
               <button type="button" onClick={() => setShowAll((v) => !v)} className="text-sm font-bold text-brand-400 underline underline-offset-2">
                 {showAll ? 'Ver menos' : 'Ver más'}
               </button>
             )}
           </div>
           {reviews.length ? (
-            <div className="mt-3">
-              <ReviewList reviews={shown} />
-            </div>
+            showAll ? (
+              <div className="mt-3">
+                <ReviewList reviews={reviews} />
+              </div>
+            ) : (
+              <p className="mt-3 flex items-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm shadow-[0_8px_24px_-14px_rgba(10,47,47,0.35)]">
+                {latest.rating ? (
+                  <span className="flex shrink-0 items-center gap-1 font-bold">
+                    <Star size={15} fill="#FF8243" stroke="#FF8243" /> {latest.rating}
+                  </span>
+                ) : null}
+                <span className="min-w-0 flex-1 truncate text-slate-300">
+                  {latestText ? `“${latestText}”` : 'Dejó una valoración'}
+                </span>
+                <span className="shrink-0 text-xs font-semibold text-slate-500">{latest.clientName || 'Anónimo'}</span>
+              </p>
+            )
           ) : (
             <p className="mt-3 text-sm text-slate-500">Aún no hay valoraciones. Sé la primera persona en dejar un comentario.</p>
           )}
@@ -209,6 +212,22 @@ export default function PublicProfile() {
             </p>
           )}
         </section>
+
+        <p className="mt-8 text-center text-sm font-bold text-slate-400">Un buen servicio merece ser reconocido.</p>
+        <div className="mt-3 space-y-3 pb-4">
+          <Link to={`/p/${worker.username}/comentar`} className="btn-primary w-full gap-2.5 !py-4 text-lg">
+            <Star size={22} fill="#FCE883" stroke="#FCE883" /> Dejar un comentario
+          </Link>
+          {worker.readyForTips ? (
+            <Link to={`/pagar/${worker.username}`} className="btn-accent w-full gap-2.5 !py-4 text-xl">
+              <HandCoins size={24} /> Dejar propina
+            </Link>
+          ) : (
+            <p className="rounded-2xl bg-white/80 p-3 text-center text-sm text-slate-400">
+              Por ahora puedes dejar un comentario.
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
