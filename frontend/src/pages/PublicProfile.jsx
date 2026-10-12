@@ -19,6 +19,9 @@ export default function PublicProfile() {
   const [worker, setWorker] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
+  // Photos saved before the higher-resolution upload are small; stretched over the
+  // whole header they look blurry, so those are shown at their own size instead.
+  const [smallPhoto, setSmallPhoto] = useState(false);
 
   useEffect(() => {
     api
@@ -67,8 +70,17 @@ export default function PublicProfile() {
     <div className="page-shell !pt-0 md:!pt-8">
       {/* Photo: full width on a phone, a rounded card on a computer. */}
       <div className="relative -mx-5 h-72 overflow-hidden border-b-2 border-punch-ink bg-punch-pink md:mx-0 md:rounded-3xl md:border-2">
-        {worker.avatarUrl ? (
-          <img src={worker.avatarUrl} alt={`Foto de ${name}`} className="h-full w-full object-cover" />
+        {worker.avatarUrl && smallPhoto ? (
+          <div className="flex h-full w-full items-center justify-center bg-punch-yellow">
+            <img src={worker.avatarUrl} alt={`Foto de ${name}`} className="h-48 w-48 rounded-full border-4 border-punch-ink object-cover" />
+          </div>
+        ) : worker.avatarUrl ? (
+          <img
+            src={worker.avatarUrl}
+            alt={`Foto de ${name}`}
+            onLoad={(e) => setSmallPhoto(e.target.naturalWidth < 560)}
+            className="h-full w-full object-cover"
+          />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-punch-yellow">
             <span aria-hidden="true" className="font-display text-9xl font-extrabold text-punch-ink/80">
