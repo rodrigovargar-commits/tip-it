@@ -65,23 +65,23 @@ const STEPS = [
 ];
 
 const CLIENT_FLOW = [
-  { icon: QrCode, tone: 'yellow', title: 'Escanea o busca', body: 'el perfil de la persona.' },
-  { icon: Pointer, tone: 'pink', title: 'Deja tu comentario', body: 'y/o una propina.' },
-  { icon: CreditCard, tone: 'teal', title: 'Paga de forma segura', body: 'con Apple Pay, Google Pay o tarjeta.' },
-  { icon: Check, tone: 'orange', title: '¡Listo!', body: 'Tu pago queda confirmado y puedes dejar tu comentario.' },
+  { svg: 'qr', tone: 'yellow', title: 'Escanea o busca', body: 'el perfil de la persona.' },
+  { svg: 'tap', tone: 'pink', title: 'Deja tu comentario', body: 'y/o una propina.' },
+  { svg: 'card', tone: 'teal', title: 'Paga de forma segura', body: 'con Apple Pay, Google Pay o tarjeta.' },
+  { svg: 'check', tone: 'orange', title: '¡Listo!', body: 'Tu pago queda confirmado y puedes dejar tu comentario.' },
 ];
 
 // Who it is for, with the photos and captions from the brand sheet (files in
 // /public/personas). If a photo is missing the card falls back to a drawing.
 const SERVICES = [
-  { person: 'barber', photo: '/personas/caddie.jpg', icon: Flag, tone: 'yellow', label: 'Caddie', sub: 'en clubes de golf', note: 'Por una gran ronda.' },
-  { person: 'stylist', photo: '/personas/belleza.jpg', icon: Scissors, tone: 'pink', label: 'Belleza', sub: 'y estilistas', note: 'Por hacerte sentir increíble.' },
-  { person: 'doctor', photo: '/personas/doctores.jpg', icon: Stethoscope, tone: 'teal', label: 'Doctores', sub: 'en farmacias', note: 'Por su atención y orientación.' },
-  { person: 'guide', photo: '/personas/guias.jpg', icon: Camera, tone: 'orange', label: 'Guías', sub: 'de turistas', note: 'Por experiencias memorables.' },
-  { person: 'waiter', photo: '/personas/valet.jpg', icon: Car, tone: 'teal', label: 'Valet', sub: 'de auto', note: 'Por su atención y cuidado.' },
-  { person: 'stylist', photo: '/personas/spa.jpg', icon: Flower2, tone: 'pink', label: 'Personal', sub: 'de spa', note: 'Por tu bienestar.' },
-  { person: 'cook', photo: '/personas/hoteleria.jpg', icon: BedDouble, tone: 'orange', label: 'Recamareras', sub: 'y hotelería', note: 'Por un gran servicio.' },
-  { person: null, photo: '/personas/cualquiera.jpg', icon: Grid2x2, tone: 'teal', label: 'Y cualquiera', sub: 'persona que dé un servicio', note: 'Todos los servicios merecen reconocimiento.' },
+  { person: 'barber', photo: '/personas/caddie.jpg', svg: 'golf-caddie', tone: 'yellow', label: 'Caddie', sub: 'en clubes de golf', note: 'Por una gran ronda.' },
+  { person: 'stylist', photo: '/personas/belleza.jpg', svg: 'belleza', tone: 'pink', label: 'Belleza', sub: 'y estilistas', note: 'Por hacerte sentir increíble.' },
+  { person: 'doctor', photo: '/personas/doctores.jpg', svg: 'medico', tone: 'teal', label: 'Doctores', sub: 'en farmacias', note: 'Por su atención y orientación.' },
+  { person: 'guide', photo: '/personas/guias.jpg', svg: 'turismo', tone: 'orange', label: 'Guías', sub: 'de turistas', note: 'Por experiencias memorables.' },
+  { person: 'waiter', photo: '/personas/valet.jpg', svg: 'valet', tone: 'teal', label: 'Valet', sub: 'de auto', note: 'Por su atención y cuidado.' },
+  { person: 'stylist', photo: '/personas/spa.jpg', svg: 'spa', tone: 'pink', label: 'Personal', sub: 'de spa', note: 'Por tu bienestar.' },
+  { person: 'cook', photo: '/personas/hoteleria.jpg', svg: 'recamarera', tone: 'orange', label: 'Recamareras', sub: 'y hotelería', note: 'Por un gran servicio.' },
+  { person: null, photo: '/personas/cualquiera.jpg', svg: 'cualquier-servicio', tone: 'teal', label: 'Y cualquiera', sub: 'persona que dé un servicio', note: 'Todos los servicios merecen reconocimiento.' },
 ];
 
 // What people have told us (the three quotes collected by the team), with the
@@ -93,10 +93,10 @@ const VOICES = [
 ];
 
 const PILLARS = [
-  { icon: Heart, tone: 'yellow', title: 'Comentarios', body: 'Deja valoraciones y comentarios.' },
-  { icon: Coins, tone: 'orange', title: 'Recompensas', body: 'Propinas de forma rápida y segura.' },
-  { icon: Star, tone: 'pink', title: 'Reputación', body: 'Ayuda a fortalecer su perfil profesional.' },
-  { icon: Users, tone: 'teal', title: 'Oportunidades', body: 'Tus valoraciones pueden darte más visibilidad y nuevos clientes.' },
+  { svg: 'heart', tone: 'yellow', title: 'Comentarios', body: 'Deja valoraciones y comentarios.' },
+  { svg: 'coins', tone: 'orange', title: 'Recompensas', body: 'Propinas de forma rápida y segura.' },
+  { svg: 'star', tone: 'pink', title: 'Reputación', body: 'Ayuda a fortalecer su perfil profesional.' },
+  { svg: 'people', tone: 'teal', title: 'Oportunidades', body: 'Tus valoraciones pueden darte más visibilidad y nuevos clientes.' },
 ];
 
 const NUMBERS = [
@@ -254,10 +254,13 @@ function SectionTitle({ eyebrow, children, className = '' }) {
 function PhoneMock() {
   return (
     <div className="relative mx-auto w-[285px] sm:w-[310px]">
-      <Blob color="yellow" className="-left-24 top-6 h-72 w-72" />
-      <Blob color="orange" className="-bottom-10 -left-16 h-60 w-60" />
-      <Blob color="pink" className="-right-24 top-0 h-64 w-64 opacity-90" />
-      <Blob color="teal" className="-bottom-16 -right-24 h-56 w-56" />
+      {/* the big pastel shapes behind the phone (brand sheet) */}
+      <img
+        src="/art/backgrounds/hero-shapes.svg"
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute left-1/2 top-1/2 w-[640px] max-w-none -translate-x-[46%] -translate-y-[52%]"
+      />
 
       <Handwritten className="-right-4 -top-14 w-36 -rotate-6 text-right sm:-right-16">
         Rápido
@@ -277,9 +280,7 @@ function PhoneMock() {
           </div>
 
           <div className="mt-3 flex items-center gap-2.5">
-            <span className="flex h-12 w-12 shrink-0 items-end justify-center overflow-hidden rounded-full border-2 border-punch-ink bg-punch-pink">
-              <Person kind="stylist" size={48} />
-            </span>
+            <img src="/personas/mariana.png" alt="" width="48" height="48" className="h-12 w-12 shrink-0 rounded-full object-cover" />
             <div className="min-w-0 leading-tight">
               <p className="font-display text-base font-extrabold">Mariana</p>
               <p className="text-[11px] font-medium text-punch-ink/60">Terapeuta de spa · CDMX</p>
@@ -466,8 +467,6 @@ export default function Home() {
     <div className={`min-h-screen overflow-x-hidden bg-punch-cream font-sans text-punch-ink ${user ? 'pb-24 md:pb-0' : ''}`}>
       {/* ---------- Hero ---------- */}
       <div className="relative overflow-hidden bg-punch-cream" id="top">
-        <Blob color="yellow" round className="-left-28 top-40 h-60 w-60" />
-        <Blob color="pink" className="-right-24 -top-24 h-80 w-80 opacity-70" />
         <section className="relative mx-auto grid max-w-6xl items-center gap-16 px-5 pb-20 pt-10 md:grid-cols-[1.05fr_1fr] md:pb-28 md:pt-16">
           <div className="relative">
             <span className="inline-flex items-center gap-2 rounded-full border-2 border-punch-orange bg-punch-yellow px-4 py-1.5 font-display text-xs font-extrabold uppercase tracking-wider">
@@ -477,7 +476,12 @@ export default function Home() {
               Que se
               <br />
               reconozca.
-              <Sparks className="-right-2 top-0 hidden sm:block lg:right-6" />
+              <img
+                src="/art/illustrations/accent-rays.svg"
+                alt=""
+                aria-hidden="true"
+                className="pointer-events-none absolute -top-2 right-0 hidden h-16 w-16 sm:block lg:right-10"
+              />
             </h1>
             <p className="mt-7 max-w-xl text-xl font-bold leading-snug">
               TIP-IT es la plataforma de reconocimiento digital para personas que brindan servicios.
@@ -511,13 +515,13 @@ export default function Home() {
             </div>
             <ul className="mt-10 grid max-w-2xl grid-cols-2 gap-x-5 gap-y-5 text-left lg:grid-cols-4">
               {[
-                [Zap, 'yellow', 'En segundos', 'Sin registros complicados'],
-                [Lock, 'pink', 'Pago seguro', 'Apple Pay, Google Pay o tarjeta'],
-                [Star, 'yellow', 'Más que propinas', 'Comentarios y reputación'],
-                [MapPin, 'pink', 'Cualquier servicio', 'Funciona en cualquier lugar'],
-              ].map(([Icon, tone, title, body]) => (
+                ['bolt', 'yellow', 'En segundos', 'Sin registros complicados'],
+                ['lock', 'pink', 'Pago seguro', 'Apple Pay, Google Pay o tarjeta'],
+                ['star', 'yellow', 'Más que propinas', 'Comentarios y reputación'],
+                ['growth', 'pink', 'Cualquier servicio', 'Funciona en cualquier lugar'],
+              ].map(([svg, tone, title, body]) => (
                 <li key={title} className="flex items-start gap-2.5">
-                  <IconBadge icon={Icon} tone={tone} size={36} />
+                  <IconBadge svg={svg} tone={tone} size={36} />
                   <span className="leading-tight">
                     <span className="block font-display text-sm font-extrabold">{title}</span>
                     <span className="mt-0.5 block text-xs font-medium text-punch-ink/70">{body}</span>
@@ -595,7 +599,7 @@ export default function Home() {
 
           <Reveal className="mt-10">
             <ol className="grid gap-5 rounded-[2rem] bg-white/80 p-6 shadow-[0_14px_40px_-18px_rgba(10,47,47,0.35)] sm:grid-cols-2 lg:grid-cols-[repeat(4,1fr)] lg:items-start lg:gap-3 lg:p-8">
-              {CLIENT_FLOW.map(({ icon, tone, title, body }, i) => (
+              {CLIENT_FLOW.map(({ svg, tone, title, body }, i) => (
                 <li key={title} className="flex items-start gap-3 lg:relative">
                   <span className="flex shrink-0 items-center gap-2">
                     {i === 0 && (
@@ -603,7 +607,7 @@ export default function Home() {
                         1
                       </span>
                     )}
-                    <IconBadge icon={icon} tone={tone} size={i === 3 ? 56 : 48} />
+                    <IconBadge svg={svg} tone={tone} size={i === 3 ? 56 : 48} />
                   </span>
                   <span className="leading-snug">
                     <span className="block font-display text-base font-extrabold">{title}</span>
@@ -666,7 +670,7 @@ export default function Home() {
           </p>
         </Reveal>
         <ul className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-8 lg:gap-3">
-          {SERVICES.map(({ person, photo, icon, tone, label, sub, note }, i) => (
+          {SERVICES.map(({ person, photo, svg, tone, label, sub, note }, i) => (
             <Reveal key={label + sub} delay={(i % 4) * 70}>
               <li className="list-none">
                 <div className="relative flex h-40 items-end justify-center overflow-hidden rounded-3xl bg-punch-yellow/50 shadow-[0_10px_28px_-16px_rgba(10,47,47,0.45)]">
@@ -677,7 +681,7 @@ export default function Home() {
                   )}
                 </div>
                 <div className="relative -mt-5 ml-2">
-                  <IconBadge icon={icon} tone={tone} size={40} className="ring-4 ring-punch-cream" />
+                  <IconBadge svg={svg} tone={tone} size={40} className="ring-4 ring-punch-cream" />
                 </div>
                 <p className="mt-1.5 font-display text-sm font-extrabold leading-tight">
                   {label}
@@ -711,10 +715,10 @@ export default function Home() {
               </div>
             </Reveal>
             <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
-              {PILLARS.map(({ icon, tone, title, body }, i) => (
+              {PILLARS.map(({ svg, tone, title, body }, i) => (
                 <Reveal key={title} delay={i * 80}>
                   <div className="text-center">
-                    <IconBadge icon={icon} tone={tone} size={84} className="mx-auto" />
+                    <IconBadge svg={svg} tone={tone} size={84} className="mx-auto" />
                     <p className="mt-4 font-display text-lg font-extrabold">{title}</p>
                     <p className="mt-1 text-sm font-medium leading-snug text-punch-ink/70">{body}</p>
                   </div>
@@ -843,18 +847,15 @@ export default function Home() {
               Crea tu cuenta en un minuto. Después conectas tu banco, descargas tu QR y listo.
             </p>
             <p className="mt-3 text-sm font-bold">Cuenta gratis · Sin contratos · En minutos</p>
-            <div className="mt-8 flex items-center gap-4">
-              <div className="flex -space-x-3">
-                {['stylist', 'musician', 'cook', 'waiter'].map((k) => (
-                  <span
-                    key={k}
-                    className="flex h-12 w-12 items-end justify-center overflow-hidden rounded-full border-2 border-punch-ink bg-punch-cream"
-                  >
-                    <Person kind={k} size={48} />
-                  </span>
-                ))}
-              </div>
-              <p className="text-sm font-semibold">Para quienes viven de dar buen servicio.</p>
+            <div className="relative mt-8 hidden h-72 sm:block">
+              <img src="/art/backgrounds/cta-shapes.svg" alt="" aria-hidden="true" className="pointer-events-none absolute -left-8 bottom-[-2rem] h-full w-auto max-w-none" />
+              <img
+                src="/art/illustrations/professional-final.svg"
+                alt=""
+                aria-hidden="true"
+                className="absolute bottom-[-2rem] left-24 h-[18rem] w-auto"
+              />
+              <p className="absolute bottom-6 left-0 max-w-[10rem] text-sm font-bold leading-snug">Para quienes viven de dar buen servicio.</p>
             </div>
             {!user && (
               <button
