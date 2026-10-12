@@ -522,7 +522,9 @@ function Confirmation({ worker, receipt, user }) {
         </p>
       )}
       {ok && (
-        <p className="text-center text-sm font-semibold text-slate-400">El pago está confirmado.</p>
+        <p className="text-center text-sm font-semibold text-slate-400">
+          El pago está confirmado. {firstName} recibirá tu pago pronto.
+        </p>
       )}
 
       {!ok && (
