@@ -26,15 +26,17 @@ const getStripe = () => {
 
 const PRESETS = [2000, 5000, 10000]; // $20, $50, $100
 
-// Wallets are offered on phones only: Apple Pay on iOS, Google Pay on Android.
-// This only decides what we ASK Stripe to show; whether the wallet is really
-// usable on this device is up to Stripe's own check (onReady), not to this guess.
+// Wallets are offered everywhere, but only the one that belongs to the device:
+// iPhone/iPad get Apple Pay (no Google Pay), Android gets Google Pay (no Apple
+// Pay), and computers get both. This only decides what we ASK Stripe to show;
+// whether a wallet is really usable on this device (a card in Apple Wallet or
+// in Chrome) is up to Stripe's own check (onReady), not to this guess.
 function walletPlatform() {
-  if (typeof navigator === 'undefined') return null;
+  if (typeof navigator === 'undefined') return 'desktop';
   const ua = navigator.userAgent || '';
   if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'ios';
   if (/Android/.test(ua)) return 'android';
-  return null;
+  return 'desktop';
 }
 const DEFAULT_PRESET = 5000;
 
@@ -319,31 +321,29 @@ function Checkout({ worker, username, user, onPaid }) {
           Método de pago
         </h2>
 
-        {platform && (
-          <div className={ready ? '' : 'pointer-events-none opacity-50'}>
-            <ExpressCheckoutElement
-              onReady={({ availablePaymentMethods }) => {
-                const any = Boolean(availablePaymentMethods?.applePay || availablePaymentMethods?.googlePay);
-                setWallets(any);
-                setCardOpen(!any); // with a wallet, the card form waits behind "Pagar con tarjeta"
-                trackEvent('payment_method_available', { wallet: any });
-              }}
-              onConfirm={pay}
-              onCancel={() => toast('Cancelaste la autorización.')}
-              options={{
-                paymentMethods: {
-                  applePay: platform === 'ios' ? 'auto' : 'never',
-                  googlePay: platform === 'android' ? 'auto' : 'never',
-                  link: 'never',
-                  amazonPay: 'never',
-                  paypal: 'never',
-                },
-                buttonTheme: { applePay: 'black', googlePay: 'white' },
-                buttonHeight: 52,
-              }}
-            />
-          </div>
-        )}
+        <div className={ready ? '' : 'pointer-events-none opacity-50'}>
+          <ExpressCheckoutElement
+            onReady={({ availablePaymentMethods }) => {
+              const any = Boolean(availablePaymentMethods?.applePay || availablePaymentMethods?.googlePay);
+              setWallets(any);
+              setCardOpen(!any); // with a wallet, the card form waits behind "Pagar con tarjeta"
+              trackEvent('payment_method_available', { wallet: any });
+            }}
+            onConfirm={pay}
+            onCancel={() => toast('Cancelaste la autorización.')}
+            options={{
+              paymentMethods: {
+                applePay: platform === 'android' ? 'never' : 'auto',
+                googlePay: platform === 'ios' ? 'never' : 'auto',
+                link: 'never',
+                amazonPay: 'never',
+                paypal: 'never',
+              },
+              buttonTheme: { applePay: 'black', googlePay: 'white' },
+              buttonHeight: 52,
+            }}
+          />
+        </div>
 
         {wallets && (
           <button
