@@ -1,4 +1,4 @@
-const { publicBaseUrl, workerTipUrl } = require('../../src/utils/publicUrl');
+const { publicBaseUrl, workerTipUrl, workerProfileUrl } = require('../../src/utils/publicUrl');
 
 describe('publicBaseUrl (what QR codes point to)', () => {
   const OLD = { ...process.env };
@@ -32,5 +32,11 @@ describe('publicBaseUrl (what QR codes point to)', () => {
     delete process.env.PUBLIC_URL;
     process.env.CLIENT_URL = 'https://a.app,https://www.tipit.com.mx';
     expect(workerTipUrl('Rafa_Barber')).toBe('https://www.tipit.com.mx/tip/rafa_barber');
+  });
+
+  it('builds the profile address the QR codes use (lowercase, one /p/ segment)', () => {
+    delete process.env.PUBLIC_URL;
+    process.env.CLIENT_URL = 'https://a.app,https://www.tipit.com.mx';
+    expect(workerProfileUrl('Rafa_Barber')).toBe('https://www.tipit.com.mx/p/rafa_barber');
   });
 });

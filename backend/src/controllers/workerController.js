@@ -6,7 +6,6 @@ const User = require('../models/User');
 const Transaction = require('../models/Transaction');
 const stripe = require('../config/stripe');
 const { generateWorkerQR } = require('../utils/generateQR');
-const { workerTipUrl } = require('../utils/publicUrl');
 const refreshStripeReadiness = require('../utils/refreshStripeReadiness');
 const { logSecurityEvent } = require('../utils/logger');
 const Recognition = require('../models/Recognition');
@@ -67,7 +66,7 @@ const registerWorker = asyncHandler(async (req, res) => {
     establishment: establishment || '',
     yearsExperience: yearsExperience ? Number(yearsExperience) : null,
     qrCode,
-    qrUrl: workerTipUrl(username),
+    qrUrl: workerProfileUrl(username),
   });
 
   req.user.isWorker = true;

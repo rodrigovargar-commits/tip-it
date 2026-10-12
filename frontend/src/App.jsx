@@ -30,6 +30,11 @@ import Spinner from './components/Spinner.jsx';
 import TopBar from './components/TopBar.jsx';
 import { PageDecor } from './components/Decor.jsx';
 
+function RedirectToProfile() {
+  const { username } = useParams();
+  return <Navigate to={`/p/${username}`} replace />;
+}
+
 // Old shared links used /reconocer; they keep working.
 function RedirectToComment() {
   const { username } = useParams();
@@ -103,10 +108,12 @@ export default function App() {
         <Route path="/worker/stripe/return" element={<Navigate to="/worker/dashboard" replace />} />
         <Route path="/worker/stripe/refresh" element={<Navigate to="/worker/dashboard" replace />} />
 
-        {/* No ProtectedRoute on /scan or /tip/:username: sending a payment never
+        {/* No ProtectedRoute on /scan or /pagar/:username: sending a payment never
             requires an account upfront — only receiving one does. */}
         <Route path="/scan" element={<ScanQR />} />
-        <Route path="/tip/:username" element={<SendTip />} />
+        <Route path="/pagar/:username" element={<SendTip />} />
+        {/* Older QR codes and shared links pointed straight at payment: they now open the profile first. */}
+        <Route path="/tip/:username" element={<RedirectToProfile />} />
         <Route path="/p/:username" element={<PublicProfile />} />
         <Route path="/p/:username/comentar" element={<Recognize />} />
         <Route path="/p/:username/reconocer" element={<RedirectToComment />} />

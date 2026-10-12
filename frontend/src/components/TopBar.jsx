@@ -62,7 +62,7 @@ export default function TopBar() {
         ? 'border-punch-ink bg-punch-yellow text-punch-ink shadow-[2px_2px_0_0_#0A2F2F]'
         : 'border-transparent text-punch-ink/80 hover:border-punch-ink/30 hover:text-punch-ink'
     }`;
-  const payingTip = pathname.startsWith('/tip/');
+  const payingTip = pathname.startsWith('/pagar/');
   const mobileItem =
     'rounded-2xl px-4 py-3 font-display text-lg font-extrabold hover:bg-punch-yellow';
 

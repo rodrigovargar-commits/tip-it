@@ -1,6 +1,6 @@
 const Worker = require('../models/Worker');
 const { generateWorkerQR } = require('./generateQR');
-const { workerTipUrl } = require('./publicUrl');
+const { workerProfileUrl } = require('./publicUrl');
 const { logger } = require('./logger');
 
 // Makes sure every stored QR encodes the CURRENT public address. A QR saved
@@ -13,7 +13,7 @@ async function ensureWorkerQRs({ force = false } = {}) {
   // eslint-disable-next-line no-restricted-syntax
   for await (const worker of cursor) {
     checked += 1;
-    const expected = workerTipUrl(worker.username);
+    const expected = workerProfileUrl(worker.username);
     if (!force && worker.qrUrl === expected && worker.qrCode) continue;
     worker.qrCode = await generateWorkerQR(worker.username);
     worker.qrUrl = expected;

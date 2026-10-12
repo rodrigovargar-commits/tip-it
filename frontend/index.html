@@ -24,12 +24,12 @@
     <link rel="preload" href="/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossorigin />
     <script>
-      // Someone scanned a QR (/tip/:username): ask the API for that worker NOW,
+      // Someone scanned a QR (/p/:username, or an older /tip/ one): ask the API for that person NOW,
       // in parallel with downloading the app, instead of after it boots.
       (function () {
         try {
           var api = '%VITE_API_URL%';
-          var m = location.pathname.match(/^\/tip\/([^\/?#]+)/);
+          var m = location.pathname.match(/^\/(?:tip|p|pagar)\/([^\/?#]+)/);
           if (!m || !api || api.indexOf('%') !== -1) return;
           var u = decodeURIComponent(m[1]).toLowerCase();
           window.__tipPrefetch = {

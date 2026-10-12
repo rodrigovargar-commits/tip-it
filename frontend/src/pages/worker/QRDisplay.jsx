@@ -173,7 +173,8 @@ async function buildPrintableQR(worker) {
 
 export default function QRDisplay() {
   const { worker } = useAuth();
-  const tipUrl = `${window.location.origin}/tip/${worker.username}`;
+  // The QR and the link open the profile first; from there people choose to tip or comment.
+  const tipUrl = `${window.location.origin}/p/${worker.username}`;
   // Only while developing: lets the card be previewed without downloading it.
   if (import.meta.env.DEV) window.__buildQR = () => buildPrintableQR(worker);
 
@@ -216,7 +217,7 @@ export default function QRDisplay() {
   const handleShare = async () => {
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Envíame un pago en TIP-IT', url: tipUrl });
+        await navigator.share({ title: 'Mi perfil en TIP-IT', url: tipUrl });
       } catch {
         // user canceled share
       }

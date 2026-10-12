@@ -13,6 +13,7 @@ import FormField from '../../components/FormField.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { trackEvent } from '../../utils/analytics.js';
 import { activityLabel } from '../../utils/activities.js';
+import { takeWorkerPrefetch } from '../../utils/prefetch.js';
 import { formatCents, parseAmountInput, quote } from '../../utils/money.js';
 
 // Stripe's script is only fetched when the payment form actually renders, not
@@ -71,9 +72,6 @@ function Identity({ worker, compact = true }) {
           ) : (
             <span className="text-slate-500">Aún no hay valoraciones</span>
           )}
-          <Link to={`/p/${worker.username}`} className="font-bold text-brand-400 underline underline-offset-2">
-            Ver perfil
-          </Link>
         </div>
       </div>
     </div>
@@ -598,11 +596,10 @@ export default function SendTip() {
       try {
         // The page's own <script> in index.html already started this request
         // when the QR was opened; reuse it so we don't wait twice.
-        const pre = window.__tipPrefetch;
-        if (pre && pre.username === String(username).toLowerCase()) {
-          window.__tipPrefetch = null;
+        const pre = takeWorkerPrefetch(username);
+        if (pre) {
           try {
-            const r = await pre.p;
+            const r = await pre;
             if (r.ok && r.data?.worker) {
               setWorker(r.data.worker);
               return;
@@ -675,8 +672,8 @@ export default function SendTip() {
         <Link to={`/p/${worker.username}/comentar`} className="btn-primary mt-6">
           Dejar un comentario
         </Link>
-        <Link to="/scan" className="btn-secondary mt-3">
-          Volver
+        <Link to={`/p/${worker.username}`} className="btn-secondary mt-3">
+          Volver al perfil
         </Link>
       </div>
     );
@@ -685,9 +682,9 @@ export default function SendTip() {
   return (
     <div className="page-shell md:!max-w-[480px]">
       {!receipt && (
-        <Link to="/scan" className="flex items-center gap-1 text-sm text-slate-400">
+        <Link to={`/p/${worker.username}`} className="flex items-center gap-1 text-sm text-slate-400">
           <ArrowLeft size={16} />
-          Volver
+          Volver al perfil
         </Link>
       )}
 

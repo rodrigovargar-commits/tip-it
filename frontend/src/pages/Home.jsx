@@ -386,7 +386,7 @@ function PayBox() {
     const clean = username.trim().replace(/^@/, '');
     if (!clean) return;
     trackEvent('landing_find_worker');
-    navigate(`/tip/${encodeURIComponent(clean)}`);
+    navigate(`/p/${encodeURIComponent(clean)}`);
   };
 
   return (

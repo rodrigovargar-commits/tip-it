@@ -6,6 +6,7 @@ import api, { getErrorMessage } from '../services/api.js';
 import ReviewList from '../components/ReviewList.jsx';
 import Avatar from '../components/Avatar.jsx';
 import { activityLabel } from '../utils/activities.js';
+import { takeWorkerPrefetch } from '../utils/prefetch.js';
 
 const roundBtn =
   'flex h-10 w-10 items-center justify-center rounded-full border-2 border-punch-ink bg-punch-cream/90 text-punch-ink backdrop-blur hover:bg-punch-yellow';
@@ -24,14 +25,34 @@ export default function PublicProfile() {
   const [smallPhoto, setSmallPhoto] = useState(false);
 
   useEffect(() => {
-    api
-      .get(`/workers/${username}`)
-      .then(({ data }) => setWorker(data.worker))
-      .catch((err) => {
+    let alive = true;
+    (async () => {
+      try {
+        // The page's own <script> already asked for this person when the link opened.
+        const pre = takeWorkerPrefetch(username);
+        if (pre) {
+          try {
+            const r = await pre;
+            if (r.ok && r.data?.worker) {
+              if (alive) setWorker(r.data.worker);
+              return;
+            }
+          } catch {
+            // fall through to the normal request
+          }
+        }
+        const { data } = await api.get(`/workers/${username}`);
+        if (alive) setWorker(data.worker);
+      } catch (err) {
         toast.error(getErrorMessage(err));
         navigate('/scan');
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
   }, [username, navigate]);
 
   const share = async () => {
@@ -158,7 +179,7 @@ export default function PublicProfile() {
             <Star size={17} fill="#FCE883" stroke="#FCE883" /> Dejar un comentario
           </Link>
           {worker.readyForTips ? (
-            <Link to={`/tip/${worker.username}`} className="btn-accent w-full gap-2 text-lg">
+            <Link to={`/pagar/${worker.username}`} className="btn-accent w-full gap-2 text-lg">
               <HandCoins size={18} /> Dejar propina
             </Link>
           ) : (

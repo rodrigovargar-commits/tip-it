@@ -19,7 +19,7 @@ export default function CookieBanner() {
 
   // Someone paying a tip is focused on that: no banner there (and no analytics
   // unless they already accepted earlier).
-  if (choice || pathname.startsWith('/tip/')) return null;
+  if (choice || pathname.startsWith('/pagar/')) return null;
 
   const decide = (value) => {
     setConsent(value);

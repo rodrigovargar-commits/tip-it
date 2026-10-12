@@ -8,7 +8,7 @@ export default function BottomNav() {
   const { pathname } = useLocation();
   const links = useNavLinks().filter((l) => !l.desktopOnly);
   // While paying, nothing else should compete with the amount and the pay button.
-  if (!user || pathname.startsWith('/tip/')) return null;
+  if (!user || pathname.startsWith('/pagar/')) return null;
 
   return (
     <nav

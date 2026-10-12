@@ -43,6 +43,7 @@ const PRIVATE_TITLES = [
   ['/history', 'Historial — TIP-IT'],
   ['/contacts', 'Contactos — TIP-IT'],
   ['/scan', 'Escanear un QR — TIP-IT'],
+  ['/pagar/', 'Dejar propina — TIP-IT'],
   ['/tip/', 'Dejar propina — TIP-IT'],
   ['/p/', 'Perfil — TIP-IT'],
 ];
