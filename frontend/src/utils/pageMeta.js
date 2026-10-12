@@ -16,7 +16,7 @@ const PUBLIC = {
   },
   '/como-funciona': {
     title: 'Cómo funciona TIP-IT — Guía de la app',
-    description: 'Dar o recibir propinas con TIP-IT toma menos de un minuto: escanea, elige el monto y paga.',
+    description: 'Dar o recibir propinas con TIP-IT toma menos de un minuto: escanea, ve el perfil, deja un comentario o una propina.',
   },
   '/terminos': {
     title: 'Términos y condiciones — TIP-IT',

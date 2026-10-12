@@ -7,7 +7,7 @@ const STEPS = [
   {
     icon: QrCode,
     title: 'Tu QR es tu forma de cobrar',
-    desc: 'Se generó solo con tu perfil. Compártelo, imprímelo o mándalo por WhatsApp — cada quien te paga escaneándolo o buscando tu username. Lo encuentras cuando quieras en "Mi QR".',
+    desc: 'Se generó solo con tu perfil. Compártelo, imprímelo o mándalo por WhatsApp — cada quien lo escanea, ve tu perfil y te deja una propina o un comentario. Lo encuentras cuando quieras en "Mi QR".',
   },
   {
     icon: ShieldCheck,

@@ -124,10 +124,10 @@ async function buildPrintableQR(worker) {
   ctx.font = `800 92px ${DISPLAY}`;
   ctx.fillText('¡Escanéame!', W / 2, 345);
   ctx.font = `500 38px ${FONT}`;
-  ctx.fillText('Deja tu propina de forma rápida y segura.', W / 2, 408);
+  ctx.fillText('Deja una propina o un comentario.', W / 2, 408);
   ctx.fillStyle = BRAND.muted;
   ctx.font = `500 30px ${FONT}`;
-  ctx.fillText('Scan me! Leave your tip quickly and securely.', W / 2, 455);
+  ctx.fillText('Scan me! Leave a tip or a comment.', W / 2, 455);
 
   const qrBox = 540;
   const qrX = W / 2 - qrBox / 2;

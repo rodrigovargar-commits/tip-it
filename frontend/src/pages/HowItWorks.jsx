@@ -7,22 +7,22 @@ const forClients = [
   {
     icon: QrCode,
     title: 'Escanea o busca',
-    desc: 'Apunta la cámara al QR del Tip-er, o busca su username. No hace falta descargar nada.',
+    desc: 'Apunta la cámara al QR de la persona, o busca su usuario. Se abre su perfil; no hace falta descargar nada.',
   },
   {
     icon: Calculator,
-    title: 'Elige el monto',
-    desc: 'Elige cuánto quieres dar, tú decides. No pedimos nombre ni ningún dato.',
+    title: 'Elige cómo agradecer',
+    desc: 'Un comentario, una propina o las dos cosas. Si dejas propina, tú decides cuánto; no pedimos nombre ni ningún dato.',
   },
   {
     icon: ShieldCheck,
     title: 'Paga seguro',
-    desc: 'Tarjeta o Apple Pay, procesado por Stripe. TIP-IT nunca ve ni guarda tu tarjeta.',
+    desc: 'Con Apple Pay, Google Pay o tarjeta, procesado por Stripe. TIP-IT nunca ve ni guarda tu tarjeta.',
   },
   {
     icon: Star,
-    title: 'Califica (opcional)',
-    desc: 'Deja estrellas y una reseña — ayuda al Tip-er a construir su reputación.',
+    title: 'Deja tu comentario (opcional)',
+    desc: 'Después de pagar puedes dejar estrellas y un comentario; ayuda a la persona a construir su reputación.',
   },
 ];
 
@@ -50,10 +50,10 @@ const forWorkers = [
 ];
 
 const faqs = [
-  ['¿Necesito crear una cuenta para pagar?', 'No. Basta con tu nombre y teléfono la primera vez — no pedimos contraseña. Si vuelves a pagar desde el mismo teléfono, te reconocemos automáticamente.'],
+  ['¿Necesito crear una cuenta para pagar?', 'No. Escaneas, ves el perfil, eliges el monto y pagas. No pedimos nombre ni ningún dato.'],
   ['¿TIP-IT guarda mi tarjeta?', 'Nunca. El pago lo procesa Stripe directamente — TIP-IT no ve ni almacena números de tarjeta.'],
   ['¿Cuánto cobra TIP-IT?', 'Una comisión pequeña por transacción, siempre visible antes de pagar. Quien envía el pago puede elegir cubrirla para que la persona reciba el 100%.'],
-  ['¿Cómo recibo mi dinero si soy Tip-er?', 'Se transfiere directo a tu cuenta bancaria a través de Stripe Connect — TIP-IT no retiene el dinero en ningún momento.'],
+  ['¿Cómo recibo mi dinero si recibo propinas?', 'Se transfiere directo a tu cuenta bancaria a través de Stripe Connect — TIP-IT no retiene el dinero en ningún momento.'],
   ['¿Puedo dejar un comentario sin pagar?', 'Sí. Entra a su perfil y toca “Dejar un comentario”. Revisamos los comentarios antes de publicarlos y se marcan como “Sin pago asociado”.'],
   ['¿Qué pasa si quiero recibir pagos más adelante?', 'Solo necesitas poner una contraseña para proteger tu cuenta y conectar tu banco — lo puedes hacer cuando quieras desde tu perfil.'],
 ];

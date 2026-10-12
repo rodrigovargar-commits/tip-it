@@ -66,9 +66,9 @@ const STEPS = [
 
 const CLIENT_FLOW = [
   { svg: 'qr', tone: 'yellow', title: 'Escanea o busca', body: 'el perfil de la persona.' },
-  { svg: 'tap', tone: 'pink', title: 'Deja tu comentario', body: 'y/o una propina.' },
-  { svg: 'card', tone: 'teal', title: 'Paga de forma segura', body: 'con Apple Pay, Google Pay o tarjeta.' },
-  { svg: 'check', tone: 'orange', title: '¡Listo!', body: 'Tu pago queda confirmado y puedes dejar tu comentario.' },
+  { svg: 'tap', tone: 'pink', title: 'Elige cómo agradecer', body: 'un comentario, una propina o las dos cosas.' },
+  { svg: 'card', tone: 'teal', title: 'Paga de forma segura', body: 'si dejas propina: Apple Pay, Google Pay o tarjeta.' },
+  { svg: 'check', tone: 'orange', title: '¡Listo!', body: 'Tu pago queda confirmado y la persona lo recibe pronto.' },
 ];
 
 // Who it is for, with the photos and captions from the brand sheet (files in
@@ -93,10 +93,10 @@ const VOICES = [
 ];
 
 const PILLARS = [
-  { svg: 'heart', tone: 'yellow', title: 'Comentarios', body: 'Deja valoraciones y comentarios.' },
+  { svg: 'heart', tone: 'yellow', title: 'Comentarios', body: 'Deja valoraciones y comentarios cuando te atiendan bien.' },
   { svg: 'coins', tone: 'orange', title: 'Recompensas', body: 'Propinas de forma rápida y segura.' },
-  { svg: 'star', tone: 'pink', title: 'Reputación', body: 'Ayuda a fortalecer su perfil profesional.' },
-  { svg: 'people', tone: 'teal', title: 'Oportunidades', body: 'Tus valoraciones pueden darte más visibilidad y nuevos clientes.' },
+  { svg: 'star', tone: 'pink', title: 'Reputación', body: 'Cada comentario fortalece el perfil profesional de la persona.' },
+  { svg: 'people', tone: 'teal', title: 'Oportunidades', body: 'Las valoraciones pueden dar más visibilidad y nuevos clientes.' },
 ];
 
 const NUMBERS = [
@@ -111,7 +111,8 @@ const FEATURES = [
 ];
 
 const FAQ = [
-  { q: '¿Necesito crear una cuenta para pagar?', a: 'No. Escaneas, eliges el monto y pagas. No pedimos nombre ni ningún dato.' },
+  { q: '¿Necesito crear una cuenta para pagar?', a: 'No. Escaneas, ves el perfil, eliges el monto y pagas. No pedimos nombre ni ningún dato.' },
+  { q: '¿Puedo dejar un comentario sin pagar?', a: 'Sí. Entras al perfil de la persona y tocas “Dejar un comentario”. Lo revisamos antes de publicarlo y se marca como “Sin pago asociado”.' },
   { q: '¿Cuánto cobra TIP-IT?', a: 'Una comisión pequeña por transacción (6% + $4), siempre visible antes de pagar. Quien envía el pago puede elegir cubrirla para que la persona reciba el 100%.' },
   { q: '¿Cómo recibo mi dinero?', a: 'Se transfiere directo a tu cuenta bancaria. TIP-IT no retiene el dinero en ningún momento. Tus primeros pagos pueden tardar unos días en liberarse; es normal en toda cuenta nueva.' },
   { q: '¿Dónde encuentro mi QR?', a: 'En tu cuenta, en “Mi código QR”. Lo descargas listo para imprimir o lo compartes por WhatsApp.' },
@@ -393,9 +394,9 @@ function PayBox() {
     <div className="relative z-20 mx-auto -mt-10 max-w-4xl px-5 sm:-mt-12">
       <div className="flex flex-col gap-5 rounded-[2rem] border border-punch-ink/15 bg-white p-5 shadow-[0_24px_60px_-24px_rgba(10,47,47,0.45)] sm:flex-row sm:items-center sm:p-6">
         <div className="sm:w-2/5">
-          <p className="font-display text-2xl font-extrabold leading-tight">¿Vas a dejar propina?</p>
+          <p className="font-display text-2xl font-extrabold leading-tight">¿Quieres agradecer a alguien?</p>
           <p className="mt-1 text-sm font-medium text-punch-ink/70">
-            Sin cuenta, sin descargar nada. Escanea o busca por username.
+            Busca su perfil: ahí dejas un comentario o una propina. Sin cuenta, sin descargar nada.
           </p>
         </div>
         <form onSubmit={go} className="flex flex-1 flex-col gap-3 sm:flex-row">
@@ -563,9 +564,9 @@ export default function Home() {
               músicos de calle, puestos de comida y más.
             </p>
             <p className="mt-4 text-lg leading-relaxed text-punch-ink/80">
-              Recibes pagos con tu QR único, o te buscan por tu username. Tu cliente escanea,
-              elige cuánto dejarte y paga. Y con cada servicio bien calificado vas construyendo
-              tu reputación, que con el tiempo funciona como tu currículum.
+              Tienes un QR único y un perfil público. Tu cliente escanea, ve tu perfil y decide si
+              te deja una propina, un comentario o las dos cosas. Y con cada servicio bien
+              calificado vas construyendo tu reputación, que con el tiempo funciona como tu currículum.
             </p>
           </Reveal>
 
@@ -602,12 +603,10 @@ export default function Home() {
               {CLIENT_FLOW.map(({ svg, tone, title, body }, i) => (
                 <li key={title} className="flex items-start gap-3 lg:relative">
                   <span className="flex shrink-0 items-center gap-2">
-                    {i === 0 && (
-                      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-punch-yellow font-display text-lg font-extrabold">
-                        1
-                      </span>
-                    )}
-                    <IconBadge svg={svg} tone={tone} size={i === 3 ? 56 : 48} />
+                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-punch-yellow font-display text-lg font-extrabold">
+                      {i + 1}
+                    </span>
+                    <IconBadge svg={svg} tone={tone} size={48} />
                   </span>
                   <span className="leading-snug">
                     <span className="block font-display text-base font-extrabold">{title}</span>

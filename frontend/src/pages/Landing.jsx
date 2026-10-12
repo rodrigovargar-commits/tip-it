@@ -7,8 +7,8 @@ import Person from '../components/Person.jsx';
 // Home of the installed iOS/Android app (the web gets the full marketing page
 // in Home.jsx). Same look: orange hero, chunky stickers, big friendly type.
 const POINTS = [
-  { icon: ScanLine, title: 'Escanea y envía', body: 'Apunta la cámara al QR y listo.', bg: 'bg-punch-yellow' },
-  { icon: Star, title: 'Califica y reseña', body: 'Construye la reputación de quien te atendió.', bg: 'bg-punch-pink' },
+  { icon: ScanLine, title: 'Escanea y elige', body: 'Apunta la cámara al QR, mira su perfil y deja una propina o un comentario.', bg: 'bg-punch-yellow' },
+  { icon: Star, title: 'Deja un comentario', body: 'Construye la reputación de quien te atendió.', bg: 'bg-punch-pink' },
   { icon: Wallet, title: 'Directo a su banco', body: 'Nunca guardamos tu tarjeta.', bg: 'bg-white' },
 ];
 
