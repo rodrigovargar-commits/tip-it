@@ -5,6 +5,12 @@ const Worker = require('../models/Worker');
 const Transaction = require('../models/Transaction');
 const Lead = require('../models/Lead');
 const { sendLeadEmail } = require('../utils/notifyLead');
+const ensureWorkerQRs = require('../utils/ensureWorkerQRs');
+const { publicBaseUrl } = require('../utils/publicUrl');
+const stripe = require('../config/stripe');
+const Recognition = require('../models/Recognition');
+const { availableChannels, providerFor } = require('../utils/otp/providers');
+const { sendCode } = require('../utils/otp/service');
 
 const getStats = asyncHandler(async (req, res) => {
   const [
@@ -145,5 +151,100 @@ const testEmail = asyncHandler(async (req, res) => {
   });
 });
 
+// Rebuilds every worker's QR from the current public address.
+// /api/admin/regenerate-qrs?key=...  (add &force=1 to rebuild even the ones that look right)
+const regenerateQrs = asyncHandler(async (req, res) => {
+  const result = await ensureWorkerQRs({ force: req.query.force === '1' });
+  res.json({ success: true, publicUrl: publicBaseUrl(), ...result });
+});
+
+// What the app and Stripe each think about one person's ability to get tips.
+// /api/admin/worker-status?username=rovargas&key=...   (no account ids or secrets in the answer)
+const workerStatus = asyncHandler(async (req, res) => {
+  const username = String(req.query.username || '').toLowerCase();
+  const worker = await Worker.findOne({ username });
+  if (!worker) throw new AppError('No existe ese username', 404);
+
+  const key = process.env.STRIPE_SECRET_KEY || '';
+  const out = {
+    success: true,
+    username,
+    serverStripeMode: key.startsWith('sk_live') ? 'live' : key.startsWith('sk_test') ? 'test' : 'no configurada',
+    appSaysReady: Boolean(worker.stripeOnboardingComplete),
+    hasStripeAccount: Boolean(worker.stripeAccountId),
+    tipCount: worker.tipCount,
+  };
+
+  if (worker.stripeAccountId) {
+    try {
+      const a = await stripe.accounts.retrieve(worker.stripeAccountId);
+      out.stripe = {
+        details_submitted: a.details_submitted,
+        charges_enabled: a.charges_enabled,
+        payouts_enabled: a.payouts_enabled,
+        disabled_reason: a.requirements?.disabled_reason || null,
+        requirements_due: a.requirements?.currently_due || [],
+        pending_verification: a.requirements?.pending_verification || [],
+      };
+      out.stripeSaysReady = Boolean(a.details_submitted && a.charges_enabled);
+    } catch (err) {
+      out.stripeError = err.message;
+    }
+  }
+  res.json(out);
+});
+
+// Recognitions left without paying wait here until someone approves them.
+const getRecognitions = asyncHandler(async (req, res) => {
+  const status = ['pending', 'published', 'rejected'].includes(req.query.status) ? req.query.status : 'pending';
+  const items = await Recognition.find({ status })
+    .sort({ createdAt: -1 })
+    .limit(100)
+    .populate('worker', 'username');
+  res.json({
+    success: true,
+    status,
+    recognitions: items.map((r) => ({
+      id: r._id,
+      worker: r.worker?.username,
+      rating: r.rating,
+      comment: r.comment,
+      alias: r.alias,
+      createdAt: r.createdAt,
+    })),
+  });
+});
+
+const moderateRecognition = asyncHandler(async (req, res) => {
+  const status = req.body?.status || req.query.status;
+  if (!['published', 'rejected'].includes(status)) {
+    throw new AppError('status debe ser published o rejected', 400);
+  }
+  const rec = await Recognition.findByIdAndUpdate(req.params.id, { status }, { new: true });
+  if (!rec) throw new AppError('No encontrado', 404);
+  res.json({ success: true, id: rec._id, status: rec.status });
+});
+
+// Which ways of sending a code are configured, and (with ?to=) a real test
+// send, without ever revealing a key or the code itself.
+const otpStatus = asyncHandler(async (req, res) => {
+  const channels = ['email', 'sms', 'whatsapp'].map((c) => ({ channel: c, provider: providerFor(c) || 'not_configured' }));
+  const out = { success: true, available: availableChannels(), channels, required: process.env.OTP_REQUIRED === 'true' };
+  if (req.query.to && req.query.channel) {
+    try {
+      const r = await sendCode({ channel: req.query.channel, destination: req.query.to, purpose: 'register' });
+      out.test = { sent: true, to: r.destination };
+    } catch (err) {
+      out.test = { sent: false, error: err.message };
+    }
+  }
+  res.json(out);
+});
+
 module.exports = {
+  getRecognitions,
+  moderateRecognition,
+  otpStatus,
+  workerStatus,
+  regenerateQrs,
   testEmail, getStats, getLeads, updateLead };

@@ -33,11 +33,8 @@ export default function PrivacyPolicy() {
           <h2 className="text-base font-semibold text-slate-100">2. Qué datos recopilamos</h2>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>Nombre y teléfono (obligatorios, tanto para cuentas completas como de invitado).</li>
-            <li>Email y contraseña (obligatorios solo para cuentas completas o de trabajador).</li>
+            <li>Email y contraseña (obligatorios solo para cuentas completas o para recibir propinas).</li>
             <li>Foto de perfil, si decides subir una.</li>
-            <li>
-              Documento de identidad (KYC), si eres trabajador y lo agregas para verificación.
-            </li>
             <li>
               Historial de transacciones: montos, fechas, calificaciones y reseñas que escribas o
               recibas.
@@ -61,7 +58,7 @@ export default function PrivacyPolicy() {
           <h2 className="text-base font-semibold text-slate-100">3. Para qué usamos tus datos</h2>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>Procesar los pagos que envías o recibes.</li>
-            <li>Identificarte en la app y mostrar tu perfil público si eres trabajador.</li>
+            <li>Identificarte en la app y mostrar tu perfil público si recibes propinas.</li>
             <li>Generar tu código QR único para recibir pagos.</li>
             <li>Enviarte confirmaciones relacionadas con tus transacciones.</li>
             <li>
@@ -83,7 +80,7 @@ export default function PrivacyPolicy() {
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>
               <strong>Stripe</strong> — procesamiento de pagos y verificación de identidad de
-              trabajadores (KYC) para cumplir regulaciones financieras.
+              quienes reciben propinas (KYC) para cumplir regulaciones financieras.
             </li>
             <li>
               <strong>MongoDB Atlas</strong> — almacenamiento de la base de datos.

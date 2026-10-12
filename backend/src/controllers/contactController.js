@@ -34,7 +34,7 @@ const listContacts = asyncHandler(async (req, res) => {
 const addContact = asyncHandler(async (req, res) => {
   const { username } = req.body;
   const worker = await Worker.findOne({ username: String(username).toLowerCase() });
-  if (!worker) throw new AppError('Trabajador no encontrado', 404);
+  if (!worker) throw new AppError('No encontramos a ese Tip-er', 404);
   if (String(worker.user) === String(req.user._id)) {
     throw new AppError('No puedes agregarte a ti mismo como contacto', 400);
   }

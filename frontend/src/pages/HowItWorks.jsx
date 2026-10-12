@@ -1,27 +1,28 @@
 import { Link } from 'react-router-dom';
 import PageHeader from '../components/PageHeader.jsx';
+import IconBadge from '../components/IconBadge.jsx';
 import { QrCode, Calculator, ShieldCheck, HandCoins, UserPlus, Star } from 'lucide-react';
 
 const forClients = [
   {
     icon: QrCode,
     title: 'Escanea o busca',
-    desc: 'Apunta la cámara al QR del trabajador, o busca su username. No hace falta descargar nada.',
+    desc: 'Apunta la cámara al QR de la persona, o busca su usuario. Se abre su perfil; no hace falta descargar nada.',
   },
   {
     icon: Calculator,
-    title: 'Elige el monto',
-    desc: 'Monto fijo o % de la cuenta — tú decides. No pedimos nombre ni ningún dato.',
+    title: 'Elige cómo agradecer',
+    desc: 'Un comentario, una propina o las dos cosas. Si dejas propina, tú decides cuánto; no pedimos nombre ni ningún dato.',
   },
   {
     icon: ShieldCheck,
     title: 'Paga seguro',
-    desc: 'Tarjeta o Apple Pay, procesado por Stripe. TIP-IT nunca ve ni guarda tu tarjeta.',
+    desc: 'Con Apple Pay, Google Pay o tarjeta, procesado por Stripe. TIP-IT nunca ve ni guarda tu tarjeta.',
   },
   {
     icon: Star,
-    title: 'Califica (opcional)',
-    desc: 'Deja estrellas y una reseña — ayuda al trabajador a construir su reputación.',
+    title: 'Deja tu comentario (opcional)',
+    desc: 'Después de pagar puedes dejar estrellas y un comentario; ayuda a la persona a construir su reputación.',
   },
 ];
 
@@ -29,7 +30,7 @@ const forWorkers = [
   {
     icon: UserPlus,
     title: 'Crea tu cuenta',
-    desc: 'Elige tu username único — con él generamos tu código QR automáticamente.',
+    desc: 'Con tu teléfono o tu correo y un código que te enviamos, sin contraseña. Elige tu usuario y generamos tu QR.',
   },
   {
     icon: ShieldCheck,
@@ -49,10 +50,11 @@ const forWorkers = [
 ];
 
 const faqs = [
-  ['¿Necesito crear una cuenta para pagar?', 'No. Basta con tu nombre y teléfono la primera vez — no pedimos contraseña. Si vuelves a pagar desde el mismo teléfono, te reconocemos automáticamente.'],
+  ['¿Necesito crear una cuenta para pagar?', 'No. Escaneas, ves el perfil, eliges el monto y pagas. No pedimos nombre ni ningún dato.'],
   ['¿TIP-IT guarda mi tarjeta?', 'Nunca. El pago lo procesa Stripe directamente — TIP-IT no ve ni almacena números de tarjeta.'],
-  ['¿Cuánto cobra TIP-IT?', 'Una comisión pequeña por transacción, siempre visible antes de pagar. Quien envía el pago puede elegir cubrirla para que el trabajador reciba el 100%.'],
-  ['¿Cómo recibo mi dinero si soy trabajador?', 'Se transfiere directo a tu cuenta bancaria a través de Stripe Connect — TIP-IT no retiene el dinero en ningún momento.'],
+  ['¿Cuánto cobra TIP-IT?', 'Una comisión pequeña por transacción, siempre visible antes de pagar. Quien envía el pago puede elegir cubrirla para que la persona reciba el 100%.'],
+  ['¿Cómo recibo mi dinero si recibo propinas?', 'Se transfiere directo a tu cuenta bancaria a través de Stripe Connect — TIP-IT no retiene el dinero en ningún momento.'],
+  ['¿Puedo dejar un comentario sin pagar?', 'Sí. Entra a su perfil y toca “Dejar un comentario”. Revisamos los comentarios antes de publicarlos y se marcan como “Sin pago asociado”.'],
   ['¿Qué pasa si quiero recibir pagos más adelante?', 'Solo necesitas poner una contraseña para proteger tu cuenta y conectar tu banco — lo puedes hacer cuando quieras desde tu perfil.'],
 ];
 
@@ -61,9 +63,7 @@ function StepList({ steps }) {
     <div className="mt-4 space-y-3">
       {steps.map(({ icon: Icon, title, desc }, i) => (
         <div key={i} className="card flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-punch-ink bg-punch-yellow text-punch-ink">
-            <Icon size={18} strokeWidth={2} />
-          </span>
+          <IconBadge icon={Icon} tone={['yellow', 'pink', 'orange', 'teal'][i % 4]} size={44} />
           <div>
             <p className="font-semibold text-slate-100">{title}</p>
             <p className="mt-0.5 text-sm text-slate-400">{desc}</p>

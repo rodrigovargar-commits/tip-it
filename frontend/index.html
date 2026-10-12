@@ -4,13 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#FF8243" />
-    <meta name="description" content="Cada vez hay menos cash. Con tu QR de TIP-IT, tus clientes te dejan propina con tarjeta o Apple Pay y te llega directo a tu banco. Para barberos, estilistas, músicos y puestos de comida." />
+    <meta name="description" content="TIP-IT es la plataforma de reconocimiento digital para personas que brindan servicios. Recibe propinas con tarjeta, Apple Pay o Google Pay, y valoraciones que fortalecen tu reputación. Para barberos, estilistas, músicos y puestos de comida." />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="es_MX" />
     <meta property="og:url" content="https://www.tipit.com.mx/" />
     <meta property="og:site_name" content="TIP-IT" />
-    <meta property="og:title" content="TIP-IT — Que no se te vayan tus propinas" />
-    <meta property="og:description" content="Cada vez hay menos cash. Con tu QR de TIP-IT, tus clientes te dejan propina en segundos y te llega directo a tu banco." />
+    <meta property="og:title" content="TIP-IT — Que se reconozca" />
+    <meta property="og:description" content="La plataforma de reconocimiento digital para personas que brindan servicios: propinas, valoraciones y reputación." />
     <meta property="og:image" content="https://www.tipit.com.mx/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -19,8 +19,33 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="64x64" href="/icons/favicon-64.png" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <!-- Start talking to the API server right away (it can be asleep): -->
+    <link rel="preconnect" href="%VITE_API_URL%" crossorigin />
     <link rel="preload" href="/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <script>
+      // Someone scanned a QR (/p/:username, or an older /tip/ one): ask the API for that person NOW,
+      // in parallel with downloading the app, instead of after it boots.
+      (function () {
+        try {
+          var api = '%VITE_API_URL%';
+          var m = location.pathname.match(/^\/(?:tip|p|pagar)\/([^\/?#]+)/);
+          if (!m || !api || api.indexOf('%') !== -1) return;
+          var u = decodeURIComponent(m[1]).toLowerCase();
+          window.__tipPrefetch = {
+            username: u,
+            p: fetch(api + '/workers/' + encodeURIComponent(u), { headers: { Accept: 'application/json' } }).then(
+              function (r) {
+                return r.json().then(function (j) {
+                  return { ok: r.ok, data: j };
+                });
+              }
+            ),
+          };
+          window.__tipPrefetch.p.catch(function () {});
+        } catch (e) {}
+      })();
+    </script>
     <title>TIP-IT — Propinas digitales por QR, sin efectivo</title>
 
     <!-- Analytics (GA4) is loaded only after the visitor accepts cookies: see src/utils/consent.js -->

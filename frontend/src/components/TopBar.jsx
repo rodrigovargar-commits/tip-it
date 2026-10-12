@@ -3,7 +3,7 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown, LifeBuoy, LogOut, Menu, ScanLine, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import useNavLinks, { HELP_LINKS } from '../hooks/useNavLinks.js';
-import Logo from './Logo.jsx';
+import { LogoFull } from './Logo.jsx';
 import Avatar from './Avatar.jsx';
 
 // Site-wide header: logo (always goes to the main page), the options right at
@@ -62,6 +62,7 @@ export default function TopBar() {
         ? 'border-punch-ink bg-punch-yellow text-punch-ink shadow-[2px_2px_0_0_#0A2F2F]'
         : 'border-transparent text-punch-ink/80 hover:border-punch-ink/30 hover:text-punch-ink'
     }`;
+  const payingTip = pathname.startsWith('/pagar/');
   const mobileItem =
     'rounded-2xl px-4 py-3 font-display text-lg font-extrabold hover:bg-punch-yellow';
 
@@ -69,12 +70,11 @@ export default function TopBar() {
     <header className="sticky top-0 z-50 border-b-2 border-punch-ink bg-punch-cream/95 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 md:h-16 md:px-6">
         <Link to="/" className="flex shrink-0 items-center gap-2.5" aria-label="TIP-IT, página principal">
-          <Logo size={36} />
-          <span className="font-display text-xl font-extrabold tracking-tight md:text-2xl">TIP-IT</span>
+          <LogoFull size={36} />
         </Link>
 
-        {/* Desktop options */}
-        <nav className="hidden items-center gap-1 md:flex" aria-label="Principal">
+        {/* Desktop options (not while paying a tip: keep it simple) */}
+        <nav className={`hidden items-center gap-1 ${payingTip ? '' : 'md:flex'}`} aria-label="Principal">
           {user ? (
             <>
               {links.map(({ to, label, icon: Icon }) => (
@@ -122,7 +122,7 @@ export default function TopBar() {
           )}
         </nav>
 
-        <div className="flex items-center gap-2 md:gap-3">
+        <div className={`flex items-center gap-2 md:gap-3 ${payingTip ? 'hidden' : ''}`}>
           {user ? (
             <Link to="/profile" aria-label="Mi perfil" className="flex items-center gap-2">
               <Avatar src={user.avatarUrl} name={user.name} size={36} />
@@ -138,14 +138,17 @@ export default function TopBar() {
               >
                 <ScanLine size={16} /> Escanear
               </Link>
-              <Link to="/login" className="hidden font-display text-sm font-extrabold hover:underline md:inline">
-                Iniciar sesión
-              </Link>
               <Link
                 to="/register?role=worker"
-                className="rounded-full border-2 border-punch-ink bg-punch-ink px-4 py-2 font-display text-sm font-extrabold text-punch-yellow shadow-[3px_3px_0_0_#FCE883] transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[1px_1px_0_0_#FCE883]"
+                className="rounded-full border-2 border-punch-ink bg-punch-ink px-4 py-2 font-display text-sm font-extrabold text-white transition hover:bg-punch-ink/90"
               >
-                Crea tu cuenta
+                Crear mi QR
+              </Link>
+              <Link
+                to="/login"
+                className="hidden rounded-full border-2 border-punch-ink bg-white/70 px-4 py-2 font-display text-sm font-extrabold transition hover:bg-punch-yellow md:inline-flex"
+              >
+                Iniciar sesión
               </Link>
             </>
           )}

@@ -56,7 +56,7 @@ export default function Contacts() {
           contacts.map((c) => (
             <div key={c.id} className="card flex items-center gap-3">
               <Avatar src={c.worker.avatarUrl} name={c.worker.name || c.worker.username} size={48} />
-              <Link to={`/tip/${c.worker.username}`} className="min-w-0 flex-1">
+              <Link to={`/p/${c.worker.username}`} className="min-w-0 flex-1">
                 <p className="truncate font-semibold text-slate-100">
                   {c.worker.name || `@${c.worker.username}`}
                 </p>

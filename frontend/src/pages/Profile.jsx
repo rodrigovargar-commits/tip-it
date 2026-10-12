@@ -7,6 +7,8 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { fileToResizedDataUrl } from '../utils/image.js';
 import Avatar from '../components/Avatar.jsx';
 import PageHeader from '../components/PageHeader.jsx';
+import FormField from '../components/FormField.jsx';
+import { ACTIVITIES } from '../utils/activities.js';
 
 export default function Profile() {
   const { user, worker, logout, refreshMe } = useAuth();
@@ -15,10 +17,14 @@ export default function Profile() {
   const [form, setForm] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
-    document: '',
   });
   const [bio, setBio] = useState(worker?.bio || '');
   const [experience, setExperience] = useState(worker?.experience || '');
+  const [publicName, setPublicName] = useState(worker?.publicName || '');
+  const [activity, setActivity] = useState(worker?.activity || '');
+  const [occupation, setOccupation] = useState(worker?.occupation || '');
+  const [establishment, setEstablishment] = useState(worker?.establishment || '');
+  const [years, setYears] = useState(worker?.yearsExperience ?? '');
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingWorkerProfile, setSavingWorkerProfile] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -41,7 +47,7 @@ export default function Profile() {
     e.preventDefault();
     setSavingProfile(true);
     try {
-      await api.put('/users/profile', form.document ? form : { name: form.name, phone: form.phone });
+      await api.put('/users/profile', { name: form.name, phone: form.phone });
       await refreshMe();
       toast.success('Perfil actualizado');
     } catch (err) {
@@ -76,7 +82,7 @@ export default function Profile() {
   const handleSaveWorkerProfile = async () => {
     setSavingWorkerProfile(true);
     try {
-      await api.put('/workers/profile', { bio, experience });
+      await api.put('/workers/profile', { bio, experience, publicName, activity, occupation, establishment, yearsExperience: years === '' ? null : Number(years) });
       await refreshMe();
       toast.success('Perfil público actualizado');
     } catch (err) {
@@ -122,24 +128,12 @@ export default function Profile() {
       </div>
 
       <form onSubmit={handleSaveProfile} className="mt-6 space-y-4">
-        <div>
-          <label className="text-xs text-slate-500">Nombre</label>
-          <input name="name" value={form.name} onChange={handleChange} className="input-field mt-1" />
-        </div>
-        <div>
-          <label className="text-xs text-slate-500">Teléfono</label>
-          <input name="phone" value={form.phone} onChange={handleChange} className="input-field mt-1" />
-        </div>
-        <div>
-          <label className="text-xs text-slate-500">Documento de identidad (KYC)</label>
-          <input
-            name="document"
-            value={form.document}
-            onChange={handleChange}
-            placeholder={user?.hasDocument ? 'Registrado (escribe para reemplazar)' : 'INE / Pasaporte'}
-            className="input-field mt-1"
-          />
-        </div>
+        <FormField label="Nombre">
+          {(p) => <input {...p} name="name" value={form.name} onChange={handleChange} className="input-field" />}
+        </FormField>
+        <FormField label="Teléfono">
+          {(p) => <input {...p} name="phone" type="tel" inputMode="tel" value={form.phone} onChange={handleChange} className="input-field" />}
+        </FormField>
         {user?.isGuest ? (
           <div className="rounded-2xl border-2 border-punch-ink/30 bg-white/60 p-3">
             <p className="text-sm text-slate-300">Estás usando una cuenta rápida, sin contraseña.</p>
@@ -148,10 +142,9 @@ export default function Profile() {
             </Link>
           </div>
         ) : (
-          <div>
-            <label className="text-xs text-slate-500">Email</label>
-            <input value={user?.email || ''} disabled className="input-field mt-1 opacity-60" />
-          </div>
+          <FormField label="Correo">
+            {(p) => <input {...p} value={user?.email || ''} disabled className="input-field opacity-60" />}
+          </FormField>
         )}
         <button type="submit" disabled={savingProfile} className="btn-primary w-full">
           {savingProfile ? 'Guardando...' : 'Guardar cambios'}
@@ -164,26 +157,54 @@ export default function Profile() {
             <p className="font-semibold">Perfil público</p>
             <p className="text-sm text-slate-500">@{worker.username}</p>
           </div>
-          <div>
-            <label className="text-xs text-slate-500">Bio corta</label>
-            <textarea
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              maxLength={280}
-              className="input-field mt-1 h-20 resize-none"
-              placeholder="¿A qué te dedicas?"
-            />
-          </div>
-          <div>
-            <label className="text-xs text-slate-500">Experiencia (opcional)</label>
-            <textarea
-              value={experience}
-              onChange={(e) => setExperience(e.target.value)}
-              maxLength={600}
-              className="input-field mt-1 h-24 resize-none"
-              placeholder="Dónde has trabajado, cuánto tiempo llevas, certificaciones... esto se muestra en tu perfil como tu trayectoria."
-            />
-          </div>
+          <FormField label="Nombre público" hint="Es el que ven tus clientes; puede ser distinto a tu nombre legal.">
+            {(p) => <input {...p} value={publicName} onChange={(e) => setPublicName(e.target.value)} maxLength={60} className="input-field" />}
+          </FormField>
+          <FormField label="Actividad">
+            {(p) => (
+              <select {...p} value={activity} onChange={(e) => setActivity(e.target.value)} className="input-field">
+                <option value="">Elige una</option>
+                {ACTIVITIES.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.label}
+                  </option>
+                ))}
+              </select>
+            )}
+          </FormField>
+          <FormField label="Ocupación" optional>
+            {(p) => <input {...p} value={occupation} onChange={(e) => setOccupation(e.target.value)} maxLength={60} className="input-field" />}
+          </FormField>
+          <FormField label="Años de experiencia" optional hint="Se muestra en tu perfil público.">
+            {(p) => <input {...p} type="number" inputMode="numeric" min="0" max="60" value={years} onChange={(e) => setYears(e.target.value)} className="input-field" />}
+          </FormField>
+          <FormField label="Lugar de trabajo" optional>
+            {(p) => <input {...p} value={establishment} onChange={(e) => setEstablishment(e.target.value)} maxLength={60} className="input-field" />}
+          </FormField>
+          <FormField label="Sobre ti" optional hint={`${bio.length}/280`}>
+            {(p) => (
+              <textarea
+                {...p}
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                maxLength={280}
+                className="input-field h-20 resize-none"
+                placeholder="¿A qué te dedicas?"
+              />
+            )}
+          </FormField>
+          <FormField label="Experiencia" optional hint="Se muestra en tu perfil como tu trayectoria.">
+            {(p) => (
+              <textarea
+                {...p}
+                value={experience}
+                onChange={(e) => setExperience(e.target.value)}
+                maxLength={600}
+                className="input-field h-24 resize-none"
+                placeholder="Dónde has trabajado, cuánto tiempo llevas, certificaciones…"
+              />
+            )}
+          </FormField>
           <button
             onClick={handleSaveWorkerProfile}
             disabled={savingWorkerProfile}

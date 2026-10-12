@@ -29,8 +29,45 @@ const workerSchema = new mongoose.Schema(
       maxlength: 600,
       default: '',
     },
+    publicName: {
+      // Name shown on the public profile; may differ from the legal name
+      type: String,
+      maxlength: 60,
+      trim: true,
+      default: '',
+    },
+    activity: {
+      type: String,
+      enum: [...require('../utils/activities').ACTIVITY_IDS, ''],
+      default: '',
+    },
+    occupation: {
+      // Free text, e.g. "Barbero" or "Manicurista"
+      type: String,
+      maxlength: 60,
+      trim: true,
+      default: '',
+    },
+    yearsExperience: {
+      // Optional, entered by the person themselves
+      type: Number,
+      min: 0,
+      max: 60,
+      default: null,
+    },
+    establishment: {
+      type: String,
+      maxlength: 60,
+      trim: true,
+      default: '',
+    },
     qrCode: {
       // Data URL (base64 PNG) of the QR pointing to this worker's public profile
+      type: String,
+      default: null,
+    },
+    qrUrl: {
+      // The exact address encoded in qrCode, so a stale QR can be detected and rebuilt
       type: String,
       default: null,
     },

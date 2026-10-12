@@ -39,6 +39,8 @@ const logger = pino({
 const SECURITY_EVENTS = new Set([
   'auth.register',
   'auth.login',
+  'auth.otp_sent',
+  'auth.otp_check',
   'authz.denied',
   'worker.privilege_granted',
   'admin.access',

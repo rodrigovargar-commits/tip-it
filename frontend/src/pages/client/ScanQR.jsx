@@ -16,11 +16,11 @@ export default function ScanQR() {
   const goToUsername = (raw) => {
     if (!raw) return;
     let value = raw.trim();
-    const match = value.match(/\/tip\/([a-zA-Z0-9_.]+)/);
+    const match = value.match(/\/(?:p|tip|pagar)\/([a-zA-Z0-9_.]+)/);
     if (match) value = match[1];
     value = value.replace(/^@/, '');
     if (!value) return;
-    navigate(`/tip/${value.toLowerCase()}`);
+    navigate(`/p/${value.toLowerCase()}`);
   };
 
   useEffect(() => {

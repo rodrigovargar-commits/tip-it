@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema(
     email: {
       // Optional for guest accounts (created from the quick-pay flow), required otherwise
       type: String,
-      required: [function emailRequired() { return !this.isGuest; }, 'El email es obligatorio'],
+      required: [function emailRequired() { return !this.isGuest && !this.phoneVerified; }, 'El email es obligatorio'],
       unique: true,
       sparse: true,
       lowercase: true,
@@ -22,13 +22,18 @@ const userSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      required: [true, 'El teléfono es obligatorio'],
+      required: [function phoneRequired() { return !this.emailVerified; }, 'El teléfono es obligatorio'],
       trim: true,
     },
+    // Set when the person proved they own the address/number by typing a code
+    // we sent. A verified phone is unique across accounts and can be used to
+    // sign in with a code instead of a password.
+    emailVerified: { type: Boolean, default: false },
+    phoneVerified: { type: Boolean, default: false },
     password: {
       // Optional for guest accounts: they authenticate by phone via /auth/guest, never by password
       type: String,
-      required: [function passwordRequired() { return !this.isGuest; }, 'La contraseña es obligatoria'],
+      required: [function passwordRequired() { return !this.isGuest && !this.emailVerified && !this.phoneVerified; }, 'La contraseña es obligatoria'],
       minlength: 8,
       select: false,
     },
@@ -73,6 +78,7 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.index({ phone: 1, isGuest: 1 });
+userSchema.index({ phone: 1 }, { unique: true, partialFilterExpression: { phoneVerified: true } });
 
 userSchema.pre('save', async function hashPassword(next) {
   if (!this.isModified('password')) return next();
@@ -96,6 +102,8 @@ userSchema.methods.toPublicJSON = function toPublicJSON() {
     worker: this.worker,
     avatarUrl: this.avatarUrl,
     isGuest: this.isGuest,
+    emailVerified: this.emailVerified,
+    phoneVerified: this.phoneVerified,
     createdAt: this.createdAt,
   };
 };

@@ -1,15 +1,32 @@
-// TIP-IT mark: two overlapping "coins" on a sunny disc. Same shape as before
-// (one outline circle, one solid), recoloured to the Tropical punch palette.
-export default function Logo({ size = 40, className = '' }) {
+// TIP-IT mark ("Original" from the brand sheet): a big yellow circle with a
+// smaller orange one over its lower-right edge, both outlined in dark green.
+// On dark backgrounds the outline is dropped and the two colours carry it.
+export default function Logo({ size = 40, onDark = false, className = '' }) {
+  const stroke = onDark ? 'none' : '#0A2F2F';
   return (
-    <span
-      className={`flex shrink-0 items-center justify-center rounded-full border-2 border-punch-ink bg-punch-yellow ${className}`}
-      style={{ width: size, height: size }}
-    >
-      <svg viewBox="0 0 24 24" width={size * 0.62} height={size * 0.62} fill="none">
-        <circle cx="9" cy="9" r="6" stroke="#0A2F2F" strokeWidth="2" />
-        <circle cx="15" cy="15" r="6" fill="#FF8243" stroke="#0A2F2F" strokeWidth="2" />
-      </svg>
+    <svg viewBox="0 0 96 96" width={size} height={size} className={`shrink-0 ${className}`} aria-hidden="true" focusable="false">
+      <circle cx="38" cy="38" r="31" fill="#FCE883" stroke={stroke} strokeWidth="7" />
+      <circle cx="62" cy="62" r="23" fill="#FF8243" stroke={stroke} strokeWidth="7" />
+    </svg>
+  );
+}
+
+// "TIP-IT" in the heavy display face, with the hyphen as a rounded orange bar.
+export function Wordmark({ className = '', onDark = false, onOrange = false }) {
+  return (
+    <span className={`font-display font-extrabold leading-none tracking-tight ${onDark ? 'text-white' : 'text-punch-ink'} ${className}`}>
+      TIP
+      <span aria-hidden="true" className={`mx-[0.05em] inline-block h-[0.16em] w-[0.31em] translate-y-[-0.14em] rounded-full align-middle ${onOrange ? 'bg-punch-yellow' : 'bg-punch-orange'}`} />
+      IT
+    </span>
+  );
+}
+
+export function LogoFull({ size = 36, onDark = false, onOrange = false, className = '' }) {
+  return (
+    <span className={`inline-flex items-center gap-2.5 ${className}`}>
+      <Logo size={size} onDark={onDark} />
+      <Wordmark onDark={onDark} onOrange={onOrange} className="text-xl md:text-2xl" />
     </span>
   );
 }

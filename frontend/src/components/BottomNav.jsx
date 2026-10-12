@@ -1,12 +1,14 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import useNavLinks from '../hooks/useNavLinks.js';
 
 // Phone tab bar (hidden from md up, where the top bar carries the options).
 export default function BottomNav() {
   const { user } = useAuth();
+  const { pathname } = useLocation();
   const links = useNavLinks().filter((l) => !l.desktopOnly);
-  if (!user) return null;
+  // While paying, nothing else should compete with the amount and the pay button.
+  if (!user || pathname.startsWith('/pagar/')) return null;
 
   return (
     <nav

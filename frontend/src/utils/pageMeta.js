@@ -2,11 +2,11 @@
 // app, so these are applied on every navigation by components/RouteMeta.jsx.
 const SITE = 'https://www.tipit.com.mx';
 const DEFAULT_DESC =
-  'Cada vez hay menos cash. Con tu QR de TIP-IT, tus clientes te dejan propina con tarjeta o Apple Pay y te llega directo a tu banco.';
+  'TIP-IT es la plataforma de reconocimiento digital para personas que brindan servicios. Recibe propinas con tarjeta, Apple Pay o Google Pay, y valoraciones que fortalecen tu reputación.';
 
 const PUBLIC = {
   '/': {
-    title: 'TIP-IT — Que no se te vayan tus propinas',
+    title: 'TIP-IT — Que se reconozca',
     description: DEFAULT_DESC,
   },
   '/unete': {
@@ -16,7 +16,7 @@ const PUBLIC = {
   },
   '/como-funciona': {
     title: 'Cómo funciona TIP-IT — Guía de la app',
-    description: 'Dar o recibir propinas con TIP-IT toma menos de un minuto: escanea, elige el monto y paga.',
+    description: 'Dar o recibir propinas con TIP-IT toma menos de un minuto: escanea, ve el perfil, deja un comentario o una propina.',
   },
   '/terminos': {
     title: 'Términos y condiciones — TIP-IT',
@@ -43,7 +43,9 @@ const PRIVATE_TITLES = [
   ['/history', 'Historial — TIP-IT'],
   ['/contacts', 'Contactos — TIP-IT'],
   ['/scan', 'Escanear un QR — TIP-IT'],
+  ['/pagar/', 'Dejar propina — TIP-IT'],
   ['/tip/', 'Dejar propina — TIP-IT'],
+  ['/p/', 'Perfil — TIP-IT'],
 ];
 
 export function metaFor(pathname) {

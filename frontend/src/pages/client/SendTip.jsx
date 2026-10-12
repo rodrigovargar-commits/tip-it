@@ -1,77 +1,585 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { ArrowLeft, UserPlus, PartyPopper, Star, Calculator, Wallet, ShieldCheck } from 'lucide-react';
+import { Elements, ExpressCheckoutElement, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { ArrowLeft, ChevronDown, Clock, CreditCard, ShieldCheck, Star, UserPlus } from 'lucide-react';
 import api, { getErrorMessage } from '../../services/api.js';
-import Spinner from '../../components/Spinner.jsx';
 import StarRating from '../../components/StarRating.jsx';
 import Avatar from '../../components/Avatar.jsx';
+import ReviewList from '../../components/ReviewList.jsx';
+import IconBadge from '../../components/IconBadge.jsx';
+import FormField from '../../components/FormField.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { trackEvent } from '../../utils/analytics.js';
+import { activityLabel } from '../../utils/activities.js';
+import { takeWorkerPrefetch } from '../../utils/prefetch.js';
+import { formatCents, parseAmountInput, quote } from '../../utils/money.js';
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
-const QUICK_AMOUNTS = [20, 50, 100, 200];
-const PERCENT_PRESETS = [10, 15, 20];
+// Stripe's script is only fetched when the payment form actually renders, not
+// the moment someone scans a QR: the first screen opens faster and without
+// third-party requests.
+let stripePromise;
+const getStripe = () => {
+  if (!stripePromise) stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
+  return stripePromise;
+};
 
-function PaymentStep({ worker, chargeAmount, netAmount, onSuccess, user }) {
+const PRESETS = [2000, 5000, 10000]; // $20, $50, $100
+
+// Wallets are offered everywhere, but only the one that belongs to the device:
+// iPhone/iPad get Apple Pay (no Google Pay), Android gets Google Pay (no Apple
+// Pay), and computers get both. This only decides what we ASK Stripe to show;
+// whether a wallet is really usable on this device (a card in Apple Wallet or
+// in Chrome) is up to Stripe's own check (onReady), not to this guess.
+function walletPlatform() {
+  if (typeof navigator === 'undefined') return 'desktop';
+  const ua = navigator.userAgent || '';
+  if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'ios';
+  if (/Android/.test(ua)) return 'android';
+  return 'desktop';
+}
+const DEFAULT_PRESET = 5000;
+
+const APPEARANCE = {
+  theme: 'stripe',
+  variables: {
+    colorPrimary: '#0A2F2F',
+    colorText: '#0A2F2F',
+    colorBackground: '#FFFFFF',
+    colorDanger: '#B3261E',
+    fontFamily: '"DM Sans", system-ui, sans-serif',
+    borderRadius: '16px',
+  },
+};
+
+/* ------------------------------------------------------------ small pieces */
+
+function Identity({ worker, compact = true }) {
+  const detail = [activityLabel(worker.activity), worker.occupation].filter(Boolean).join(' · ');
+  return (
+    <div className="flex items-center gap-3">
+      <Avatar src={worker.avatarUrl} name={worker.name || worker.username} size={compact ? 52 : 80} />
+      <div className="min-w-0">
+        <p className="truncate text-lg font-extrabold leading-tight">{worker.name || `@${worker.username}`}</p>
+        <p className="truncate text-sm text-slate-400">{detail || `@${worker.username}`}</p>
+        <div className="mt-0.5 flex items-center gap-3 text-xs">
+          {worker.ratingCount > 0 ? (
+            <span className="flex items-center gap-1 font-bold text-amber-700">
+              <Star size={12} fill="#FF8243" stroke="#FF8243" />
+              {worker.rating} ({worker.ratingCount})
+            </span>
+          ) : (
+            <span className="text-slate-500">Aún no hay valoraciones</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Switch({ checked, onChange, label, hint }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className="flex w-full items-start gap-3 rounded-2xl border-2 border-punch-ink/25 bg-white p-3.5 text-left transition hover:border-punch-ink"
+    >
+      <span className={`relative mt-0.5 h-7 w-12 shrink-0 rounded-full border-2 border-punch-ink transition ${checked ? 'bg-punch-orange' : 'bg-punch-ink/10'}`}>
+        <span className={`absolute top-0.5 h-5 w-5 rounded-full border-2 border-punch-ink bg-white transition-all ${checked ? 'left-[1.5rem]' : 'left-0.5'}`} />
+      </span>
+      <span>
+        <span className="block text-base font-bold">{label}</span>
+        {hint && <span className="mt-0.5 block text-sm text-slate-500">{hint}</span>}
+      </span>
+    </button>
+  );
+}
+
+function SummaryRow({ label, value, suffix, strong, note }) {
+  return (
+    <div className={`flex items-baseline justify-between gap-3 ${strong ? 'border-t-2 border-punch-ink/15 pt-2.5 font-extrabold' : 'text-base'}`}>
+      <dt className={strong ? 'text-lg' : 'text-slate-400'}>
+        {label}
+        {note && <span className="block text-sm font-normal text-slate-500">{note}</span>}
+      </dt>
+      <dd className={strong ? 'whitespace-nowrap text-2xl' : 'font-bold'}>
+        {value}
+        {suffix && <span className="ml-1 text-sm font-bold text-slate-500">{suffix}</span>}
+      </dd>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------ the checkout */
+
+function Checkout({ worker, username, user, onPaid }) {
   const stripe = useStripe();
   const elements = useElements();
+
+  const [feeInfo, setFeeInfo] = useState({ feePercent: 6, feeFixedCents: 400 });
+  const [choice, setChoice] = useState(DEFAULT_PRESET); // a preset in cents, or 'other'
+  const [otherText, setOtherText] = useState('');
+  const [coverFee, setCoverFee] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [wallets, setWallets] = useState(false);
+  const [cardOpen, setCardOpen] = useState(true);
+  const platform = useMemo(walletPlatform, []);
+  const [notice, setNotice] = useState('');
+  const intentRef = useRef(null);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!stripe || !elements) return;
-    setSubmitting(true);
+  useEffect(() => {
+    trackEvent('checkout_view', { origin: 'qr' });
+    api
+      .get('/tips/fee-info')
+      .then(({ data }) => setFeeInfo({ feePercent: data.feePercent, feeFixedCents: data.feeFixedCents }))
+      .catch(() => {});
+  }, []);
 
-    const { error, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      redirect: 'if_required',
-    });
+  const parsed = choice === 'other' ? parseAmountInput(otherText) : { cents: choice, error: null };
+  const tipCents = parsed.cents;
+  const q = tipCents ? quote(tipCents, coverFee, feeInfo) : null;
+  const tooLow = q && q.net <= 0;
+  const ready = Boolean(q) && !tooLow;
+  const name = worker.name || `@${worker.username}`;
+  const firstName = name.split(' ')[0];
 
-    if (error) {
-      toast.error(error.message || 'No se pudo procesar el pago');
-      setSubmitting(false);
+  // Keep the amount Stripe shows in the Apple Pay / Google Pay sheet equal to the total on screen.
+  useEffect(() => {
+    if (elements && q && q.total >= 100) elements.update({ amount: q.total });
+  }, [elements, q?.total]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // A new amount or choice means a new quote: forget any payment started for the old one.
+  const quoteKey = ready ? `${tipCents}:${coverFee}` : null;
+
+  const pay = async () => {
+    if (!stripe || !elements || submitting) return;
+    if (!ready) {
+      toast.error(parsed.error || 'Elige cuánto quieres dejar.');
       return;
     }
+    setSubmitting(true);
+    setNotice('');
+    try {
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        setSubmitting(false);
+        return;
+      }
 
-    if (paymentIntent?.status === 'succeeded') {
-      onSuccess(paymentIntent.id);
-    } else {
+      let intent = intentRef.current && intentRef.current.key === quoteKey ? intentRef.current : null;
+      if (!intent) {
+        const { data } = await api.post('/tips/create-intent', { username, amount: tipCents / 100, coverFee });
+        // The server is the authority on the total. If it disagrees with the screen
+        // (for example the rate changed), say so and ask again instead of charging.
+        if (data.amount !== q.total) {
+          setNotice(`Actualizamos el total a ${formatCents(data.amount)}. Revísalo antes de pagar.`);
+          setFeeInfo((f) => ({ ...f }));
+          setSubmitting(false);
+          return;
+        }
+        intent = { key: quoteKey, clientSecret: data.clientSecret, transactionId: data.transactionId };
+        intentRef.current = intent;
+      }
+
+      trackEvent('payment_attempted', { currency: 'MXN', method: wallets ? 'wallet_or_card' : 'card' });
+      const { error, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        clientSecret: intent.clientSecret,
+        confirmParams: {
+          return_url: window.location.href,
+          payment_method_data: { billing_details: { address: { country: 'MX' } } },
+        },
+        redirect: 'if_required',
+      });
+
+      if (error) {
+        // A declined card leaves the same payment open for another try; anything
+        // structural means this payment is unusable, so start a new one next time.
+        if (error.type !== 'card_error') intentRef.current = null;
+        trackEvent('payment_failed', { category: error.type });
+        toast.error(error.type === 'card_error' || error.type === 'validation_error' ? error.message : 'No se pudo autorizar el pago. Prueba otro medio.');
+        setSubmitting(false);
+        return;
+      }
+
+      // Never trust the browser's word that it worked: the server asks Stripe itself.
+      // If we can't reach it right now, the payment may still be going through:
+      // show "estamos confirmando" with a way to check, never "failed" and never a second charge.
+      let transaction;
+      try {
+        const { data: confirmed } = await api.post('/tips/confirm', { paymentIntentId: paymentIntent.id });
+        transaction = confirmed.transaction;
+        trackEvent('payment_succeeded', { currency: 'MXN' });
+      } catch {
+        transaction = {
+          _id: intent.transactionId,
+          status: 'processing',
+          amount: q.total,
+          platformFee: q.fee,
+          netAmount: q.net,
+          coverFee,
+          createdAt: new Date().toISOString(),
+        };
+      }
+      intentRef.current = null;
+      onPaid({ transaction, paymentIntentId: paymentIntent.id });
+    } catch (err) {
+      trackEvent('checkout_error', { screen: 'pay' });
+      toast.error(getErrorMessage(err));
       setSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-      <div className="card !bg-brand-500/10 text-center">
-        <p className="text-sm text-slate-400">Tú pagas ${chargeAmount.toFixed(2)}</p>
-        <p className="mt-1 text-2xl font-bold text-brand-300">
-          {worker.name || `@${worker.username}`} recibe ${netAmount.toFixed(2)}
+    <div className="space-y-5">
+      <section aria-labelledby="amount-title">
+        <h2 id="amount-title" className="font-display text-xl font-extrabold">
+          ¿Cuánto deseas dejar?
+        </h2>
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4" role="radiogroup" aria-labelledby="amount-title">
+          {[...PRESETS, 'other'].map((opt) => {
+            const on = choice === opt;
+            return (
+              <button
+                key={opt}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                onClick={() => {
+                  setChoice(opt);
+                  trackEvent('amount_selected', { type: opt === 'other' ? 'other' : 'preset' });
+                }}
+                className={`min-h-[4.25rem] rounded-3xl border-2 py-4 font-display text-2xl font-extrabold transition active:scale-95 ${
+                  on ? 'border-punch-ink bg-punch-orange shadow-[3px_3px_0_0_#0A2F2F]' : 'border-punch-ink/30 bg-white hover:border-punch-ink'
+                }`}
+              >
+                {opt === 'other' ? 'Otro' : formatCents(opt).replace('.00', '')}
+              </button>
+            );
+          })}
+        </div>
+
+        {choice === 'other' && (
+          <div className="mt-3">
+            <FormField label="Otro importe en MXN" error={parsed.error && otherText ? parsed.error : ''}>
+              {(p) => (
+                <div className="flex items-center rounded-2xl border-2 border-punch-ink/30 bg-white px-4 focus-within:border-punch-ink focus-within:ring-2 focus-within:ring-punch-yellow">
+                  <span className="text-2xl text-slate-500">$</span>
+                  <input
+                    {...p}
+                    type="text"
+                    inputMode="decimal"
+                    autoFocus
+                    value={otherText}
+                    onChange={(e) => setOtherText(e.target.value)}
+                    placeholder="0.00"
+                    className="w-full bg-transparent px-2 py-3 text-2xl font-bold outline-none"
+                  />
+                  <span className="text-sm font-bold text-slate-500">MXN</span>
+                </div>
+              )}
+            </FormField>
+          </div>
+        )}
+      </section>
+
+      <Switch
+        checked={coverFee}
+        onChange={(v) => {
+          setCoverFee(v);
+          trackEvent('fee_coverage_changed', { on: v });
+        }}
+        label="Quiero cubrir el costo de procesamiento"
+        hint={q ? (coverFee ? `Pagas ${formatCents(q.fee)} más y ${firstName} recibe la propina completa.` : `Si no, ${formatCents(q.fee)} se descuentan de lo que recibe ${firstName}.`) : 'Es opcional.'}
+      />
+
+      <dl className="card space-y-2 !bg-white" aria-live="polite">
+        <SummaryRow label="Propina" value={q ? formatCents(q.tip) : '—'} />
+        <SummaryRow label="Procesamiento que cubres" value={q ? formatCents(coverFee ? q.fee : 0) : '—'} />
+        <SummaryRow label="Total a pagar" value={q ? formatCents(q.total) : '—'} suffix="MXN" strong />
+        <SummaryRow label={`Neto estimado para ${firstName}`} value={q ? formatCents(Math.max(q.net, 0)) : '—'} />
+      </dl>
+
+      {tooLow && (
+        <p role="alert" className="rounded-2xl border-2 border-red-700/40 bg-red-50 p-3 text-sm font-semibold text-red-800">
+          Con este importe no alcanza para cubrir el procesamiento. Elige un monto mayor o cubre el costo tú.
         </p>
-      </div>
-      <PaymentElement />
-      <button type="submit" disabled={!stripe || submitting} className="btn-primary w-full">
-        {submitting
-          ? 'Procesando...'
-          : `Confirmar pago de $${chargeAmount.toFixed(2)} a @${worker.username}`}
-      </button>
-      <p className="flex items-center justify-center gap-1.5 text-xs text-slate-500">
-        <ShieldCheck size={13} />
-        Pago seguro, procesado por Stripe
+      )}
+      {notice && (
+        <p role="status" className="rounded-2xl border-2 border-punch-ink bg-punch-yellow/60 p-3 text-sm font-semibold">
+          {notice}
+        </p>
+      )}
+
+      <section aria-labelledby="method-title" className="space-y-3">
+        <h2 id="method-title" className="font-display text-xl font-extrabold">
+          Método de pago
+        </h2>
+
+        <div className={ready ? '' : 'pointer-events-none opacity-50'}>
+          <ExpressCheckoutElement
+            onReady={({ availablePaymentMethods }) => {
+              const any = Boolean(availablePaymentMethods?.applePay || availablePaymentMethods?.googlePay);
+              setWallets(any);
+              setCardOpen(!any); // with a wallet, the card form waits behind "Pagar con tarjeta"
+              trackEvent('payment_method_available', { wallet: any });
+            }}
+            onConfirm={pay}
+            onCancel={() => toast('Cancelaste la autorización.')}
+            options={{
+              paymentMethods: {
+                applePay: platform === 'android' ? 'never' : 'auto',
+                googlePay: platform === 'ios' ? 'never' : 'auto',
+                link: 'never',
+                amazonPay: 'never',
+                paypal: 'never',
+              },
+              buttonTheme: { applePay: 'black', googlePay: 'white' },
+              buttonHeight: 52,
+            }}
+          />
+        </div>
+
+        {wallets && (
+          <button
+            type="button"
+            onClick={() => setCardOpen((v) => !v)}
+            aria-expanded={cardOpen}
+            className="flex w-full items-center justify-between rounded-2xl border-2 border-punch-ink/25 bg-white px-4 py-3 text-left font-bold"
+          >
+            <span className="flex items-center gap-2">
+              <IconBadge icon={CreditCard} tone="pink" size={28} /> Pagar con tarjeta
+            </span>
+            <ChevronDown size={18} className={`transition ${cardOpen ? 'rotate-180' : ''}`} />
+          </button>
+        )}
+
+        <div className={`rounded-2xl border-2 border-punch-ink/25 bg-white p-3.5 ${cardOpen ? '' : 'hidden'}`}>
+          {!wallets && (
+            <p className="mb-2 flex items-center gap-2 text-sm font-bold">
+              <IconBadge icon={CreditCard} tone="pink" size={28} /> Pagar con tarjeta
+            </p>
+          )}
+          <PaymentElement
+            options={{
+              layout: 'tabs',
+              wallets: { applePay: 'never', googlePay: 'never' },
+              // Everyone paying here is in Mexico, so the country is not asked for.
+              fields: { billingDetails: { address: { country: 'never' } } },
+            }}
+          />
+        </div>
+      </section>
+
+      {/* With a wallet button on screen, that button is the way to pay; a second
+          pay button would invite two attempts at once. It appears once the card form is open. */}
+      {cardOpen && (
+        <button type="button" onClick={pay} disabled={!stripe || submitting || !ready} className="btn-accent w-full text-lg">
+          {submitting ? 'Procesando…' : q ? `Pagar ${formatCents(q.total)} MXN` : 'Elige un monto'}
+        </button>
+      )}
+      <p className="flex items-center justify-center gap-1.5 text-center text-xs text-slate-500">
+        <ShieldCheck size={13} /> Pago seguro, procesado por Stripe. TIP-IT no guarda tu tarjeta.
+      </p>
+      <p className="text-center text-xs text-slate-500">
+        Al pagar aceptas los{' '}
+        <Link to="/terminos" className="text-brand-400 underline underline-offset-2" target="_blank">
+          Términos
+        </Link>{' '}
+        y el{' '}
+        <Link to="/privacidad" className="text-brand-400 underline underline-offset-2" target="_blank">
+          Aviso de privacidad
+        </Link>
+        .
       </p>
       {!user && (
-        <p className="text-center text-xs text-slate-600">
-          <Link to="/register" className="text-slate-500 underline hover:text-brand-400">
+        <p className="text-center text-xs text-slate-500">
+          <Link to="/register?role=client" className="underline hover:text-brand-400">
             Crear cuenta
           </Link>{' '}
           (opcional)
         </p>
       )}
-    </form>
+    </div>
   );
 }
+
+/* ----------------------------------------------- confirmation + review step */
+
+// A yellow circle with a check and a burst of colour around it (brand sheet).
+function Sunburst() {
+  const rays = [
+    [-70, '#FF8243'], [-35, '#069494'], [0, '#FF8243'], [35, '#FFC0CB'], [70, '#FCE883'],
+    [110, '#069494'], [145, '#FF8243'], [180, '#FFC0CB'], [215, '#FCE883'], [250, '#FF8243'],
+  ];
+  return (
+    <svg viewBox="0 0 120 120" width="112" height="112" className="mx-auto" aria-hidden="true">
+      {rays.map(([deg, color]) => (
+        <line
+          key={deg}
+          x1="60" y1="8" x2="60" y2="20"
+          stroke={color} strokeWidth="5" strokeLinecap="round"
+          transform={`rotate(${deg} 60 60)`}
+        />
+      ))}
+      <circle cx="60" cy="60" r="32" fill="#FCE883" stroke="#0A2F2F" strokeWidth="4" />
+      <path d="M46 61 L56 71 L75 50" fill="none" stroke="#0A2F2F" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function Confirmation({ worker, receipt, user }) {
+  const { transaction } = receipt;
+  const name = worker.name || `@${worker.username}`;
+  const firstName = name.split(' ')[0];
+  const confirmed = transaction?.status === 'succeeded';
+  const [state, setState] = useState(confirmed ? 'review' : 'checking'); // checking | review | sent
+  // Rated or skipped: show a thank-you with one button back to the main page.
+  const finish = () => setState('sent');
+  const [rating, setRating] = useState(0);
+  const [review, setReview] = useState('');
+  const [alias, setAlias] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [tx, setTx] = useState(transaction);
+  const ok = tx?.status === 'succeeded';
+
+  const tip = tx.coverFee ? tx.amount - tx.platformFee : tx.amount;
+  const when = new Date(tx.createdAt).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
+
+  const recheck = async () => {
+    try {
+      const { data } = await api.post('/tips/confirm', { paymentIntentId: receipt.paymentIntentId });
+      setTx(data.transaction);
+      if (data.transaction.status === 'succeeded') setState('review');
+      else toast('Todavía estamos confirmando tu pago.');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  };
+
+  const send = async ({ thanks = false } = {}) => {
+    setSaving(true);
+    try {
+      await api.post('/tips/confirm', {
+        paymentIntentId: receipt.paymentIntentId,
+        ...(rating ? { rating } : {}),
+        ...(review.trim() ? { review: review.trim() } : {}),
+        ...(alias.trim() ? { alias: alias.trim() } : {}),
+        ...(thanks ? { thanks: true } : {}),
+      });
+      trackEvent('recognition_submitted', { paid: true, rating: Boolean(rating), comment: Boolean(review.trim()) });
+      finish();
+    } catch (err) {
+      toast.error('Tu pago está confirmado. No pudimos guardar tu comentario; puedes intentar de nuevo.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="text-center">
+        {ok ? (
+          <Sunburst />
+        ) : (
+          <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-punch-yellow">
+            <Clock size={36} aria-hidden="true" />
+          </span>
+        )}
+        <h1 className="mt-3 text-4xl font-extrabold">{ok ? '¡Gracias!' : 'Estamos confirmando tu pago'}</h1>
+        {ok ? null : (
+          <p className="mt-1 text-sm text-slate-400">No pudimos confirmar el estado todavía. No vuelvas a pagar: toca “Consultar estado”.</p>
+        )}
+      </div>
+
+      <div className="card !p-4">
+        <div className="flex items-center gap-3">
+          <Avatar src={worker.avatarUrl} name={name} size={44} />
+          <div className="min-w-0 flex-1 leading-tight">
+            <p className="truncate font-bold">{name}</p>
+            <p className="truncate text-sm text-slate-500">
+              {[activityLabel(worker.activity), worker.occupation].filter(Boolean).join(' · ') || `@${worker.username}`}
+            </p>
+          </div>
+          <p className="font-display text-xl font-extrabold">{formatCents(tx.amount)}</p>
+        </div>
+      </div>
+
+      <dl className="card space-y-2">
+        <SummaryRow label="Propina" value={formatCents(tip)} />
+        {tx.coverFee && <SummaryRow label="Procesamiento cubierto" value={formatCents(tx.platformFee)} />}
+        <SummaryRow label="Total pagado" value={formatCents(tx.amount)} suffix="MXN" strong note={tx.coverFee ? 'Incluye el costo de procesamiento' : undefined} />
+        <SummaryRow label={`Neto estimado para ${firstName}`} value={formatCents(tx.netAmount)} />
+        <SummaryRow label="Fecha" value={when} />
+        <SummaryRow label="Referencia" value={String(tx._id).slice(-8).toUpperCase()} />
+      </dl>
+      {ok && tx.coverFee && (
+        <p className="rounded-2xl bg-punch-tealdark/10 p-3 text-center text-sm font-bold">
+          {firstName} recibirá {formatCents(tip)} completos. ¡Gracias por apoyar!
+        </p>
+      )}
+      {ok && (
+        <p className="text-center text-sm font-semibold text-slate-400">
+          El pago está confirmado. {firstName} recibirá tu pago pronto.
+        </p>
+      )}
+
+      {!ok && (
+        <button type="button" onClick={recheck} className="btn-secondary w-full">
+          Consultar estado
+        </button>
+      )}
+
+      {ok && state === 'review' && (
+        <section aria-labelledby="review-title" className="card space-y-4">
+          <h2 id="review-title" className="font-display text-xl font-extrabold">
+            ¿Cómo fue el servicio?
+          </h2>
+          <p className="-mt-2 text-sm text-slate-500">Calificar es opcional.</p>
+          <StarRating value={rating} onChange={setRating} label="¿Cómo fue el servicio?" />
+          <FormField label="Comentario" optional hint={`${review.length}/200`}>
+            {(p) => (
+              <textarea
+                {...p}
+                value={review}
+                onChange={(e) => setReview(e.target.value.slice(0, 200))}
+                placeholder="Deja un comentario (opcional)"
+                className="input-field h-24 resize-none"
+              />
+            )}
+          </FormField>
+          <FormField label="Alias" optional hint="Si no pones uno, saldrá como “Anónimo”. Nunca mostramos tu nombre.">
+            {(p) => <input {...p} value={alias} onChange={(e) => setAlias(e.target.value.slice(0, 30))} maxLength={30} className="input-field" />}
+          </FormField>
+          <p className="text-xs text-slate-500">Al publicar, tu comentario y tus estrellas se verán en el perfil de {firstName}.</p>
+          <button type="button" onClick={() => send()} disabled={saving || (!rating && !review.trim())} className="btn-primary w-full">
+            {saving ? 'Publicando…' : 'Publicar comentario'}
+          </button>
+          <button type="button" onClick={() => send({ thanks: true })} disabled={saving || Boolean(rating || review.trim())} className="btn-secondary w-full">
+            Enviar agradecimiento
+          </button>
+          <button type="button" onClick={() => finish()} className="w-full text-center text-sm font-bold underline underline-offset-2">
+            Ahora no
+          </button>
+        </section>
+      )}
+
+      {ok && state === 'sent' && (
+        <div className="space-y-4 text-center">
+          <p className="font-display text-2xl font-extrabold">¡Gracias!</p>
+          <Link to="/" className="btn-primary w-full">
+            Volver a la página principal
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------- the page */
 
 export default function SendTip() {
   const { username } = useParams();
@@ -80,28 +588,26 @@ export default function SendTip() {
 
   const [worker, setWorker] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [step, setStep] = useState('amount'); // amount -> payment -> rating -> done
-  const [mode, setMode] = useState('fixed'); // fixed | percent
-  const [amount, setAmount] = useState('');
-  const [billTotal, setBillTotal] = useState('');
-  const [percent, setPercent] = useState(15);
-  const [customPercent, setCustomPercent] = useState('');
-  const [comment, setComment] = useState('');
-  const [coverFee, setCoverFee] = useState(false);
-  const [feeInfo, setFeeInfo] = useState({ feePercent: 6, feeFixedCents: 400 });
-  const [clientSecret, setClientSecret] = useState(null);
-  const [creatingIntent, setCreatingIntent] = useState(false);
-  const [paymentIntentId, setPaymentIntentId] = useState(null);
-  const [chargeAmount, setChargeAmount] = useState(0);
-  const [netAmount, setNetAmount] = useState(0);
-  const [rating, setRating] = useState(0);
-  const [review, setReview] = useState('');
-  const [savingRating, setSavingRating] = useState(false);
+  const [receipt, setReceipt] = useState(null);
   const [savingContact, setSavingContact] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
+        // The page's own <script> in index.html already started this request
+        // when the QR was opened; reuse it so we don't wait twice.
+        const pre = takeWorkerPrefetch(username);
+        if (pre) {
+          try {
+            const r = await pre;
+            if (r.ok && r.data?.worker) {
+              setWorker(r.data.worker);
+              return;
+            }
+          } catch {
+            // fall through to the normal request below
+          }
+        }
         const { data } = await api.get(`/workers/${username}`);
         setWorker(data.worker);
       } catch (err) {
@@ -113,69 +619,11 @@ export default function SendTip() {
     })();
   }, [username, navigate]);
 
-  useEffect(() => {
-    api
-      .get('/tips/fee-info')
-      .then(({ data }) => setFeeInfo({ feePercent: data.feePercent, feeFixedCents: data.feeFixedCents }))
-      .catch(() => {});
-  }, []);
-
-  const effectivePercent = customPercent ? Number(customPercent) : percent;
-  const computedTip =
-    mode === 'percent' && billTotal ? (Number(billTotal) * effectivePercent) / 100 : 0;
-  const finalAmount = mode === 'percent' ? computedTip : Number(amount) || 0;
-
-  const feeAmount =
-    finalAmount > 0
-      ? (Math.round(finalAmount * 100 * (feeInfo.feePercent / 100)) + feeInfo.feeFixedCents) / 100
-      : 0;
-  const previewChargeAmount = coverFee ? finalAmount + feeAmount : finalAmount;
-  const previewWorkerReceives = coverFee ? finalAmount : Math.max(0, finalAmount - feeAmount);
-
-  const handleContinue = async (e) => {
-    e.preventDefault();
-    if (!finalAmount || finalAmount < 1) {
-      toast.error('Ingresa un monto válido');
-      return;
-    }
-    setCreatingIntent(true);
-    try {
-      const { data } = await api.post('/tips/create-intent', {
-        username,
-        amount: Number(finalAmount.toFixed(2)),
-        comment,
-        coverFee,
-      });
-      setClientSecret(data.clientSecret);
-      setPaymentIntentId(data.transactionId);
-      setChargeAmount(data.amount / 100);
-      setNetAmount(data.netAmount / 100);
-      setStep('payment');
-      trackEvent('begin_checkout', { value: data.amount / 100, currency: 'MXN' });
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setCreatingIntent(false);
-    }
-  };
-
-  const handlePaymentSuccess = (piId) => {
-    setPaymentIntentId(piId);
-    setStep('rating');
-    trackEvent('purchase', { value: chargeAmount, currency: 'MXN' });
-  };
-
-  const handleSubmitRating = async () => {
-    setSavingRating(true);
-    try {
-      await api.post('/tips/confirm', { paymentIntentId, rating: rating || undefined, review });
-      setStep('done');
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSavingRating(false);
-    }
-  };
+  // Created once with a first amount; the checkout then keeps it in sync.
+  const elementsOptions = useMemo(
+    () => ({ mode: 'payment', amount: 5000, currency: 'mxn', paymentMethodTypes: ['card'], appearance: APPEARANCE, locale: 'es' }),
+    []
+  );
 
   const handleSaveContact = async () => {
     setSavingContact(true);
@@ -190,320 +638,107 @@ export default function SendTip() {
   };
 
   if (loading) {
+    // A skeleton of the page, so something friendly shows instantly even if the
+    // server is still waking up.
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Spinner />
+      <div className="page-shell" aria-busy="true" aria-label="Cargando perfil">
+        <div className="mt-6 flex items-center gap-3">
+          <div className="h-14 w-14 animate-pulse rounded-full border-2 border-punch-ink/20 bg-punch-pink/60" />
+          <div className="flex-1 space-y-2">
+            <div className="h-4 w-40 animate-pulse rounded-full bg-punch-ink/10" />
+            <div className="h-3 w-24 animate-pulse rounded-full bg-punch-ink/10" />
+          </div>
+        </div>
+        <div className="mt-8 grid grid-cols-2 gap-3">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="h-[4.25rem] animate-pulse rounded-3xl bg-punch-ink/10" />
+          ))}
+        </div>
+        <div className="mt-6 h-12 animate-pulse rounded-full bg-punch-orange/40" />
+        <p className="mt-6 text-center text-sm font-medium text-slate-400">Abriendo el perfil…</p>
       </div>
     );
   }
 
   if (!worker) return null;
 
-  if (!worker.readyForTips && step === 'amount') {
+  if (!worker.readyForTips && !receipt) {
     return (
       <div className="page-shell items-center text-center">
-        <h1 className="mt-10 text-xl font-bold">@{worker.username}</h1>
-        <p className="mt-4 text-slate-400">
-          Este trabajador todavía no puede recibir pagos. Inténtalo más tarde.
-        </p>
-        <Link to="/scan" className="btn-secondary mt-8">
-          Volver
+        <div className="mt-10">
+          <Identity worker={worker} />
+        </div>
+        <p className="mt-6 max-w-sm text-slate-400">Esta persona no puede recibir propinas por ahora. Puedes dejar un comentario sin pago.</p>
+        <Link to={`/p/${worker.username}/comentar`} className="btn-primary mt-6">
+          Dejar un comentario
+        </Link>
+        <Link to={`/p/${worker.username}`} className="btn-secondary mt-3">
+          Volver al perfil
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="page-shell md:!max-w-5xl">
-      <Link to="/scan" className="flex items-center gap-1 text-sm text-slate-400">
-        <ArrowLeft size={16} />
-        Volver
-      </Link>
-
-      <div className="lg:mt-6 lg:grid lg:grid-cols-[1fr_1.1fr] lg:items-start lg:gap-14">
-        <div className="lg:sticky lg:top-24">
-      <div className="mt-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <Avatar src={worker.avatarUrl} name={worker.name || worker.username} size={56} />
-          <div>
-            <p className="text-lg font-bold">{worker.name || `@${worker.username}`}</p>
-            <p className="text-sm text-slate-400">@{worker.username}</p>
-            {worker.rating ? (
-              <div className="mt-0.5 flex items-center gap-1 text-xs text-amber-700">
-                <Star size={12} fill="#fbbf24" stroke="#fbbf24" />
-                {worker.rating} ({worker.ratingCount})
-              </div>
-            ) : null}
-          </div>
-        </div>
-        {step === 'amount' && user && (
-          <button
-            onClick={handleSaveContact}
-            disabled={savingContact}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-700 text-slate-400 hover:border-brand-500 hover:text-brand-400"
-            aria-label="Guardar contacto"
-          >
-            <UserPlus size={16} />
-          </button>
-        )}
-      </div>
-      {worker.bio && <p className="mt-3 text-sm text-slate-400">{worker.bio}</p>}
-      {worker.experience && (
-        <div className="mt-3 card !p-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Trayectoria
-          </p>
-          <p className="mt-1 text-sm text-slate-300">{worker.experience}</p>
-        </div>
-      )}
-      {worker.reviews?.length > 0 && (
-        <div className="mt-3 space-y-2">
-          {worker.reviews.slice(0, 2).map((r, i) => (
-            <div key={i} className="rounded-2xl border-2 border-punch-ink/30 bg-white/40 p-3">
-              <div className="flex items-center gap-1 text-amber-700">
-                {Array.from({ length: r.rating || 0 }).map((_, s) => (
-                  <Star key={s} size={12} fill="#fbbf24" stroke="#fbbf24" />
-                ))}
-                <span className="ml-1 text-xs text-slate-500">{r.clientName}</span>
-              </div>
-              {r.review && <p className="mt-1 text-sm italic text-slate-400">“{r.review}”</p>}
-            </div>
-          ))}
-        </div>
+    <div className="page-shell md:!max-w-[480px]">
+      {!receipt && (
+        <Link to={`/p/${worker.username}`} className="flex items-center gap-1 text-sm text-slate-400">
+          <ArrowLeft size={16} />
+          Volver al perfil
+        </Link>
       )}
 
+      {receipt ? (
+        <div className="mt-6">
+          <Confirmation worker={worker} receipt={receipt} user={user} />
         </div>
-        <div>
-      {step === 'amount' && (
-        <form onSubmit={handleContinue} className="mt-8 space-y-4 lg:mt-0">
-          <div className="flex gap-2 rounded-2xl border-2 border-punch-ink/30 bg-white p-1">
-            <button
-              type="button"
-              onClick={() => setMode('fixed')}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-semibold transition ${
-                mode === 'fixed' ? 'bg-brand-600 text-white' : 'text-slate-400'
-              }`}
-            >
-              <Wallet size={14} />
-              Monto fijo
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode('percent')}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-semibold transition ${
-                mode === 'percent' ? 'bg-brand-600 text-white' : 'text-slate-400'
-              }`}
-            >
-              <Calculator size={14} />
-              % de la cuenta
-            </button>
+      ) : (
+        <>
+          <div className="mt-4 flex items-start justify-between gap-3">
+            <Identity worker={worker} />
+            {user && (
+              <button
+                onClick={handleSaveContact}
+                disabled={savingContact}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-punch-ink/40 text-slate-400 hover:border-punch-ink hover:text-punch-ink"
+                aria-label="Guardar contacto"
+              >
+                <UserPlus size={17} />
+              </button>
+            )}
           </div>
 
-          {mode === 'fixed' ? (
-            <>
-              <label className="text-sm text-slate-400">¿Cuánto quieres dar?</label>
-              <div className="flex items-center rounded-2xl border-2 border-punch-ink/30 bg-white px-4 focus-within:border-punch-ink focus-within:ring-2 focus-within:ring-punch-yellow">
-                <span className="text-2xl text-slate-500">$</span>
-                <input
-                  type="number"
-                  min="1"
-                  step="0.5"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="0.00"
-                  className="w-full bg-transparent px-2 py-3 text-2xl font-bold text-slate-100 outline-none"
-                  required
-                />
-                <span className="text-slate-500">MXN</span>
-              </div>
-
-              <div className="grid grid-cols-4 gap-2">
-                {QUICK_AMOUNTS.map((val) => (
-                  <button
-                    type="button"
-                    key={val}
-                    onClick={() => setAmount(String(val))}
-                    className="rounded-2xl border-2 border-punch-ink/30 bg-white py-2 text-sm font-semibold hover:border-brand-500"
-                  >
-                    ${val}
-                  </button>
-                ))}
-              </div>
-            </>
-          ) : (
-            <>
-              <label className="text-sm text-slate-400">¿De cuánto fue la cuenta?</label>
-              <div className="flex items-center rounded-2xl border-2 border-punch-ink/30 bg-white px-4 focus-within:border-punch-ink focus-within:ring-2 focus-within:ring-punch-yellow">
-                <span className="text-2xl text-slate-500">$</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.5"
-                  value={billTotal}
-                  onChange={(e) => setBillTotal(e.target.value)}
-                  placeholder="0.00"
-                  className="w-full bg-transparent px-2 py-3 text-2xl font-bold text-slate-100 outline-none"
-                  required
-                />
-                <span className="text-slate-500">MXN</span>
-              </div>
-
-              <label className="text-sm text-slate-400">¿Qué porcentaje quieres dejar?</label>
-              <div className="grid grid-cols-3 gap-2">
-                {PERCENT_PRESETS.map((p) => (
-                  <button
-                    type="button"
-                    key={p}
-                    onClick={() => {
-                      setPercent(p);
-                      setCustomPercent('');
-                    }}
-                    className={`rounded-xl border py-2 text-sm font-semibold transition ${
-                      !customPercent && percent === p
-                        ? 'border-brand-500 bg-brand-500/10 text-brand-300'
-                        : 'border-punch-ink/30 bg-white hover:border-punch-ink'
-                    }`}
-                  >
-                    {p}%
-                  </button>
-                ))}
-              </div>
-              <div className="flex items-center rounded-2xl border-2 border-punch-ink/30 bg-white px-4">
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={customPercent}
-                  onChange={(e) => setCustomPercent(e.target.value)}
-                  placeholder="Otro porcentaje"
-                  className="w-full bg-transparent py-3 text-slate-100 outline-none"
-                />
-                <span className="text-slate-500">%</span>
-              </div>
-
-              {billTotal && (
-                <div className="card !bg-brand-500/10 text-center">
-                  <p className="text-xs uppercase tracking-wide text-slate-400">
-                    Vas a dejar ({effectivePercent}% de ${Number(billTotal).toFixed(2)})
-                  </p>
-                  <p className="mt-1 text-3xl font-bold text-brand-300">
-                    ${computedTip.toFixed(2)} MXN
-                  </p>
-                </div>
-              )}
-            </>
-          )}
-
-          {finalAmount > 0 && (
-            <div className="card space-y-3 !bg-slate-900/60">
-              <label className="flex cursor-pointer items-start gap-3">
-                <input
-                  type="checkbox"
-                  checked={coverFee}
-                  onChange={(e) => setCoverFee(e.target.checked)}
-                  className="mt-1 h-4 w-4 accent-brand-500"
-                />
-                <span className="text-sm text-slate-300">
-                  Cubrir la comisión (+${feeAmount.toFixed(2)}) para que{' '}
-                  <span className="font-semibold">@{worker.username}</span> reciba el 100% de tu
-                  propina
-                </span>
-              </label>
-              <div className="space-y-1 border-t border-slate-800 pt-3 text-sm">
-                <div className="flex justify-between text-slate-400">
-                  <span>Trabajador recibe</span>
-                  <span className="font-semibold text-slate-100">
-                    ${previewWorkerReceives.toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-slate-400">
-                  <span>Tú pagas</span>
-                  <span className="font-semibold text-slate-100">
-                    ${previewChargeAmount.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <textarea
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Comentario (opcional)"
-            className="input-field h-20 resize-none"
-            maxLength={500}
-          />
-
-          <button type="submit" disabled={creatingIntent} className="btn-primary w-full">
-            {creatingIntent ? 'Preparando pago...' : 'Continuar'}
-          </button>
-          <p className="text-center text-xs text-slate-500">
-            Al continuar aceptas los{' '}
-            <Link to="/terminos" className="text-brand-400" target="_blank">
-              Términos
-            </Link>{' '}
-            y el{' '}
-            <Link to="/privacidad" className="text-brand-400" target="_blank">
-              Aviso de privacidad
+          <div className="mt-5 grid grid-cols-2 gap-1 rounded-full border-2 border-punch-ink/25 bg-white p-1 text-center font-display text-sm font-extrabold">
+            <span aria-current="page" className="flex min-h-[44px] items-center justify-center rounded-full border-2 border-punch-ink bg-punch-yellow">
+              Dejar propina
+            </span>
+            <Link to={`/p/${worker.username}/comentar`} className="flex min-h-[44px] items-center justify-center rounded-full border-2 border-transparent text-punch-ink/80 hover:text-punch-ink">
+              Comentar
             </Link>
-            .
-          </p>
-        </form>
-      )}
-
-      {step === 'payment' && clientSecret && (
-        <Elements stripe={stripePromise} options={{ clientSecret }}>
-          <PaymentStep
-            worker={worker}
-            chargeAmount={chargeAmount}
-            netAmount={netAmount}
-            onSuccess={handlePaymentSuccess}
-            user={user}
-          />
-        </Elements>
-      )}
-
-      {step === 'rating' && (
-        <div className="mt-8 space-y-5">
-          <p className="text-center text-lg font-semibold">
-            ¡Pago enviado! Califica el servicio
-          </p>
-          <div className="flex justify-center">
-            <StarRating value={rating} onChange={setRating} />
           </div>
-          <textarea
-            value={review}
-            onChange={(e) => setReview(e.target.value)}
-            placeholder="Cuéntale a otros cómo fue tu experiencia (esto se verá en el perfil público)"
-            className="input-field h-24 resize-none"
-            maxLength={500}
-          />
-          <button onClick={handleSubmitRating} disabled={savingRating} className="btn-primary w-full">
-            {savingRating ? 'Guardando...' : 'Terminar'}
-          </button>
-        </div>
-      )}
 
-      {step === 'done' && (
-        <div className="mt-10 space-y-5 text-center">
-          <PartyPopper size={48} className="mx-auto text-brand-400" />
-          <p className="text-lg font-semibold">¡Gracias por tu pago!</p>
-          {user ? (
-            <Link to="/history" className="btn-secondary w-full">
-              Ver historial
-            </Link>
-          ) : (
-            <Link to="/register" className="btn-secondary w-full">
-              Crear cuenta gratis (guarda tu historial)
-            </Link>
+          <div className="mt-6">
+            <Elements stripe={getStripe()} options={elementsOptions}>
+              <Checkout worker={worker} username={username} user={user} onPaid={setReceipt} />
+            </Elements>
+          </div>
+
+          {worker.reviews?.length > 0 && (
+            <section className="mt-10 border-t-2 border-punch-ink/15 pt-6">
+              <h2 className="font-display text-lg font-extrabold">Lo que dicen de esta persona</h2>
+              <div className="mt-3">
+                <ReviewList reviews={worker.reviews} limit={2} />
+              </div>
+              <Link to={`/p/${worker.username}`} className="mt-3 inline-block text-sm font-bold text-brand-400 underline underline-offset-2">
+                Ver todas
+              </Link>
+            </section>
           )}
-          <Link to="/scan" className="btn-primary w-full">
-            Enviar otro pago
-          </Link>
-        </div>
+        </>
       )}
-        </div>
-      </div>
     </div>
   );
 }
+
+// Used by the profile page too.
+export { Identity };

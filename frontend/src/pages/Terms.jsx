@@ -17,7 +17,7 @@ export default function Terms() {
           <h2 className="text-base font-semibold text-slate-100">1. Qué es TIP-IT</h2>
           <p className="mt-2">
             TIP-IT es una plataforma que permite enviar y recibir pagos entre personas —
-            principalmente propinas — usando un código QR único por trabajador. El procesamiento
+            principalmente propinas — usando un código QR único por persona. El procesamiento
             de pagos lo realiza Stripe; TIP-IT actúa como intermediario tecnológico y cobra una
             comisión por cada transacción exitosa.
           </p>
@@ -35,7 +35,7 @@ export default function Terms() {
             </li>
             <li>
               <strong>Cuenta completa</strong>: protegida con contraseña, requerida para recibir
-              pagos como trabajador. Eres responsable de mantener tu contraseña segura y de toda
+              propinas. Eres responsable de mantener tu contraseña segura y de toda
               actividad que ocurra en tu cuenta.
             </li>
           </ul>
@@ -45,14 +45,14 @@ export default function Terms() {
           <h2 className="text-base font-semibold text-slate-100">3. Comisión de la plataforma</h2>
           <p className="mt-2">
             TIP-IT cobra una comisión (porcentaje + tarifa fija por transacción) sobre cada pago
-            procesado. Quien envía el pago puede elegir cubrir esta comisión para que el
-            trabajador reciba el monto completo, o dejar que se descuente del monto enviado. La
+            procesado. Quien envía el pago puede elegir cubrir esta comisión para que la
+            persona reciba el monto completo, o dejar que se descuente del monto enviado. La
             comisión vigente se muestra siempre antes de confirmar el pago.
           </p>
         </section>
 
         <section>
-          <h2 className="text-base font-semibold text-slate-100">4. Trabajadores y verificación</h2>
+          <h2 className="text-base font-semibold text-slate-100">4. Recibir propinas y verificación</h2>
           <p className="mt-2">
             Para recibir pagos, debes completar el proceso de verificación de identidad de Stripe
             Connect (KYC), requerido por regulación financiera. TIP-IT no tiene acceso a tus

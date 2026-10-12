@@ -11,9 +11,20 @@ const {
   getStripeAccountStatus,
   getConnectedBalance,
   createInstantPayout,
+  createRecognition,
 } = require('../controllers/workerController');
+const { ACTIVITY_IDS } = require('../utils/activities');
+const { recognitionLimiter } = require('../middleware/rateLimiter');
 
 const router = express.Router();
+
+const profileFieldRules = [
+  body('publicName').optional({ nullable: true }).trim().isLength({ max: 60 }),
+  body('activity').optional({ nullable: true, checkFalsy: true }).isIn(ACTIVITY_IDS).withMessage('Actividad inválida'),
+  body('occupation').optional({ nullable: true }).trim().isLength({ max: 60 }),
+  body('establishment').optional({ nullable: true }).trim().isLength({ max: 60 }),
+  body('yearsExperience').optional({ nullable: true, checkFalsy: true }).isInt({ min: 0, max: 60 }).withMessage('Los años de experiencia van de 0 a 60'),
+];
 
 router.post(
   '/register',
@@ -25,6 +36,7 @@ router.post(
       .matches(/^[a-z0-9_.]+$/i)
       .withMessage('Username inválido (solo letras, números, punto y guion bajo)'),
     body('bio').optional().isLength({ max: 280 }),
+    ...profileFieldRules,
   ],
   validate,
   registerWorker
@@ -42,9 +54,22 @@ router.put(
   [
     body('bio').optional().isLength({ max: 280 }),
     body('experience').optional().isLength({ max: 600 }),
+    ...profileFieldRules,
   ],
   validate,
   updateWorkerProfile
+);
+
+router.post(
+  '/:username/recognitions',
+  recognitionLimiter,
+  [
+    body('rating').optional({ nullable: true, checkFalsy: true }).isInt({ min: 1, max: 5 }).withMessage('Las estrellas van de 1 a 5'),
+    body('comment').optional({ nullable: true }).isString().isLength({ max: 200 }).withMessage('El comentario puede tener hasta 200 caracteres'),
+    body('alias').optional({ nullable: true }).isString().isLength({ max: 30 }),
+  ],
+  validate,
+  createRecognition
 );
 
 router.get('/:username', getByUsername);

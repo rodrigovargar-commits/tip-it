@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
 const Worker = require('../models/Worker');
@@ -5,7 +6,11 @@ const User = require('../models/User');
 const Transaction = require('../models/Transaction');
 const stripe = require('../config/stripe');
 const { generateWorkerQR } = require('../utils/generateQR');
+const refreshStripeReadiness = require('../utils/refreshStripeReadiness');
 const { logSecurityEvent } = require('../utils/logger');
+const Recognition = require('../models/Recognition');
+const { ACTIVITY_IDS } = require('../utils/activities');
+const { workerProfileUrl } = require('../utils/publicUrl');
 
 // Explicit output DTO — never hand back the raw Mongo document. It carries
 // internal fields (stripeAccountId, ratingSum, __v) that the client has no
@@ -17,7 +22,13 @@ function toWorkerDTO(worker) {
     username: worker.username,
     bio: worker.bio,
     experience: worker.experience,
+    publicName: worker.publicName,
+    activity: worker.activity,
+    occupation: worker.occupation,
+    establishment: worker.establishment,
+    yearsExperience: worker.yearsExperience,
     qrCode: worker.qrCode,
+    profileUrl: workerProfileUrl(worker.username),
     rating: worker.rating,
     ratingCount: worker.ratingCount,
     tipCount: worker.tipCount,
@@ -26,10 +37,10 @@ function toWorkerDTO(worker) {
 }
 
 const registerWorker = asyncHandler(async (req, res) => {
-  const { username, bio } = req.body;
+  const { username, bio, publicName, activity, occupation, establishment, yearsExperience } = req.body;
 
   if (req.user.isWorker) {
-    throw new AppError('Ya tienes una cuenta de trabajador', 409);
+    throw new AppError('Ya tienes una cuenta para recibir propinas', 409);
   }
   if (req.user.isGuest) {
     throw new AppError(
@@ -49,7 +60,13 @@ const registerWorker = asyncHandler(async (req, res) => {
     user: req.user._id,
     username: username.toLowerCase(),
     bio: bio || '',
+    publicName: publicName || '',
+    activity: activity || '',
+    occupation: occupation || '',
+    establishment: establishment || '',
+    yearsExperience: yearsExperience ? Number(yearsExperience) : null,
     qrCode,
+    qrUrl: workerProfileUrl(username),
   });
 
   req.user.isWorker = true;
@@ -74,8 +91,10 @@ const getByUsername = asyncHandler(async (req, res) => {
   );
 
   if (!worker) {
-    throw new AppError('Trabajador no encontrado', 404);
+    throw new AppError('No encontramos a ese Tip-er', 404);
   }
+
+  await refreshStripeReadiness(worker);
 
   const reviews = await Transaction.find({
     worker: worker._id,
@@ -84,8 +103,27 @@ const getByUsername = asyncHandler(async (req, res) => {
   })
     .sort({ createdAt: -1 })
     .limit(10)
-    .populate('client', 'name')
-    .select('rating review comment createdAt client');
+    .select('rating review comment reviewAlias createdAt');
+
+  const paidWithWords = {
+    worker: worker._id,
+    status: 'succeeded',
+    $or: [{ review: { $ne: '' } }, { comment: { $ne: '' } }, { rating: { $ne: null } }],
+  };
+  const [paidCount, unpaidCount] = await Promise.all([
+    Transaction.countDocuments(paidWithWords),
+    Recognition.countDocuments({ worker: worker._id, status: 'published' }),
+  ]);
+
+  const [ratedTotal, ratedPositive] = await Promise.all([
+    Transaction.countDocuments({ worker: worker._id, status: 'succeeded', rating: { $ne: null } }),
+    Transaction.countDocuments({ worker: worker._id, status: 'succeeded', rating: { $gte: 4 } }),
+  ]);
+
+  const recognitions = await Recognition.find({ worker: worker._id, status: 'published' })
+    .sort({ createdAt: -1 })
+    .limit(10)
+    .select('rating comment alias createdAt');
 
   res.json({
     success: true,
@@ -94,22 +132,89 @@ const getByUsername = asyncHandler(async (req, res) => {
       username: worker.username,
       bio: worker.bio,
       experience: worker.experience,
+      activity: worker.activity,
+      occupation: worker.occupation,
+      establishment: worker.establishment,
+      yearsExperience: worker.yearsExperience,
+      // Share of rated payments that are 4 or 5 stars; only shown from 3 ratings on.
+      // Both numbers come from the same set of payments, so it can never pass 100.
+      positivePercent: ratedTotal >= 3 ? Math.min(100, Math.round((ratedPositive / ratedTotal) * 100)) : null,
       qrCode: worker.qrCode,
       rating: worker.rating,
       ratingCount: worker.ratingCount,
       tipCount: worker.tipCount,
-      name: worker.user?.name,
+      recognitionCount: paidCount + unpaidCount,
+      thanksCount: await Transaction.countDocuments({ worker: worker._id, status: 'succeeded', thanked: true }),
+      name: worker.publicName || worker.user?.name,
       avatarUrl: worker.user?.avatarUrl,
       readyForTips: Boolean(worker.stripeOnboardingComplete),
-      reviews: reviews.map((r) => ({
-        rating: r.rating,
-        review: r.review,
-        comment: r.comment,
-        clientName: r.client?.name?.split(' ')[0] || 'Cliente',
-        createdAt: r.createdAt,
-      })),
+      // Authors are anonymous unless they chose a nickname; the payer's real
+      // name is never shown. "paid" reviews come from a real payment; the
+      // others were left without one and are labelled as such.
+      reviews: [
+        ...reviews.map((r) => ({
+          rating: r.rating,
+          review: r.review,
+          comment: r.comment,
+          clientName: r.reviewAlias || 'Anónimo',
+          source: 'paid',
+          createdAt: r.createdAt,
+        })),
+        ...recognitions.map((r) => ({
+          rating: r.rating,
+          review: r.comment,
+          comment: '',
+          clientName: r.alias || 'Anónimo',
+          source: 'unpaid',
+          createdAt: r.createdAt,
+        })),
+      ]
+        .sort((a, b) => b.createdAt - a.createdAt)
+        .slice(0, 12),
     },
   });
+});
+
+// Leaves a thank-you/rating for someone without paying. Needs no account.
+// It waits for review before showing, is limited per sender, and a repeat
+// from the same sender within a day just returns the first one.
+const createRecognition = asyncHandler(async (req, res) => {
+  const { rating, comment, alias, website } = req.body;
+
+  // Honeypot: a real person never fills this hidden field.
+  if (website) return res.status(201).json({ success: true, status: 'pending' });
+
+  const worker = await Worker.findOne({ username: req.params.username.toLowerCase() });
+  if (!worker) throw new AppError('No encontramos a esa persona', 404);
+
+  const text = (comment || '').trim();
+  if (!rating && !text) {
+    // An explicit thank-you without stars or words is allowed; it just has
+    // nothing to publish beyond the fact that someone said thanks.
+    if (req.body.thanks !== true) throw new AppError('Elige estrellas o escribe un comentario', 400);
+  }
+
+  const senderHash = crypto
+    .createHmac('sha256', `${process.env.JWT_SECRET}:recognition`)
+    .update(`${req.ip}:${worker._id}`)
+    .digest('hex');
+
+  const recent = await Recognition.findOne({
+    worker: worker._id,
+    senderHash,
+    createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+  });
+  if (recent) return res.status(200).json({ success: true, status: recent.status });
+
+  const rec = await Recognition.create({
+    worker: worker._id,
+    rating: rating ? Number(rating) : null,
+    comment: text,
+    alias: String(alias || '').trim().slice(0, 30),
+    senderHash,
+  });
+
+  res.status(201).json({ success: true, status: rec.status });
 });
 
 const getStats = asyncHandler(async (req, res) => {
@@ -126,11 +231,11 @@ const getStats = asyncHandler(async (req, res) => {
       target: `worker:${req.params.id}`,
       reason: 'owner_mismatch',
     });
-    throw new AppError('Trabajador no encontrado', 404);
+    throw new AppError('Persona no encontrada', 404);
   }
   const worker = await Worker.findById(req.params.id);
   if (!worker) {
-    throw new AppError('Trabajador no encontrado', 404);
+    throw new AppError('Persona no encontrada', 404);
   }
 
   res.json({
@@ -147,10 +252,16 @@ const getStats = asyncHandler(async (req, res) => {
 
 const updateWorkerProfile = asyncHandler(async (req, res) => {
   const worker = await Worker.findById(req.user.worker);
-  if (!worker) throw new AppError('Perfil de trabajador no encontrado', 404);
+  if (!worker) throw new AppError('Perfil no encontrado', 404);
 
   if (req.body.bio !== undefined) worker.bio = req.body.bio;
   if (req.body.experience !== undefined) worker.experience = req.body.experience;
+  ['publicName', 'activity', 'occupation', 'establishment'].forEach((field) => {
+    if (req.body[field] !== undefined) worker[field] = req.body[field];
+  });
+  if (req.body.yearsExperience !== undefined) {
+    worker.yearsExperience = req.body.yearsExperience === '' || req.body.yearsExperience === null ? null : Number(req.body.yearsExperience);
+  }
   await worker.save();
 
   res.json({ success: true, worker: toWorkerDTO(worker) });
@@ -167,7 +278,7 @@ async function createFreshStripeAccount(worker, email) {
     // description up front satisfies that requirement instead, so Stripe
     // skips asking for a URL at all.
     business_profile: {
-      product_description: 'Recibe propinas digitales como trabajador independiente en TIP-IT',
+      product_description: 'Recibe propinas digitales como persona independiente en TIP-IT',
     },
     capabilities: {
       transfers: { requested: true },
@@ -214,7 +325,7 @@ async function ensureDailyPayoutSchedule(account) {
 
 const createStripeOnboardingLink = asyncHandler(async (req, res) => {
   const worker = await Worker.findById(req.user.worker);
-  if (!worker) throw new AppError('Perfil de trabajador no encontrado', 404);
+  if (!worker) throw new AppError('Perfil no encontrado', 404);
 
   if (!worker.stripeAccountId) {
     await createFreshStripeAccount(worker, req.user.email);
@@ -247,7 +358,7 @@ const createStripeOnboardingLink = asyncHandler(async (req, res) => {
 
 const getStripeAccountStatus = asyncHandler(async (req, res) => {
   const worker = await Worker.findById(req.user.worker);
-  if (!worker) throw new AppError('Perfil de trabajador no encontrado', 404);
+  if (!worker) throw new AppError('Perfil no encontrado', 404);
 
   if (!worker.stripeAccountId) {
     return res.json({ success: true, connected: false, onboardingComplete: false });
@@ -285,7 +396,7 @@ const getStripeAccountStatus = asyncHandler(async (req, res) => {
 
 const getConnectedBalance = asyncHandler(async (req, res) => {
   const worker = await Worker.findById(req.user.worker);
-  if (!worker) throw new AppError('Perfil de trabajador no encontrado', 404);
+  if (!worker) throw new AppError('Perfil no encontrado', 404);
 
   if (!worker.stripeAccountId) {
     return res.json({
@@ -343,7 +454,7 @@ const getConnectedBalance = asyncHandler(async (req, res) => {
 
 const createInstantPayout = asyncHandler(async (req, res) => {
   const worker = await Worker.findById(req.user.worker);
-  if (!worker) throw new AppError('Perfil de trabajador no encontrado', 404);
+  if (!worker) throw new AppError('Perfil no encontrado', 404);
   if (!worker.stripeAccountId) {
     throw new AppError('No tienes una cuenta de Stripe conectada', 400);
   }
@@ -368,6 +479,7 @@ const createInstantPayout = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
+  createRecognition,
   registerWorker,
   getByUsername,
   getStats,

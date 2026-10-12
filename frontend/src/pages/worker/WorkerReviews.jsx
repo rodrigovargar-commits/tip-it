@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import EmptyState from '../../components/EmptyState.jsx';
 import Spinner from '../../components/Spinner.jsx';
+import ReviewList from '../../components/ReviewList.jsx';
 
 export default function WorkerReviews() {
   const { worker } = useAuth();
@@ -47,7 +48,7 @@ export default function WorkerReviews() {
         ) : null}
       </div>
 
-      <div className="mt-6 space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
+      <div className="mt-6">
         {!profile?.reviews?.length ? (
           <EmptyState
             person="stylist"
@@ -55,26 +56,7 @@ export default function WorkerReviews() {
             body="Aparecerán aquí en cuanto tus clientes califiquen tu servicio."
           />
         ) : (
-          profile.reviews.map((r, i) => (
-            <div key={i} className="card">
-              <div className="flex items-center justify-between">
-                <p className="font-semibold text-slate-100">{r.clientName}</p>
-                <div className="flex gap-0.5">
-                  {Array.from({ length: r.rating || 0 }).map((_, s) => (
-                    <Star key={s} size={14} fill="#FF8243" stroke="#FF8243" />
-                  ))}
-                </div>
-              </div>
-              <p className="text-xs text-slate-500">
-                {new Date(r.createdAt).toLocaleDateString('es-MX', {
-                  dateStyle: 'medium',
-                })}
-              </p>
-              {r.review || r.comment ? (
-                <p className="mt-2 text-sm text-slate-300">“{r.review || r.comment}”</p>
-              ) : null}
-            </div>
-          ))
+          <ReviewList reviews={profile.reviews} columns />
         )}
       </div>
     </div>
