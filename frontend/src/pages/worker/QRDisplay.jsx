@@ -34,41 +34,56 @@ function roundRectPath(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// Draws the app logo (see Logo.jsx): a yellow disc with an ink outline
-// holding two overlapping coins — one outline, one solid orange.
-function drawLogo(ctx, x, y, size) {
-  const c = size / 2;
-  ctx.lineWidth = size * 0.04;
+// Draws the TIP-IT mark (see Logo.jsx): a big yellow circle with a smaller
+// orange one over its lower-right edge, both outlined in dark green.
+// `size` is the width of the whole mark.
+function drawMark(ctx, x, y, size) {
+  const k = size / 85; // the mark is 85 units wide in its 96-unit box
+  const ox = x - 3.5 * k;
+  const oy = y - 3.5 * k;
+  ctx.lineWidth = 7 * k;
   ctx.strokeStyle = BRAND.ink;
   ctx.fillStyle = BRAND.yellow;
   ctx.beginPath();
-  ctx.arc(x + c, y + c, c - ctx.lineWidth / 2, 0, Math.PI * 2);
+  ctx.arc(ox + 38 * k, oy + 38 * k, 31 * k, 0, Math.PI * 2);
   ctx.fill();
-  ctx.stroke();
-
-  // 24x24 viewBox rendered at size*0.62, centered.
-  const iconSize = size * 0.62;
-  const ix = x + (size - iconSize) / 2;
-  const iy = y + (size - iconSize) / 2;
-  const scale = iconSize / 24;
-  ctx.lineWidth = 2 * scale;
-  ctx.beginPath();
-  ctx.arc(ix + 9 * scale, iy + 9 * scale, 6 * scale, 0, Math.PI * 2);
   ctx.stroke();
   ctx.fillStyle = BRAND.bg;
   ctx.beginPath();
-  ctx.arc(ix + 15 * scale, iy + 15 * scale, 6 * scale, 0, Math.PI * 2);
+  ctx.arc(ox + 62 * k, oy + 62 * k, 23 * k, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
 }
 
-// Builds a printable card (logo, tagline, QR, name) instead of just the
+// "TIP-IT" with the hyphen as a rounded orange bar, centred on cx.
+function drawWordmark(ctx, cx, baseline, fontPx) {
+  ctx.font = `800 ${fontPx}px ${DISPLAY}`;
+  ctx.textAlign = 'left';
+  const tip = ctx.measureText('TIP').width;
+  const it = ctx.measureText('IT').width;
+  const gap = fontPx * 0.05;
+  const barW = fontPx * 0.31;
+  const barH = fontPx * 0.16;
+  const total = tip + gap + barW + gap + it;
+  let x = cx - total / 2;
+  ctx.fillStyle = BRAND.ink;
+  ctx.fillText('TIP', x, baseline);
+  x += tip + gap;
+  ctx.fillStyle = '#FF8243';
+  roundRectPath(ctx, x, baseline - fontPx * 0.36 - barH / 2, barW, barH, barH / 2);
+  ctx.fill();
+  x += barW + gap;
+  ctx.fillStyle = BRAND.ink;
+  ctx.fillText('IT', x, baseline);
+  ctx.textAlign = 'center';
+}
+
+// Builds a printable card (logo, "¡Escanéame!", QR, name) instead of just the
 // bare QR — meant to be downloaded, printed, and displayed as-is, so it
 // needs to look finished and trustworthy on its own with no extra context.
 async function buildPrintableQR(worker) {
-  // The brand fonts are loaded via Google Fonts in index.html — make sure it's actually
-  // ready before drawing text, or canvas silently falls back to a system
-  // font on first load.
+  // Make sure the brand fonts are really loaded before drawing text, or the
+  // canvas silently falls back to a system font on first load.
   if (document.fonts?.ready) {
     await document.fonts.load(`800 64px ${DISPLAY}`);
     await document.fonts.load(`500 32px ${FONT}`);
@@ -82,37 +97,41 @@ async function buildPrintableQR(worker) {
   canvas.height = H;
   const ctx = canvas.getContext('2d');
 
-  ctx.fillStyle = BRAND.bg;
+  ctx.fillStyle = BRAND.yellow;
   ctx.fillRect(0, 0, W, H);
 
-  ctx.fillStyle = BRAND.yellow;
-  ctx.beginPath();
-  ctx.arc(900, 110, 70, 0, Math.PI * 2);
-  ctx.fill();
+  // a little colour: pink and orange discs in the corners
   ctx.fillStyle = BRAND.pink;
   ctx.beginPath();
-  ctx.arc(80, H - 120, 90, 0, Math.PI * 2);
+  ctx.arc(920, 90, 80, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = BRAND.bg;
+  ctx.beginPath();
+  ctx.arc(70, H - 90, 90, 0, Math.PI * 2);
   ctx.fill();
 
-  const logoSize = 130;
-  drawLogo(ctx, W / 2 - logoSize / 2, 80, logoSize);
+  // logo: mark + wordmark, side by side and centred
+  const markSize = 120;
+  ctx.font = `800 96px ${DISPLAY}`;
+  const wordW = ctx.measureText('TIP').width + ctx.measureText('IT').width + 96 * 0.41;
+  const rowW = markSize + 28 + wordW;
+  const rowX = W / 2 - rowW / 2;
+  drawMark(ctx, rowX, 95, markSize);
+  drawWordmark(ctx, rowX + markSize + 28 + wordW / 2, 95 + markSize * 0.82, 96);
 
   ctx.textAlign = 'center';
   ctx.fillStyle = BRAND.ink;
-  ctx.font = `800 72px ${DISPLAY}`;
-  ctx.fillText('TIP-IT', W / 2, 295);
-
-  ctx.fillStyle = BRAND.ink;
-  ctx.font = `800 44px ${DISPLAY}`;
-  ctx.fillText('¿Te gustó el servicio?', W / 2, 350);
-  ctx.fillText('¡Déjame una propina!', W / 2, 387);
+  ctx.font = `800 92px ${DISPLAY}`;
+  ctx.fillText('¡Escanéame!', W / 2, 345);
+  ctx.font = `500 38px ${FONT}`;
+  ctx.fillText('Deja tu propina de forma rápida y segura.', W / 2, 408);
   ctx.fillStyle = BRAND.muted;
-  ctx.font = `500 32px ${FONT}`;
-  ctx.fillText('Enjoyed the service? Leave a tip!', W / 2, 437);
+  ctx.font = `500 30px ${FONT}`;
+  ctx.fillText('Scan me! Leave your tip quickly and securely.', W / 2, 455);
 
   const qrBox = 540;
   const qrX = W / 2 - qrBox / 2;
-  const qrY = 475;
+  const qrY = 500;
   roundRectPath(ctx, qrX + 12, qrY + 12, qrBox, qrBox, 40);
   ctx.fillStyle = BRAND.ink;
   ctx.fill();
@@ -127,18 +146,27 @@ async function buildPrintableQR(worker) {
   const pad = 40;
   ctx.drawImage(qrImg, qrX + pad, qrY + pad, qrBox - pad * 2, qrBox - pad * 2);
 
+  // the mark in the middle of the QR: small (about 2% of the code's area) so
+  // phone cameras still read it, on a white disc so it stands out
+  const cx = qrX + qrBox / 2;
+  const cy = qrY + qrBox / 2;
+  ctx.fillStyle = '#FFFFFF';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 44, 0, Math.PI * 2);
+  ctx.fill();
+  drawMark(ctx, cx - 30, cy - 30, 60);
+
+  ctx.textAlign = 'center';
   ctx.fillStyle = BRAND.ink;
   ctx.font = `800 52px ${DISPLAY}`;
-  ctx.fillText(worker.name || `@${worker.username}`, W / 2, qrY + qrBox + 75);
+  ctx.fillText(worker.name || `@${worker.username}`, W / 2, qrY + qrBox + 80);
   ctx.fillStyle = BRAND.muted;
   ctx.font = `500 32px ${FONT}`;
-  ctx.fillText(`@${worker.username}`, W / 2, qrY + qrBox + 120);
+  ctx.fillText(`@${worker.username}`, W / 2, qrY + qrBox + 125);
 
   ctx.fillStyle = BRAND.muted;
   ctx.font = `500 26px ${FONT}`;
-  ctx.fillText('Escanea y paga con tarjeta, Apple Pay o Google Pay', W / 2, H - 170);
-  ctx.fillText('Scan and pay with card, Apple Pay or Google Pay', W / 2, H - 132);
-  ctx.fillText('Pagos seguros / Secure payments', W / 2, H - 80);
+  ctx.fillText('Paga con tarjeta, Apple Pay o Google Pay · Pagos seguros', W / 2, H - 70);
 
   return canvas.toDataURL('image/png');
 }
@@ -146,6 +174,8 @@ async function buildPrintableQR(worker) {
 export default function QRDisplay() {
   const { worker } = useAuth();
   const tipUrl = `${window.location.origin}/tip/${worker.username}`;
+  // Only while developing: lets the card be previewed without downloading it.
+  if (import.meta.env.DEV) window.__buildQR = () => buildPrintableQR(worker);
 
   const handleDownload = async () => {
     try {
@@ -232,7 +262,7 @@ export default function QRDisplay() {
 
       <div className="mt-6 w-full rounded-2xl border-2 border-punch-ink/25 bg-white p-4 text-left">
         <p className="font-display font-extrabold">Tu perfil público</p>
-        <p className="mt-0.5 text-sm text-slate-400">Con tus reseñas y dos botones: dejar propina o reconocer sin pago.</p>
+        <p className="mt-0.5 text-sm text-slate-400">Con tus reseñas y dos botones: dejar propina o dejar un comentario.</p>
         <p className="mt-2 break-all text-xs text-slate-500">{profileUrl}</p>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <a href={profileUrl} target="_blank" rel="noreferrer" className="btn-secondary !py-2 text-sm">

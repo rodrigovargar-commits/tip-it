@@ -54,7 +54,7 @@ const faqs = [
   ['¿TIP-IT guarda mi tarjeta?', 'Nunca. El pago lo procesa Stripe directamente — TIP-IT no ve ni almacena números de tarjeta.'],
   ['¿Cuánto cobra TIP-IT?', 'Una comisión pequeña por transacción, siempre visible antes de pagar. Quien envía el pago puede elegir cubrirla para que la persona reciba el 100%.'],
   ['¿Cómo recibo mi dinero si soy Tip-er?', 'Se transfiere directo a tu cuenta bancaria a través de Stripe Connect — TIP-IT no retiene el dinero en ningún momento.'],
-  ['¿Puedo reconocer a alguien sin pagar?', 'Sí. Entra a su perfil y toca “Reconocer sin pago”. Revisamos los reconocimientos antes de publicarlos y se marcan como “Sin pago asociado”.'],
+  ['¿Puedo dejar un comentario sin pagar?', 'Sí. Entra a su perfil y toca “Dejar un comentario”. Revisamos los comentarios antes de publicarlos y se marcan como “Sin pago asociado”.'],
   ['¿Qué pasa si quiero recibir pagos más adelante?', 'Solo necesitas poner una contraseña para proteger tu cuenta y conectar tu banco — lo puedes hacer cuando quieras desde tu perfil.'],
 ];
 

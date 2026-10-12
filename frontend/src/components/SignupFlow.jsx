@@ -211,7 +211,7 @@ export default function SignupFlow({ channels, defaultRole = 'worker' }) {
               <Logo size={48} className="mb-4" />
               <Heading
                 title="Crea tu cuenta"
-                subtitle={role === 'worker' ? 'Comienza a recibir reconocimientos y propinas por tu trabajo.' : 'Para guardar tu historial y tus contactos.'}
+                subtitle={role === 'worker' ? 'Comienza a recibir comentarios y propinas por tu trabajo.' : 'Para guardar tu historial y tus contactos.'}
               />
             </>
           }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowLeft, BadgeCheck, HandCoins, HeartHandshake, Share2, Star } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, HandCoins, MessageSquareText, Share2, Star } from 'lucide-react';
 import api, { getErrorMessage } from '../services/api.js';
 import ReviewList from '../components/ReviewList.jsx';
 import Avatar from '../components/Avatar.jsx';
@@ -126,7 +126,7 @@ export default function PublicProfile() {
           <div className="mt-4 grid grid-cols-2 divide-x-2 divide-punch-ink/15 rounded-2xl border-2 border-punch-ink/20 bg-white/70 py-2.5 text-center">
             <div>
               <p className="font-display text-xl font-extrabold">{worker.recognitionCount}</p>
-              <p className="text-[11px] font-semibold text-slate-500">reconocimientos</p>
+              <p className="text-[11px] font-semibold text-slate-500">comentarios</p>
             </div>
             <div>
               <p className="font-display text-xl font-extrabold">{worker.ratingCount > 0 ? worker.rating : '—'}</p>
@@ -143,14 +143,14 @@ export default function PublicProfile() {
             </Link>
           ) : (
             <p className="rounded-2xl border-2 border-punch-ink/25 bg-white p-3 text-center text-sm text-slate-400">
-              Por ahora puedes reconocer su servicio.
+              Por ahora puedes dejar un comentario.
             </p>
           )}
           <Link
-            to={`/p/${worker.username}/reconocer`}
+            to={`/p/${worker.username}/comentar`}
             className="inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-punch-ink bg-punch-ink px-6 py-3 font-display font-extrabold text-punch-yellow transition hover:bg-punch-ink/90"
           >
-            <HeartHandshake size={17} /> Reconocer sin pago
+            <MessageSquareText size={17} /> Dejar un comentario
           </Link>
         </div>
 
@@ -170,7 +170,7 @@ export default function PublicProfile() {
               <ReviewList reviews={shown} />
             </div>
           ) : (
-            <p className="mt-3 text-sm text-slate-500">Aún no hay valoraciones. Sé la primera persona en reconocer su servicio.</p>
+            <p className="mt-3 text-sm text-slate-500">Aún no hay valoraciones. Sé la primera persona en dejar un comentario.</p>
           )}
           {worker.thanksCount > 0 && (
             <p className="mt-3 text-xs font-semibold text-slate-500">

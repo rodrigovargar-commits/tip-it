@@ -7,8 +7,11 @@ import {
   HandCoins,
   Heart,
   LifeBuoy,
-  HeartHandshake,
+  Lock,
+  MapPin,
+  MessageSquareText,
   TrendingUp,
+  Zap,
   Plus,
   QrCode,
   ScanLine,
@@ -46,7 +49,7 @@ const STEPS = [
 
 const CLIENT_STEPS = [
   { icon: ScanLine, title: 'Escanea o busca', body: 'El perfil de la persona, con la cámara o por su usuario. No hace falta descargar nada.' },
-  { icon: HeartHandshake, title: 'Reconoce su servicio', body: 'Y/o deja una propina. Tú decides cuánto; no pedimos tu nombre.' },
+  { icon: MessageSquareText, title: 'Deja tu comentario', body: 'Y/o deja una propina. Tú decides cuánto; no pedimos tu nombre.' },
   { icon: ShieldCheck, title: 'Paga de forma segura', body: 'Con Apple Pay, Google Pay o tarjeta. TIP-IT nunca ve ni guarda tu tarjeta.' },
   { icon: Check, title: '¡Listo!', body: 'Tu pago queda confirmado y, si quieres, dejas tu reseña.' },
 ];
@@ -67,9 +70,9 @@ const NUMBERS = [
 ];
 
 const FEATURES = [
-  { icon: Heart, title: 'Reconocimiento', body: 'Deja valoraciones y comentarios cuando alguien te atienda bien.' },
+  { icon: Heart, title: 'Comentarios', body: 'Deja valoraciones y comentarios cuando alguien te atienda bien.' },
   { icon: HandCoins, title: 'Recompensas', body: 'Propinas de forma rápida y segura, con tarjeta o con tu celular.' },
-  { icon: Star, title: 'Reputación', body: 'Cada reconocimiento suma a tu perfil público. Con el tiempo es tu currículum.' },
+  { icon: Star, title: 'Reputación', body: 'Cada comentario suma a tu perfil público. Con el tiempo es tu currículum.' },
   { icon: TrendingUp, title: 'Oportunidades', body: 'Tus valoraciones pueden darte más visibilidad y nuevos clientes.' },
   { icon: QrCode, title: 'Un QR que es tuyo', body: 'Descárgalo listo para imprimir, en español e inglés, o mándalo por WhatsApp.' },
   { icon: Wallet, title: 'Tu lana, a tu banco', body: 'Ves tu saldo y tus pagos en un solo panel. TIP-IT no retiene tu dinero.' },
@@ -255,7 +258,7 @@ function PhoneMock() {
 
           <div className="mt-3 grid grid-cols-2 gap-1 rounded-full border-2 border-punch-ink/30 bg-white p-0.5 text-center font-display text-[11px] font-extrabold">
             <span className="rounded-full bg-punch-yellow py-1">Dejar propina</span>
-            <span className="py-1 text-punch-ink/70">Reconocer</span>
+            <span className="py-1 text-punch-ink/70">Comentar</span>
           </div>
 
           <div className="mt-3 rounded-full border-2 border-punch-ink bg-punch-tealdark py-2.5 text-center font-display text-base font-extrabold text-white">
@@ -446,7 +449,23 @@ export default function Home() {
                 Conoce cómo funciona
               </a>
             </div>
-            <p className="mt-5 text-sm font-semibold">Gratis · Sin efectivo, sin fricción · Hecho en CDMX</p>
+            <ul className="mt-8 grid max-w-xl grid-cols-2 gap-x-4 gap-y-4 text-left">
+              {[
+                [Zap, 'yellow', 'En segundos', 'Sin registros complicados'],
+                [Lock, 'pink', 'Pago seguro', 'Apple Pay, Google Pay o tarjeta'],
+                [Star, 'yellow', 'Más que propinas', 'Comentarios y reputación'],
+                [MapPin, 'pink', 'Cualquier servicio', 'Funciona en cualquier lugar'],
+              ].map(([Icon, tone, title, body]) => (
+                <li key={title} className="flex items-center gap-2.5">
+                  <IconBadge icon={Icon} tone={tone} size={38} />
+                  <span className="leading-tight">
+                    <span className="block font-display text-sm font-extrabold">{title}</span>
+                    <span className="block text-xs font-medium text-punch-ink/80">{body}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-5 text-sm font-semibold">Cuenta gratis · Sin efectivo, sin fricción · Hecho en CDMX</p>
             {!user && (
               <button
                 type="button"
@@ -574,7 +593,7 @@ export default function Home() {
       {/* ---------- Para quién ---------- */}
       <section id="para-quien" className="mx-auto max-w-6xl px-5 py-14 sm:py-20">
         <Reveal>
-          <SectionTitle eyebrow="¿Para quién?">
+          <SectionTitle eyebrow="En cualquier servicio">
             Si das buen servicio,{' '}
             <span className="relative inline-block text-punch-tealdark">
               es para ti.
@@ -582,7 +601,7 @@ export default function Home() {
             </span>
           </SectionTitle>
           <p className="mt-6 max-w-2xl text-lg font-medium">
-            ¡Cualquiera que reciba propinas se beneficia! Estos son los que más nos escriben:
+            TIP-IT conecta a las personas que brindan servicios con quienes valoran su trabajo. Estos son los que más nos escriben:
           </p>
         </Reveal>
         <div className="mt-12 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
@@ -692,13 +711,14 @@ export default function Home() {
       <section id="registro" className="border-t-2 border-punch-ink bg-punch-orange py-16 sm:py-24">
         <div className="mx-auto grid max-w-6xl items-start gap-12 px-5 lg:grid-cols-[1fr_1fr]">
           <Reveal>
-            <Eyebrow>Únete</Eyebrow>
+            <Eyebrow>Únete a TIP-IT</Eyebrow>
             <h2 className="mt-4 font-display text-5xl font-extrabold leading-[0.95] tracking-tight sm:text-7xl">
-              Que tu próxima propina llegue aunque nadie traiga cash.
+              Tu servicio también merece ser reconocido.
             </h2>
             <p className="mt-6 max-w-md text-lg font-medium leading-relaxed">
               Crea tu cuenta en un minuto. Después conectas tu banco, descargas tu QR y listo.
             </p>
+            <p className="mt-3 text-sm font-bold">Cuenta gratis · Sin contratos · En minutos</p>
             <div className="mt-8 flex items-center gap-4">
               <div className="flex -space-x-3">
                 {['stylist', 'musician', 'cook', 'waiter'].map((k) => (

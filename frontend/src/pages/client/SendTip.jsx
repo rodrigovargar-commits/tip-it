@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, ExpressCheckoutElement, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { ArrowLeft, CreditCard, PartyPopper, ShieldCheck, Star, UserPlus } from 'lucide-react';
+import { ArrowLeft, ChevronDown, CreditCard, PartyPopper, ShieldCheck, Star, UserPlus } from 'lucide-react';
 import api, { getErrorMessage } from '../../services/api.js';
 import StarRating from '../../components/StarRating.jsx';
 import Avatar from '../../components/Avatar.jsx';
@@ -25,6 +25,17 @@ const getStripe = () => {
 };
 
 const PRESETS = [2000, 5000, 10000]; // $20, $50, $100
+
+// Wallets are offered on phones only: Apple Pay on iOS, Google Pay on Android.
+// This only decides what we ASK Stripe to show; whether the wallet is really
+// usable on this device is up to Stripe's own check (onReady), not to this guess.
+function walletPlatform() {
+  if (typeof navigator === 'undefined') return null;
+  const ua = navigator.userAgent || '';
+  if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'ios';
+  if (/Android/.test(ua)) return 'android';
+  return null;
+}
 const DEFAULT_PRESET = 5000;
 
 const APPEARANCE = {
@@ -80,21 +91,24 @@ function Switch({ checked, onChange, label, hint }) {
         <span className={`absolute top-0.5 h-5 w-5 rounded-full border-2 border-punch-ink bg-white transition-all ${checked ? 'left-[1.5rem]' : 'left-0.5'}`} />
       </span>
       <span>
-        <span className="block text-sm font-bold">{label}</span>
-        {hint && <span className="mt-0.5 block text-xs text-slate-500">{hint}</span>}
+        <span className="block text-base font-bold">{label}</span>
+        {hint && <span className="mt-0.5 block text-sm text-slate-500">{hint}</span>}
       </span>
     </button>
   );
 }
 
-function SummaryRow({ label, value, strong, note }) {
+function SummaryRow({ label, value, suffix, strong, note }) {
   return (
-    <div className={`flex items-baseline justify-between gap-3 ${strong ? 'border-t-2 border-punch-ink/15 pt-2.5 text-lg font-extrabold' : 'text-sm'}`}>
-      <dt className={strong ? '' : 'text-slate-400'}>
+    <div className={`flex items-baseline justify-between gap-3 ${strong ? 'border-t-2 border-punch-ink/15 pt-2.5 font-extrabold' : 'text-base'}`}>
+      <dt className={strong ? 'text-lg' : 'text-slate-400'}>
         {label}
-        {note && <span className="block text-[11px] font-normal text-slate-500">{note}</span>}
+        {note && <span className="block text-sm font-normal text-slate-500">{note}</span>}
       </dt>
-      <dd className={strong ? '' : 'font-bold'}>{value}</dd>
+      <dd className={strong ? 'whitespace-nowrap text-2xl' : 'font-bold'}>
+        {value}
+        {suffix && <span className="ml-1 text-sm font-bold text-slate-500">{suffix}</span>}
+      </dd>
     </div>
   );
 }
@@ -111,6 +125,8 @@ function Checkout({ worker, username, user, onPaid }) {
   const [coverFee, setCoverFee] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [wallets, setWallets] = useState(false);
+  const [cardOpen, setCardOpen] = useState(true);
+  const platform = useMemo(walletPlatform, []);
   const [notice, setNotice] = useState('');
   const intentRef = useRef(null);
 
@@ -283,7 +299,7 @@ function Checkout({ worker, username, user, onPaid }) {
       <dl className="card space-y-2 !bg-white" aria-live="polite">
         <SummaryRow label="Propina" value={q ? formatCents(q.tip) : '—'} />
         <SummaryRow label="Procesamiento que cubres" value={q ? formatCents(coverFee ? q.fee : 0) : '—'} />
-        <SummaryRow label="Total a pagar" value={q ? `${formatCents(q.total)} MXN` : '—'} strong />
+        <SummaryRow label="Total a pagar" value={q ? formatCents(q.total) : '—'} suffix="MXN" strong />
         <SummaryRow label={`Neto estimado para ${firstName}`} value={q ? formatCents(Math.max(q.net, 0)) : '—'} />
       </dl>
 
@@ -303,25 +319,52 @@ function Checkout({ worker, username, user, onPaid }) {
           Método de pago
         </h2>
 
-        <div className={ready ? '' : 'pointer-events-none opacity-50'}>
-          <ExpressCheckoutElement
-            onReady={({ availablePaymentMethods }) => {
-              const any = Boolean(availablePaymentMethods?.applePay || availablePaymentMethods?.googlePay);
-              setWallets(any);
-              trackEvent('payment_method_available', { wallet: any });
-            }}
-            onConfirm={pay}
-            onCancel={() => toast('Cancelaste la autorización.')}
-            options={{ paymentMethods: { link: 'never', amazonPay: 'never', paypal: 'never' }, buttonHeight: 52 }}
-          />
-        </div>
+        {platform && (
+          <div className={ready ? '' : 'pointer-events-none opacity-50'}>
+            <ExpressCheckoutElement
+              onReady={({ availablePaymentMethods }) => {
+                const any = Boolean(availablePaymentMethods?.applePay || availablePaymentMethods?.googlePay);
+                setWallets(any);
+                setCardOpen(!any); // with a wallet, the card form waits behind "Pagar con tarjeta"
+                trackEvent('payment_method_available', { wallet: any });
+              }}
+              onConfirm={pay}
+              onCancel={() => toast('Cancelaste la autorización.')}
+              options={{
+                paymentMethods: {
+                  applePay: platform === 'ios' ? 'auto' : 'never',
+                  googlePay: platform === 'android' ? 'auto' : 'never',
+                  link: 'never',
+                  amazonPay: 'never',
+                  paypal: 'never',
+                },
+                buttonTheme: { applePay: 'black', googlePay: 'white' },
+                buttonHeight: 52,
+              }}
+            />
+          </div>
+        )}
 
-        {wallets && <p className="text-center text-xs font-semibold text-slate-500">o paga con tarjeta</p>}
+        {wallets && (
+          <button
+            type="button"
+            onClick={() => setCardOpen((v) => !v)}
+            aria-expanded={cardOpen}
+            className="flex w-full items-center justify-between rounded-2xl border-2 border-punch-ink/25 bg-white px-4 py-3 text-left font-bold"
+          >
+            <span className="flex items-center gap-2">
+              <IconBadge icon={CreditCard} tone="pink" size={28} /> Pagar con tarjeta
+            </span>
+            <ChevronDown size={18} className={`transition ${cardOpen ? 'rotate-180' : ''}`} />
+          </button>
+        )}
 
-        <div className="rounded-2xl border-2 border-punch-ink/25 bg-white p-3.5">
-          <p className="mb-2 flex items-center gap-2 text-sm font-bold">
-            <IconBadge icon={CreditCard} tone="pink" size={28} /> Pagar con tarjeta
-          </p>
+        <div className={`rounded-2xl border-2 border-punch-ink/25 bg-white p-3.5 ${cardOpen ? '' : 'hidden'}`}>
+          {!wallets && (
+            <p className="mb-2 flex items-center gap-2 text-sm font-bold">
+              <IconBadge icon={CreditCard} tone="pink" size={28} /> Pagar con tarjeta
+            </p>
+          )}
           <PaymentElement
             options={{
               layout: 'tabs',
@@ -333,9 +376,13 @@ function Checkout({ worker, username, user, onPaid }) {
         </div>
       </section>
 
-      <button type="button" onClick={pay} disabled={!stripe || submitting || !ready} className="btn-primary w-full text-lg">
-        {submitting ? 'Procesando…' : q ? `Pagar ${formatCents(q.total)} MXN` : 'Elige un monto'}
-      </button>
+      {/* With a wallet button on screen, that button is the way to pay; a second
+          pay button would invite two attempts at once. It appears once the card form is open. */}
+      {cardOpen && (
+        <button type="button" onClick={pay} disabled={!stripe || submitting || !ready} className="btn-primary w-full text-lg">
+          {submitting ? 'Procesando…' : q ? `Pagar ${formatCents(q.total)} MXN` : 'Elige un monto'}
+        </button>
+      )}
       <p className="flex items-center justify-center gap-1.5 text-center text-xs text-slate-500">
         <ShieldCheck size={13} /> Pago seguro, procesado por Stripe. TIP-IT no guarda tu tarjeta.
       </p>
@@ -404,7 +451,7 @@ function Confirmation({ worker, receipt, user }) {
       trackEvent('recognition_submitted', { paid: true, rating: Boolean(rating), comment: Boolean(review.trim()) });
       setState('sent');
     } catch (err) {
-      toast.error('Tu pago está confirmado. No pudimos guardar el reconocimiento; puedes intentar de nuevo.');
+      toast.error('Tu pago está confirmado. No pudimos guardar tu comentario; puedes intentar de nuevo.');
     } finally {
       setSaving(false);
     }
@@ -423,7 +470,7 @@ function Confirmation({ worker, receipt, user }) {
         <SummaryRow label="Destinatario" value={name} />
         <SummaryRow label="Propina" value={formatCents(tip)} />
         {tx.coverFee && <SummaryRow label="Procesamiento cubierto" value={formatCents(tx.platformFee)} />}
-        <SummaryRow label="Total pagado" value={`${formatCents(tx.amount)} MXN`} strong note={tx.coverFee ? 'Incluye el costo de procesamiento' : undefined} />
+        <SummaryRow label="Total pagado" value={formatCents(tx.amount)} suffix="MXN" strong note={tx.coverFee ? 'Incluye el costo de procesamiento' : undefined} />
         <SummaryRow label={`Neto estimado para ${firstName}`} value={formatCents(tx.netAmount)} />
         <SummaryRow label="Fecha" value={when} />
         <SummaryRow label="Referencia" value={String(tx._id).slice(-8).toUpperCase()} />
@@ -468,7 +515,7 @@ function Confirmation({ worker, receipt, user }) {
           </FormField>
           <p className="text-xs text-slate-500">Al publicar, tu comentario y tus estrellas se verán en el perfil de {firstName}.</p>
           <button type="button" onClick={() => send()} disabled={saving || (!rating && !review.trim())} className="btn-primary w-full">
-            {saving ? 'Publicando…' : 'Publicar reconocimiento'}
+            {saving ? 'Publicando…' : 'Publicar comentario'}
           </button>
           <button type="button" onClick={() => send({ thanks: true })} disabled={saving || Boolean(rating || review.trim())} className="btn-secondary w-full">
             Enviar agradecimiento
@@ -593,9 +640,9 @@ export default function SendTip() {
         <div className="mt-10">
           <Identity worker={worker} />
         </div>
-        <p className="mt-6 max-w-sm text-slate-400">Esta persona no puede recibir propinas por ahora. Puedes reconocer su servicio sin pago.</p>
-        <Link to={`/p/${worker.username}/reconocer`} className="btn-primary mt-6">
-          Reconocer sin pago
+        <p className="mt-6 max-w-sm text-slate-400">Esta persona no puede recibir propinas por ahora. Puedes dejar un comentario sin pago.</p>
+        <Link to={`/p/${worker.username}/comentar`} className="btn-primary mt-6">
+          Dejar un comentario
         </Link>
         <Link to="/scan" className="btn-secondary mt-3">
           Volver
@@ -605,7 +652,7 @@ export default function SendTip() {
   }
 
   return (
-    <div className="page-shell md:!max-w-xl">
+    <div className="page-shell md:!max-w-[480px]">
       {!receipt && (
         <Link to="/scan" className="flex items-center gap-1 text-sm text-slate-400">
           <ArrowLeft size={16} />
@@ -634,11 +681,11 @@ export default function SendTip() {
           </div>
 
           <div className="mt-5 grid grid-cols-2 gap-1 rounded-full border-2 border-punch-ink/25 bg-white p-1 text-center font-display text-sm font-extrabold">
-            <span aria-current="page" className="rounded-full border-2 border-punch-ink bg-punch-yellow py-2">
+            <span aria-current="page" className="flex min-h-[44px] items-center justify-center rounded-full border-2 border-punch-ink bg-punch-yellow">
               Dejar propina
             </span>
-            <Link to={`/p/${worker.username}/reconocer`} className="rounded-full border-2 border-transparent py-2 text-punch-ink/80 hover:text-punch-ink">
-              Reconocer
+            <Link to={`/p/${worker.username}/comentar`} className="flex min-h-[44px] items-center justify-center rounded-full border-2 border-transparent text-punch-ink/80 hover:text-punch-ink">
+              Comentar
             </Link>
           </div>
 

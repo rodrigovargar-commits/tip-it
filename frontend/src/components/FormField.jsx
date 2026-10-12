@@ -12,18 +12,18 @@ export default function FormField({ label, hint, error, optional, children }) {
 
   return (
     <div>
-      <label htmlFor={id} className="mb-1.5 flex items-baseline gap-2 text-sm font-bold text-punch-ink">
+      <label htmlFor={id} className="mb-1.5 flex items-baseline gap-2 text-base font-bold text-punch-ink">
         {label}
-        {optional && <span className="text-xs font-medium text-slate-500">(opcional)</span>}
+        {optional && <span className="text-sm font-medium text-slate-500">(opcional)</span>}
       </label>
       {children(controlProps)}
       {hint && !error && (
-        <p id={hintId} className="mt-1 text-xs text-slate-500">
+        <p id={hintId} className="mt-1 text-sm text-slate-500">
           {hint}
         </p>
       )}
       {error && (
-        <p id={errId} role="alert" className="mt-1 text-xs font-semibold text-red-700">
+        <p id={errId} role="alert" className="mt-1 text-sm font-semibold text-red-700">
           {error}
         </p>
       )}

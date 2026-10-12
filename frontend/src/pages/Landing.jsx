@@ -18,15 +18,15 @@ export default function Landing() {
   return (
     <div className="mx-auto flex min-h-[calc(100dvh-3.5rem)] w-full max-w-md flex-col">
       <section className="border-b-2 border-punch-ink bg-punch-orange px-5 pb-10 pt-8">
-        <LogoFull size={40} />
+        <LogoFull size={40} onOrange />
         <h1 className="mt-8 font-display text-[2.6rem] font-extrabold leading-[0.97]">
-          Propinas digitales,{' '}
+          Que se{' '}
           <span className="inline-block -rotate-1 rounded-2xl bg-punch-yellow px-2.5 pb-0.5">
-            simples y directas.
+            reconozca.
           </span>
         </h1>
         <p className="mt-4 font-medium">
-          Recibe pagos con tu QR único o busca a alguien por su usuario. Sin efectivo, sin fricción.
+          Recibe propinas y comentarios con tu QR único, o busca a alguien por su usuario. Sin efectivo, sin fricción.
         </p>
         <div className="mt-6 flex -space-x-3">
           {['stylist', 'musician', 'cook', 'waiter'].map((k) => (

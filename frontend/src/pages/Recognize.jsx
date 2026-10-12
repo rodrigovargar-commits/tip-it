@@ -57,7 +57,7 @@ export default function Recognize() {
     return (
       <div className="page-shell items-center text-center">
         <CheckCircle2 size={56} className="mt-10 text-brand-400" aria-hidden />
-        <h1 className="mt-4 text-3xl font-extrabold">{result === 'published' ? 'Tu reconocimiento fue enviado' : 'Tu reconocimiento está pendiente de revisión'}</h1>
+        <h1 className="mt-4 text-3xl font-extrabold">{result === 'published' ? 'Tu comentario fue enviado' : 'Tu comentario está pendiente de revisión'}</h1>
         <p className="mt-2 max-w-sm text-sm text-slate-400">
           {result === 'published' ? `Ya se ve en el perfil de ${firstName}.` : `Lo revisamos antes de publicarlo en el perfil de ${firstName}. Gracias por tomarte el tiempo.`}
         </p>
@@ -76,7 +76,7 @@ export default function Recognize() {
       <div className="mt-4 flex items-center gap-3">
         <Avatar src={worker.avatarUrl} name={worker.name || worker.username} size={52} />
         <div>
-          <h1 className="text-2xl font-extrabold leading-tight">Reconoce su servicio</h1>
+          <h1 className="text-2xl font-extrabold leading-tight">Deja un comentario</h1>
           <p className="text-sm text-slate-400">{worker.name || `@${worker.username}`}</p>
         </div>
       </div>
@@ -103,11 +103,11 @@ export default function Recognize() {
         <input type="text" name="website" value={website} onChange={(e) => setWebsite(e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute left-[-9999px] h-0 w-0 opacity-0" />
 
         <p className="text-xs text-slate-500">
-          Esto no es un pago. Revisamos los reconocimientos antes de publicarlos y se marcan como “Sin pago asociado”. No cuentan para el promedio de estrellas.
+          Esto no es un pago. Revisamos los comentarios antes de publicarlos y se marcan como “Sin pago asociado”. No cuentan para el promedio de estrellas.
         </p>
 
         <button type="submit" disabled={saving || (!rating && !comment.trim())} className="btn-primary w-full">
-          {saving ? 'Enviando…' : 'Publicar reconocimiento'}
+          {saving ? 'Enviando…' : 'Publicar comentario'}
         </button>
         <button type="button" onClick={() => submit({ thanks: true })} disabled={saving || Boolean(rating || comment.trim())} className="btn-secondary w-full">
           Enviar agradecimiento

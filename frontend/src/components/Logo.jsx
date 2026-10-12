@@ -12,21 +12,21 @@ export default function Logo({ size = 40, onDark = false, className = '' }) {
 }
 
 // "TIP-IT" in the heavy display face, with the hyphen as a rounded orange bar.
-export function Wordmark({ className = '', onDark = false }) {
+export function Wordmark({ className = '', onDark = false, onOrange = false }) {
   return (
     <span className={`font-display font-extrabold leading-none tracking-tight ${onDark ? 'text-white' : 'text-punch-ink'} ${className}`}>
       TIP
-      <span aria-hidden="true" className="mx-[0.05em] inline-block h-[0.16em] w-[0.31em] translate-y-[-0.14em] rounded-full bg-punch-orange align-middle" />
+      <span aria-hidden="true" className={`mx-[0.05em] inline-block h-[0.16em] w-[0.31em] translate-y-[-0.14em] rounded-full align-middle ${onOrange ? 'bg-punch-yellow' : 'bg-punch-orange'}`} />
       IT
     </span>
   );
 }
 
-export function LogoFull({ size = 36, onDark = false, className = '' }) {
+export function LogoFull({ size = 36, onDark = false, onOrange = false, className = '' }) {
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
       <Logo size={size} onDark={onDark} />
-      <Wordmark onDark={onDark} className="text-xl md:text-2xl" />
+      <Wordmark onDark={onDark} onOrange={onOrange} className="text-xl md:text-2xl" />
     </span>
   );
 }
