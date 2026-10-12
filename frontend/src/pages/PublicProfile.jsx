@@ -173,14 +173,26 @@ export default function PublicProfile() {
           </dl>
         )}
 
-        <section className="mt-8" aria-labelledby="reviews-title">
+        <div className="mt-6">
+          {worker.readyForTips ? (
+            <Link to={`/pagar/${worker.username}`} className="btn-accent w-full gap-2.5 !py-4 text-xl">
+              <HandCoins size={24} /> Dejar propina
+            </Link>
+          ) : (
+            <Link to={`/p/${worker.username}/comentar`} className="btn-primary w-full gap-2.5 !py-4 text-lg">
+              <Star size={22} fill="#FCE883" stroke="#FCE883" /> Dejar un comentario
+            </Link>
+          )}
+        </div>
+
+        <section className="mt-6" aria-labelledby="reviews-title">
           <div className="flex items-baseline justify-between">
             <h2 id="reviews-title" className="font-display text-2xl font-extrabold">
               Lo que dicen de {firstName}
             </h2>
             {reviews.length > 3 && (
               <button type="button" onClick={() => setShowAll((v) => !v)} className="text-sm font-bold text-brand-400 underline underline-offset-2">
-                {showAll ? 'Ver menos' : 'Ver todo'}
+                {showAll ? 'Ver menos' : 'Ver más'}
               </button>
             )}
           </div>
@@ -197,22 +209,6 @@ export default function PublicProfile() {
             </p>
           )}
         </section>
-
-        <p className="mt-8 text-center text-sm font-bold text-slate-400">Un buen servicio merece ser reconocido.</p>
-        <div className="mt-3 space-y-3 pb-4">
-          <Link to={`/p/${worker.username}/comentar`} className="btn-primary w-full gap-2.5 !py-4 text-lg">
-            <Star size={22} fill="#FCE883" stroke="#FCE883" /> Dejar un comentario
-          </Link>
-          {worker.readyForTips ? (
-            <Link to={`/pagar/${worker.username}`} className="btn-accent w-full gap-2.5 !py-4 text-xl">
-              <HandCoins size={24} /> Dejar propina
-            </Link>
-          ) : (
-            <p className="rounded-2xl bg-white/80 p-3 text-center text-sm text-slate-400">
-              Por ahora puedes dejar un comentario.
-            </p>
-          )}
-        </div>
       </div>
     </div>
   );
