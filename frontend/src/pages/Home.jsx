@@ -87,9 +87,9 @@ const SERVICES = [
 // What people have told us (the three quotes collected by the team), with the
 // portraits and stars from the brand sheet.
 const VOICES = [
-  { name: 'Carlos', role: 'Guía de turistas · CDMX', photo: '/personas/carlos.png', quote: 'Mis clientes me dejan más reseñas y eso me ha traído nuevos servicios.' },
-  { name: 'Sofía', role: 'Estilista · Monterrey', photo: '/personas/sofia.png', quote: 'TIP-IT me permite recibir propinas sin efectivo y mis clientas me valoran.' },
-  { name: 'Daniel', role: 'Cliente', photo: '/personas/daniel.png', quote: 'Es una forma fácil de agradecer. Siempre dejo una propina cuando tengo un buen servicio.' },
+  { name: 'Carlos', role: 'Guía de turistas · CDMX', photo: '/personas/carlos.jpg', quote: 'Mis clientes me dejan más reseñas y eso me ha traído nuevos servicios.' },
+  { name: 'Sofía', role: 'Estilista · Monterrey', photo: '/personas/sofia.jpg', quote: 'TIP-IT me permite recibir propinas sin efectivo y mis clientas me valoran.' },
+  { name: 'Daniel', role: 'Cliente', photo: '/personas/daniel.jpg', quote: 'Es una forma fácil de agradecer. Siempre dejo una propina cuando tengo un buen servicio.' },
 ];
 
 const PILLARS = [
@@ -757,21 +757,19 @@ export default function Home() {
           <div className="grid gap-4 md:grid-cols-3">
             {VOICES.map((v, i) => (
               <Reveal key={v.name} delay={i * 90}>
-                <figure className="h-full rounded-3xl bg-white/90 p-5 shadow-[0_12px_32px_-16px_rgba(10,47,47,0.35)]">
-                  <div className="flex items-start gap-3">
-                    <img src={v.photo} alt="" width="48" height="48" loading="lazy" className="h-12 w-12 shrink-0 rounded-full object-cover" />
-                    <div className="min-w-0">
-                      <blockquote className="text-sm font-medium leading-relaxed text-punch-ink/85">“{v.quote}”</blockquote>
-                      <figcaption className="mt-3 leading-tight">
-                        <span className="block text-sm font-extrabold">{v.name}</span>
-                        <span className="block text-xs font-medium text-punch-ink/60">{v.role}</span>
-                      </figcaption>
-                      <span className="mt-2 flex gap-0.5" role="img" aria-label="5 de 5 estrellas">
-                        {[0, 1, 2, 3, 4].map((k) => (
-                          <Star key={k} size={15} fill="#F5B52E" stroke="#F5B52E" />
-                        ))}
-                      </span>
-                    </div>
+                <figure className="flex h-full flex-col overflow-hidden rounded-3xl bg-white/90 shadow-[0_12px_32px_-16px_rgba(10,47,47,0.35)]">
+                  <img src={v.photo} alt={`${v.name}, ${v.role}`} width="480" height="480" loading="lazy" className="aspect-square w-full object-cover" />
+                  <div className="flex flex-1 flex-col p-5">
+                    <span className="flex gap-0.5" role="img" aria-label="5 de 5 estrellas">
+                      {[0, 1, 2, 3, 4].map((k) => (
+                        <Star key={k} size={16} fill="#F5B52E" stroke="#F5B52E" />
+                      ))}
+                    </span>
+                    <blockquote className="mt-3 flex-1 text-sm font-medium leading-relaxed text-punch-ink/85">“{v.quote}”</blockquote>
+                    <figcaption className="mt-4 leading-tight">
+                      <span className="block text-sm font-extrabold">{v.name}</span>
+                      <span className="block text-xs font-medium text-punch-ink/60">{v.role}</span>
+                    </figcaption>
                   </div>
                 </figure>
               </Reveal>
