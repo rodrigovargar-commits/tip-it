@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QrCode, ShieldCheck, Clock, Star } from 'lucide-react';
+import IconBadge from '../../components/IconBadge.jsx';
 
 const STEPS = [
   {
@@ -55,9 +56,7 @@ export default function WorkerOnboarding() {
         </div>
 
         <div className="mt-16 flex flex-col items-center text-center">
-          <span className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-punch-ink bg-punch-yellow text-punch-ink shadow-[3px_3px_0_0_#0A2F2F]">
-            <Icon size={28} strokeWidth={2} />
-          </span>
+          <IconBadge icon={Icon} tone={['yellow', 'teal', 'pink', 'orange'][step % 4]} size={72} />
           <h1 className="mt-6 text-2xl font-bold">{current.title}</h1>
           <p className="mt-3 text-slate-400">{current.desc}</p>
         </div>

@@ -45,8 +45,8 @@ export default function AuthLayout({ title, subtitle, children, footer }) {
           <Link to="/" className="mb-6 hidden text-sm font-semibold text-slate-400 hover:text-punch-ink md:inline-block">
             ← Volver al inicio
           </Link>
-          <h1 className="text-3xl font-extrabold md:text-4xl">{title}</h1>
-          {subtitle && <p className="mt-1 text-sm text-slate-400 md:text-base">{subtitle}</p>}
+          {title && <h1 className="text-3xl font-extrabold md:text-4xl">{title}</h1>}
+          {title && subtitle && <p className="mt-1 text-sm text-slate-400 md:text-base">{subtitle}</p>}
           <div className="mt-6">{children}</div>
           {footer && <div className="mt-6 text-center text-sm text-slate-400">{footer}</div>}
         </div>

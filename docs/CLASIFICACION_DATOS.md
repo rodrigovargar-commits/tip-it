@@ -18,7 +18,7 @@ puñado de usuarios reales, el riesgo es bajo — pero la lista debe quedar corr
 | `phoneVerified` / `emailVerified` | User | Indicador, no dato nuevo | Saber que la persona demostró ser dueña del teléfono o correo (con un código) | Nadie más que el propio usuario |
 | Código de verificación | OtpChallenge | Temporal | Comprobar teléfono o correo al crear cuenta o entrar. No se guarda el código, solo una huella cifrada; se borra al usarse o a la hora de vencer | Nadie |
 | `reviewAlias` | Transaction | Potencialmente — es un apodo elegido | Mostrar la reseña con un nombre distinto a “Anónimo” | Público en el perfil |
-| Reconocimiento sin pago (`rating`, `comment`, `alias`) | Recognition | Potencialmente — texto libre | Dejar agradecimiento sin pagar; se revisa antes de publicarse. Se guarda una huella cifrada de la IP solo para evitar repeticiones | Público en el perfil, ya aprobado |
+| Comentario sin pago (`rating`, `comment`, `alias`) | Recognition | Potencialmente — texto libre | Dejar agradecimiento sin pagar; se revisa antes de publicarse. Se guarda una huella cifrada de la IP solo para evitar repeticiones | Público en el perfil, ya aprobado |
 | `publicName`, `activity`, `occupation`, `establishment` | Worker | No identifican por sí solos (los elige la persona) | Perfil público de quien recibe propinas | Público |
 | `username`, `bio`, `experience` | Worker | No es dato personal identificable por sí solo (es un alias elegido) | Perfil público del trabajador | Público |
 

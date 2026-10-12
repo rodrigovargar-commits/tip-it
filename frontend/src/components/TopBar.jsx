@@ -3,7 +3,7 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown, LifeBuoy, LogOut, Menu, ScanLine, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import useNavLinks, { HELP_LINKS } from '../hooks/useNavLinks.js';
-import Logo from './Logo.jsx';
+import { LogoFull } from './Logo.jsx';
 import Avatar from './Avatar.jsx';
 
 // Site-wide header: logo (always goes to the main page), the options right at
@@ -70,8 +70,7 @@ export default function TopBar() {
     <header className="sticky top-0 z-50 border-b-2 border-punch-ink bg-punch-cream/95 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 md:h-16 md:px-6">
         <Link to="/" className="flex shrink-0 items-center gap-2.5" aria-label="TIP-IT, página principal">
-          <Logo size={36} />
-          <span className="font-display text-xl font-extrabold tracking-tight md:text-2xl">TIP-IT</span>
+          <LogoFull size={36} />
         </Link>
 
         {/* Desktop options (not while paying a tip: keep it simple) */}

@@ -67,9 +67,9 @@ https://tip-it-backend-65q4.onrender.com/api/admin/otp-status?key=TU_CLAVE
 https://tip-it-backend-65q4.onrender.com/api/admin/otp-status?key=TU_CLAVE&channel=email&to=tucorreo@gmail.com
 ```
 
-## Reconocimientos sin pago
+## Comentarios sin pago
 
-Cuando alguien reconoce a una persona sin pagar, el reconocimiento queda pendiente. Para verlos y aprobarlos:
+Cuando alguien deja un comentario sin pagar, queda pendiente. Para verlos y aprobarlos:
 
 ```
 /api/admin/recognitions?key=TU_CLAVE

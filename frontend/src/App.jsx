@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import Landing from './pages/Landing.jsx';
 import Home from './pages/Home.jsx';
@@ -13,6 +13,8 @@ const QRDisplay = lazy(() => import('./pages/worker/QRDisplay.jsx'));
 const WorkerReviews = lazy(() => import('./pages/worker/WorkerReviews.jsx'));
 const ScanQR = lazy(() => import('./pages/client/ScanQR.jsx'));
 const SendTip = lazy(() => import('./pages/client/SendTip.jsx'));
+const PublicProfile = lazy(() => import('./pages/PublicProfile.jsx'));
+const Recognize = lazy(() => import('./pages/Recognize.jsx'));
 const History = lazy(() => import('./pages/History.jsx'));
 const Profile = lazy(() => import('./pages/Profile.jsx'));
 const Contacts = lazy(() => import('./pages/Contacts.jsx'));
@@ -26,6 +28,12 @@ import RouteMeta from './components/RouteMeta.jsx';
 import NotFound from './pages/NotFound.jsx';
 import Spinner from './components/Spinner.jsx';
 import TopBar from './components/TopBar.jsx';
+
+// Old shared links used /reconocer; they keep working.
+function RedirectToComment() {
+  const { username } = useParams();
+  return <Navigate to={`/p/${username}/comentar`} replace />;
+}
 
 export default function App() {
   return (
@@ -97,6 +105,9 @@ export default function App() {
             requires an account upfront — only receiving one does. */}
         <Route path="/scan" element={<ScanQR />} />
         <Route path="/tip/:username" element={<SendTip />} />
+        <Route path="/p/:username" element={<PublicProfile />} />
+        <Route path="/p/:username/comentar" element={<Recognize />} />
+        <Route path="/p/:username/reconocer" element={<RedirectToComment />} />
         <Route
           path="/history"
           element={
