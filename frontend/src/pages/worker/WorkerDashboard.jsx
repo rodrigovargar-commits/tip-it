@@ -133,6 +133,15 @@ export default function WorkerDashboard() {
         </div>
       )}
 
+      <Link to="/worker/cobros" className="mt-6 card flex items-center gap-3 hover:bg-white">
+        <ShieldAlert size={22} className="shrink-0" />
+        <span className="flex-1">
+          <span className="block font-display text-lg font-extrabold">Datos para activar tus cobros</span>
+          <span className="block text-sm font-medium text-slate-400">Una sola vez, con lo que pide Cheqpay.</span>
+        </span>
+        <span aria-hidden="true" className="font-extrabold">→</span>
+      </Link>
+
       {stripeStatus?.onboardingComplete && stripeStatus.requirementsDue?.length > 0 && (
         <div className="mt-6 card flex gap-3 border-red-600/40 bg-red-500/10">
           <ShieldAlert size={20} className="mt-0.5 shrink-0 text-red-600" />

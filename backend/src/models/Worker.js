@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const { encryptField, decryptField } = require('../utils/fieldCrypto');
+const { GIRO_IDS } = require('../utils/cheqpayGiro');
 
 const workerSchema = new mongoose.Schema(
   {
@@ -78,6 +80,21 @@ const workerSchema = new mongoose.Schema(
     stripeOnboardingComplete: {
       type: Boolean,
       default: false,
+    },
+    // Data Cheqpay's onboarding form asks for (Persona Física). Collected here so
+    // the person fills it once; sent to Cheqpay when it gives us the way to do it.
+    cheqpay: {
+      status: { type: String, enum: ['none', 'collected', 'submitted', 'approved', 'rejected'], default: 'none' },
+      legalName: { type: String, maxlength: 120, trim: true, default: '' },
+      // RFC is optional for Persona Física; stored encrypted when DATA_ENCRYPTION_KEY is set.
+      rfc: { type: String, maxlength: 200, default: '', set: encryptField, get: decryptField },
+      nationality: { type: String, maxlength: 60, trim: true, default: '' },
+      phone: { type: String, maxlength: 20, default: '' },
+      email: { type: String, maxlength: 120, lowercase: true, trim: true, default: '' },
+      giro: { type: String, enum: [...GIRO_IDS, ''], default: '' },
+      giroOther: { type: String, maxlength: 100, trim: true, default: '' },
+      termsAcceptedAt: { type: Date, default: null },
+      updatedAt: { type: Date, default: null },
     },
     ratingSum: {
       type: Number,

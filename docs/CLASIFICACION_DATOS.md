@@ -19,6 +19,7 @@ puñado de usuarios reales, el riesgo es bajo — pero la lista debe quedar corr
 | Código de verificación | OtpChallenge | Temporal | Comprobar teléfono o correo al crear cuenta o entrar. No se guarda el código, solo una huella cifrada; se borra al usarse o a la hora de vencer | Nadie |
 | `reviewAlias` | Transaction | Potencialmente — es un apodo elegido | Mostrar la reseña con un nombre distinto a “Anónimo” | Público en el perfil |
 | Comentario sin pago (`rating`, `comment`, `alias`) | Recognition | Potencialmente — texto libre | Dejar agradecimiento sin pagar; se revisa antes de publicarse. Se guarda una huella cifrada de la IP solo para evitar repeticiones | Público en el perfil, ya aprobado |
+| Datos de alta de cobros (`legalName`, `rfc`, `nationality`, `phone`, `email`, `giro`, `giroOther`, `termsAcceptedAt`) | Worker (`cheqpay`) | Sí. El RFC es sensible: va cifrado en la base de datos y la API solo lo devuelve enmascarado | Dar de alta a la persona con Cheqpay, que procesa y deposita sus cobros. Es lo mismo que pide el formulario de Cheqpay (persona física) | Solo la propia persona; TIP-IT para enviarlo a Cheqpay. No se muestra a nadie más |
 | `publicName`, `activity`, `occupation`, `establishment` | Worker | No identifican por sí solos (los elige la persona) | Perfil público de quien recibe propinas | Público |
 | `username`, `bio`, `experience` | Worker | No es dato personal identificable por sí solo (es un alias elegido) | Perfil público del trabajador | Público |
 

@@ -9,6 +9,7 @@ const Login = lazy(() => import('./pages/auth/Login.jsx'));
 const WorkerDashboard = lazy(() => import('./pages/worker/WorkerDashboard.jsx'));
 const WorkerSetup = lazy(() => import('./pages/worker/WorkerSetup.jsx'));
 const WorkerOnboarding = lazy(() => import('./pages/worker/WorkerOnboarding.jsx'));
+const CheqpayAlta = lazy(() => import('./pages/worker/CheqpayAlta.jsx'));
 const QRDisplay = lazy(() => import('./pages/worker/QRDisplay.jsx'));
 const WorkerReviews = lazy(() => import('./pages/worker/WorkerReviews.jsx'));
 const ScanQR = lazy(() => import('./pages/client/ScanQR.jsx'));
@@ -86,6 +87,14 @@ export default function App() {
           element={
             <ProtectedRoute requireWorker>
               <WorkerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/worker/cobros"
+          element={
+            <ProtectedRoute requireWorker>
+              <CheqpayAlta />
             </ProtectedRoute>
           }
         />

@@ -13,6 +13,8 @@ const {
   createInstantPayout,
   createRecognition,
 } = require('../controllers/workerController');
+const { getApplication, saveApplication } = require('../controllers/cheqpayController');
+const { GIRO_IDS } = require('../utils/cheqpayGiro');
 const { ACTIVITY_IDS } = require('../utils/activities');
 const { recognitionLimiter } = require('../middleware/rateLimiter');
 
@@ -46,6 +48,24 @@ router.get('/stripe/status', protect, requireWorker, getStripeAccountStatus);
 router.post('/stripe/onboarding-link', protect, requireWorker, createStripeOnboardingLink);
 router.get('/stripe/balance', protect, requireWorker, getConnectedBalance);
 router.post('/stripe/instant-payout', protect, requireWorker, createInstantPayout);
+
+router.get('/cheqpay/application', protect, requireWorker, getApplication);
+router.put(
+  '/cheqpay/application',
+  protect,
+  requireWorker,
+  [
+    body('legalName').isString().trim().isLength({ min: 3, max: 120 }).withMessage('Escribe tu nombre completo'),
+    body('rfc').optional({ nullable: true }).isString().isLength({ max: 20 }),
+    body('nationality').isString().trim().isLength({ min: 2, max: 60 }).withMessage('Escribe tu nacionalidad'),
+    body('phone').isString().custom((v) => /^\d{10,15}$/.test(String(v).replace(/\D/g, ''))).withMessage('Escribe un teléfono válido'),
+    body('email').isEmail().withMessage('Escribe un correo válido'),
+    body('giro').isIn(GIRO_IDS).withMessage('Elige un giro'),
+    body('giroOther').optional({ nullable: true }).isString().isLength({ max: 100 }),
+  ],
+  validate,
+  saveApplication
+);
 
 router.put(
   '/profile',
