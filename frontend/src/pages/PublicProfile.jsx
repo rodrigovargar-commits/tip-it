@@ -93,7 +93,7 @@ export default function PublicProfile() {
             <Avatar src={worker.avatarUrl} name={name} size={84} />
           </span>
           <div className="min-w-0 pb-1">
-            <h1 className="truncate text-2xl font-extrabold leading-tight">{name}</h1>
+            <h1 className="break-words text-2xl font-extrabold leading-tight">{name}</h1>
             {detail && <p className="truncate text-sm font-semibold text-slate-400">{detail}</p>}
             {worker.establishment && <p className="truncate text-xs text-slate-500">{worker.establishment}</p>}
           </div>
