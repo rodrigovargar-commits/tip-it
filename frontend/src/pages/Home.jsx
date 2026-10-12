@@ -672,10 +672,9 @@ export default function Home() {
           {SERVICES.map(({ person, photo, svg, tone, label, sub, note }, i) => (
             <Reveal key={label + sub} delay={(i % 4) * 70}>
               <li className="list-none">
-                {/* The photos are small (about 110 px), so the tile stays at their own size: bigger would look blurry. */}
-                <div className="relative mx-auto flex h-[7.25rem] w-28 items-end justify-center overflow-hidden rounded-3xl bg-punch-yellow/50 shadow-[0_10px_28px_-16px_rgba(10,47,47,0.45)] sm:mx-0">
+                <div className="relative mx-auto aspect-[4/5] w-full max-w-[9.5rem] overflow-hidden rounded-3xl bg-punch-yellow/50 shadow-[0_10px_28px_-16px_rgba(10,47,47,0.45)] sm:mx-0">
                   {photo ? (
-                    <img src={photo} alt="" width="112" height="116" loading="lazy" className="h-full w-full object-cover" />
+                    <img src={photo} alt="" width="480" height="600" loading="lazy" className="h-full w-full object-cover" />
                   ) : (
                     <Person kind={person || 'cook'} size={150} />
                   )}
