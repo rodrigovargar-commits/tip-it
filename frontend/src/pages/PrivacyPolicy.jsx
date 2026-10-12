@@ -36,9 +36,6 @@ export default function PrivacyPolicy() {
             <li>Email y contraseña (obligatorios solo para cuentas completas o para recibir propinas).</li>
             <li>Foto de perfil, si decides subir una.</li>
             <li>
-              Documento de identidad (KYC), si vas a recibir propinas y lo agregas para verificación.
-            </li>
-            <li>
               Historial de transacciones: montos, fechas, calificaciones y reseñas que escribas o
               recibas.
             </li>

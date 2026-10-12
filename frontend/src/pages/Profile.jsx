@@ -17,7 +17,6 @@ export default function Profile() {
   const [form, setForm] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
-    document: '',
   });
   const [bio, setBio] = useState(worker?.bio || '');
   const [experience, setExperience] = useState(worker?.experience || '');
@@ -48,7 +47,7 @@ export default function Profile() {
     e.preventDefault();
     setSavingProfile(true);
     try {
-      await api.put('/users/profile', form.document ? form : { name: form.name, phone: form.phone });
+      await api.put('/users/profile', { name: form.name, phone: form.phone });
       await refreshMe();
       toast.success('Perfil actualizado');
     } catch (err) {
@@ -134,18 +133,6 @@ export default function Profile() {
         </FormField>
         <FormField label="Teléfono">
           {(p) => <input {...p} name="phone" type="tel" inputMode="tel" value={form.phone} onChange={handleChange} className="input-field" />}
-        </FormField>
-        <FormField label="Documento de identidad (KYC)" optional>
-          {(p) => (
-            <input
-              {...p}
-              name="document"
-              value={form.document}
-              onChange={handleChange}
-              placeholder={user?.hasDocument ? 'Registrado (escribe para reemplazar)' : 'INE / Pasaporte'}
-              className="input-field"
-            />
-          )}
         </FormField>
         {user?.isGuest ? (
           <div className="rounded-2xl border-2 border-punch-ink/30 bg-white/60 p-3">
