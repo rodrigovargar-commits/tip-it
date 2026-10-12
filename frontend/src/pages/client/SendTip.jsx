@@ -438,7 +438,13 @@ function Confirmation({ worker, receipt, user }) {
   const name = worker.name || `@${worker.username}`;
   const firstName = name.split(' ')[0];
   const confirmed = transaction?.status === 'succeeded';
+  const navigate = useNavigate();
   const [state, setState] = useState(confirmed ? 'review' : 'checking'); // checking | review | sent
+  // Once the person has rated (or skipped it), they go back to the main page.
+  const finish = (message) => {
+    if (message) toast.success(message);
+    navigate('/');
+  };
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState('');
   const [alias, setAlias] = useState('');
@@ -471,7 +477,7 @@ function Confirmation({ worker, receipt, user }) {
         ...(thanks ? { thanks: true } : {}),
       });
       trackEvent('recognition_submitted', { paid: true, rating: Boolean(rating), comment: Boolean(review.trim()) });
-      setState('sent');
+      finish(thanks ? '¡Gracias!' : '¡Gracias! Tu comentario fue publicado.');
     } catch (err) {
       toast.error('Tu pago está confirmado. No pudimos guardar tu comentario; puedes intentar de nuevo.');
     } finally {
@@ -561,7 +567,7 @@ function Confirmation({ worker, receipt, user }) {
           <button type="button" onClick={() => send({ thanks: true })} disabled={saving || Boolean(rating || review.trim())} className="btn-secondary w-full">
             Enviar agradecimiento
           </button>
-          <button type="button" onClick={() => setState('sent')} className="w-full text-center text-sm font-bold underline underline-offset-2">
+          <button type="button" onClick={() => finish('¡Gracias!')} className="w-full text-center text-sm font-bold underline underline-offset-2">
             Ahora no
           </button>
         </section>
