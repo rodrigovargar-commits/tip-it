@@ -25,6 +25,7 @@ export default function Profile() {
   const [activity, setActivity] = useState(worker?.activity || '');
   const [occupation, setOccupation] = useState(worker?.occupation || '');
   const [establishment, setEstablishment] = useState(worker?.establishment || '');
+  const [years, setYears] = useState(worker?.yearsExperience ?? '');
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingWorkerProfile, setSavingWorkerProfile] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -82,7 +83,7 @@ export default function Profile() {
   const handleSaveWorkerProfile = async () => {
     setSavingWorkerProfile(true);
     try {
-      await api.put('/workers/profile', { bio, experience, publicName, activity, occupation, establishment });
+      await api.put('/workers/profile', { bio, experience, publicName, activity, occupation, establishment, yearsExperience: years === '' ? null : Number(years) });
       await refreshMe();
       toast.success('Perfil público actualizado');
     } catch (err) {
@@ -186,6 +187,9 @@ export default function Profile() {
           </FormField>
           <FormField label="Ocupación" optional>
             {(p) => <input {...p} value={occupation} onChange={(e) => setOccupation(e.target.value)} maxLength={60} className="input-field" />}
+          </FormField>
+          <FormField label="Años de experiencia" optional hint="Se muestra en tu perfil público.">
+            {(p) => <input {...p} type="number" inputMode="numeric" min="0" max="60" value={years} onChange={(e) => setYears(e.target.value)} className="input-field" />}
           </FormField>
           <FormField label="Lugar de trabajo" optional>
             {(p) => <input {...p} value={establishment} onChange={(e) => setEstablishment(e.target.value)} maxLength={60} className="input-field" />}

@@ -194,3 +194,38 @@ describe('a rating that arrives after the payment is confirmed', () => {
     expect(w.ratingSum).toBe(4);
   });
 });
+
+
+describe('years of experience and the share of 4-5 star ratings', () => {
+  it('shows years when the person set them, and rejects nonsense', async () => {
+    await makeWorker({ yearsExperience: 5 });
+    const res = await request(app).get('/api/workers/rafa');
+    expect(res.body.worker.yearsExperience).toBe(5);
+
+    const reg = await request(app).post('/api/auth/register').send({
+      name: 'B', email: 'b@example.com', phone: '5551113333', password: 'password123',
+    });
+    const bad = await request(app)
+      .post('/api/workers/register')
+      .set('Authorization', `Bearer ${reg.body.token}`)
+      .send({ username: 'bbb', yearsExperience: 61 });
+    expect(bad.status).toBe(400);
+  });
+
+  it('only reports the 4-5 star share from three ratings on, and computes it from real ratings', async () => {
+    const { user } = await makeWorker();
+    const worker = await Worker.findById(user.worker);
+    const base = { worker: worker._id, amount: 5000, platformFee: 700, netAmount: 4300, status: 'succeeded' };
+    const mk = (id, rating) => Transaction.create({ ...base, stripePaymentIntentId: id, rating, ratingCounted: true });
+    await mk('pi_p1', 5);
+    await mk('pi_p2', 2);
+    await Worker.findByIdAndUpdate(worker._id, { ratingSum: 7, ratingCount: 2 });
+    let res = await request(app).get('/api/workers/rafa');
+    expect(res.body.worker.positivePercent).toBeNull();
+
+    await mk('pi_p3', 4);
+    await Worker.findByIdAndUpdate(worker._id, { ratingSum: 11, ratingCount: 3 });
+    res = await request(app).get('/api/workers/rafa');
+    expect(res.body.worker.positivePercent).toBe(67); // 2 of 3
+  });
+});

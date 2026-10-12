@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowLeft, BadgeCheck, HandCoins, MessageSquareText, Share2, Star } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, CalendarDays, HandCoins, Heart, MessageSquareText, Share2, Star, Users } from 'lucide-react';
 import api, { getErrorMessage } from '../services/api.js';
 import ReviewList from '../components/ReviewList.jsx';
 import Avatar from '../components/Avatar.jsx';
@@ -65,6 +65,12 @@ export default function PublicProfile() {
   const detail = [activityLabel(worker.activity), worker.occupation].filter(Boolean).join(' · ');
   const reviews = worker.reviews || [];
   const shown = showAll ? reviews : reviews.slice(0, 3);
+  // Only real numbers: each one appears when there is data behind it.
+  const stats = [
+    worker.recognitionCount > 0 && { icon: Users, value: worker.recognitionCount, label: 'comentarios' },
+    worker.positivePercent !== null && worker.positivePercent !== undefined && { icon: Heart, value: `${worker.positivePercent}%`, label: 'califican con 4 o 5 estrellas' },
+    worker.yearsExperience > 0 && { icon: CalendarDays, value: worker.yearsExperience, label: worker.yearsExperience === 1 ? 'año de experiencia' : 'años de experiencia' },
+  ].filter(Boolean);
 
   return (
     <div className="page-shell !pt-0 md:!pt-8">
@@ -99,7 +105,7 @@ export default function PublicProfile() {
       </div>
 
       {/* Sheet that overlaps the photo, with the avatar on its edge. */}
-      <div className="relative -mt-8 rounded-t-[2rem] border-2 border-b-0 border-punch-ink bg-punch-cream px-5 pb-2 pt-4 md:mx-4">
+      <div className="relative -mt-8 rounded-t-[2rem] bg-punch-cream px-5 pb-2 pt-4 shadow-[0_-12px_30px_-18px_rgba(10,47,47,0.4)] md:mx-4">
         <div className="flex items-end gap-4">
           <span className="-mt-14 rounded-full border-4 border-punch-cream bg-punch-pink">
             <Avatar src={worker.avatarUrl} name={name} size={84} />
@@ -134,36 +140,32 @@ export default function PublicProfile() {
           <p className="mt-3 rounded-2xl bg-white/80 px-4 py-3 text-center text-sm italic text-slate-300">“{worker.bio}”</p>
         )}
 
-        {worker.recognitionCount > 0 && (
-          <div className="mt-4 grid grid-cols-2 divide-x-2 divide-punch-ink/15 rounded-2xl border-2 border-punch-ink/20 bg-white/70 py-2.5 text-center">
-            <div>
-              <p className="font-display text-xl font-extrabold">{worker.recognitionCount}</p>
-              <p className="text-[11px] font-semibold text-slate-500">comentarios</p>
-            </div>
-            <div>
-              <p className="font-display text-xl font-extrabold">{worker.ratingCount > 0 ? worker.rating : '—'}</p>
-              <p className="text-[11px] font-semibold text-slate-500">calificación</p>
-            </div>
-          </div>
+        {stats.length > 0 && (
+          <dl className="mt-4 grid divide-x divide-punch-ink/15 rounded-2xl bg-white/80 py-3 text-center" style={{ gridTemplateColumns: `repeat(${stats.length}, minmax(0, 1fr))` }}>
+            {stats.map(({ icon: Icon, value, label }) => (
+              <div key={label} className="px-1">
+                <Icon size={18} className="mx-auto text-punch-orange" aria-hidden="true" />
+                <dd className="mt-1 font-display text-xl font-extrabold">{value}</dd>
+                <dt className="text-[11px] font-semibold leading-tight text-slate-500">{label}</dt>
+              </div>
+            ))}
+          </dl>
         )}
 
         <p className="mt-5 text-center text-sm font-bold text-slate-400">Un buen servicio merece ser reconocido.</p>
         <div className="mt-3 space-y-3">
+          <Link to={`/p/${worker.username}/comentar`} className="btn-primary w-full gap-2">
+            <Star size={17} fill="#FCE883" stroke="#FCE883" /> Dejar un comentario
+          </Link>
           {worker.readyForTips ? (
-            <Link to={`/tip/${worker.username}`} className="btn-primary w-full gap-2 text-lg">
+            <Link to={`/tip/${worker.username}`} className="btn-accent w-full gap-2 text-lg">
               <HandCoins size={18} /> Dejar propina
             </Link>
           ) : (
-            <p className="rounded-2xl border-2 border-punch-ink/25 bg-white p-3 text-center text-sm text-slate-400">
+            <p className="rounded-2xl bg-white/80 p-3 text-center text-sm text-slate-400">
               Por ahora puedes dejar un comentario.
             </p>
           )}
-          <Link
-            to={`/p/${worker.username}/comentar`}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-punch-ink bg-punch-ink px-6 py-3 font-display font-extrabold text-punch-yellow transition hover:bg-punch-ink/90"
-          >
-            <MessageSquareText size={17} /> Dejar un comentario
-          </Link>
         </div>
 
         <section className="mt-8" aria-labelledby="reviews-title">

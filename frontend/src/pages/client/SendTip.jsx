@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, ExpressCheckoutElement, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { ArrowLeft, ChevronDown, CreditCard, PartyPopper, ShieldCheck, Star, UserPlus } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Clock, CreditCard, ShieldCheck, Star, UserPlus } from 'lucide-react';
 import api, { getErrorMessage } from '../../services/api.js';
 import StarRating from '../../components/StarRating.jsx';
 import Avatar from '../../components/Avatar.jsx';
@@ -379,7 +379,7 @@ function Checkout({ worker, username, user, onPaid }) {
       {/* With a wallet button on screen, that button is the way to pay; a second
           pay button would invite two attempts at once. It appears once the card form is open. */}
       {cardOpen && (
-        <button type="button" onClick={pay} disabled={!stripe || submitting || !ready} className="btn-primary w-full text-lg">
+        <button type="button" onClick={pay} disabled={!stripe || submitting || !ready} className="btn-accent w-full text-lg">
           {submitting ? 'Procesando…' : q ? `Pagar ${formatCents(q.total)} MXN` : 'Elige un monto'}
         </button>
       )}
@@ -410,6 +410,28 @@ function Checkout({ worker, username, user, onPaid }) {
 }
 
 /* ----------------------------------------------- confirmation + review step */
+
+// A yellow circle with a check and a burst of colour around it (brand sheet).
+function Sunburst() {
+  const rays = [
+    [-70, '#FF8243'], [-35, '#069494'], [0, '#FF8243'], [35, '#FFC0CB'], [70, '#FCE883'],
+    [110, '#069494'], [145, '#FF8243'], [180, '#FFC0CB'], [215, '#FCE883'], [250, '#FF8243'],
+  ];
+  return (
+    <svg viewBox="0 0 120 120" width="112" height="112" className="mx-auto" aria-hidden="true">
+      {rays.map(([deg, color]) => (
+        <line
+          key={deg}
+          x1="60" y1="8" x2="60" y2="20"
+          stroke={color} strokeWidth="5" strokeLinecap="round"
+          transform={`rotate(${deg} 60 60)`}
+        />
+      ))}
+      <circle cx="60" cy="60" r="32" fill="#FCE883" stroke="#0A2F2F" strokeWidth="4" />
+      <path d="M46 61 L56 71 L75 50" fill="none" stroke="#0A2F2F" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 function Confirmation({ worker, receipt, user }) {
   const { transaction } = receipt;
@@ -460,14 +482,35 @@ function Confirmation({ worker, receipt, user }) {
   return (
     <div className="space-y-5">
       <div className="text-center">
-        <PartyPopper size={44} className="mx-auto text-brand-400" aria-hidden />
-        <h1 className="mt-2 text-3xl font-extrabold">{ok ? 'Pago confirmado' : 'Estamos confirmando tu pago'}</h1>
-        {!ok && <p className="mt-1 text-sm text-slate-400">No pudimos confirmar el estado todavía. No vuelvas a pagar: toca “Consultar estado”.</p>}
-        {ok && <p className="mt-1 text-sm font-semibold text-slate-400">¡Gracias!</p>}
+        {ok ? (
+          <Sunburst />
+        ) : (
+          <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-punch-yellow">
+            <Clock size={36} aria-hidden="true" />
+          </span>
+        )}
+        <h1 className="mt-3 text-4xl font-extrabold">{ok ? '¡Gracias!' : 'Estamos confirmando tu pago'}</h1>
+        {ok ? (
+          <p className="mt-1 text-sm font-semibold text-slate-400">Pago confirmado.</p>
+        ) : (
+          <p className="mt-1 text-sm text-slate-400">No pudimos confirmar el estado todavía. No vuelvas a pagar: toca “Consultar estado”.</p>
+        )}
+      </div>
+
+      <div className="card !p-4">
+        <div className="flex items-center gap-3">
+          <Avatar src={worker.avatarUrl} name={name} size={44} />
+          <div className="min-w-0 flex-1 leading-tight">
+            <p className="truncate font-bold">{name}</p>
+            <p className="truncate text-sm text-slate-500">
+              {[activityLabel(worker.activity), worker.occupation].filter(Boolean).join(' · ') || `@${worker.username}`}
+            </p>
+          </div>
+          <p className="font-display text-xl font-extrabold">{formatCents(tx.amount)}</p>
+        </div>
       </div>
 
       <dl className="card space-y-2">
-        <SummaryRow label="Destinatario" value={name} />
         <SummaryRow label="Propina" value={formatCents(tip)} />
         {tx.coverFee && <SummaryRow label="Procesamiento cubierto" value={formatCents(tx.platformFee)} />}
         <SummaryRow label="Total pagado" value={formatCents(tx.amount)} suffix="MXN" strong note={tx.coverFee ? 'Incluye el costo de procesamiento' : undefined} />
@@ -505,7 +548,7 @@ function Confirmation({ worker, receipt, user }) {
                 {...p}
                 value={review}
                 onChange={(e) => setReview(e.target.value.slice(0, 200))}
-                placeholder="Cuéntale a otros cómo fue."
+                placeholder="Deja un comentario (opcional)"
                 className="input-field h-24 resize-none"
               />
             )}
@@ -541,7 +584,7 @@ function Confirmation({ worker, receipt, user }) {
               Crear cuenta gratis (guarda tu historial)
             </Link>
           )}
-          <Link to="/scan" className="btn-primary w-full">
+          <Link to="/scan" className="btn-accent w-full">
             Dejar otra propina
           </Link>
         </div>

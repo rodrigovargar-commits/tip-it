@@ -11,6 +11,8 @@ const PRESETS = {
   waiter: { skin: 'a', shirt: '#FFC0CB', hair: 'short', beard: false, extra: 'bowtie' },
   rider: { skin: 'b', shirt: '#FCE883', hair: 'none', beard: false, extra: 'helmet' },
   stylist: { skin: 'a', shirt: '#FF8243', hair: 'curly', beard: false, extra: null },
+  doctor: { skin: 'd', shirt: '#FFFFFF', hair: 'short', beard: false, extra: 'stetho' },
+  guide: { skin: 'b', shirt: '#069494', hair: 'none', beard: false, extra: 'hat' },
 };
 
 function Hair({ kind }) {
@@ -60,6 +62,20 @@ function Extra({ kind }) {
         <path d="M31 44 Q30 18 50 18 Q70 18 69 44" />
         <rect x="27" y="42" width="7" height="12" rx="3" fill="#FCE883" />
         <rect x="66" y="42" width="7" height="12" rx="3" fill="#FCE883" />
+      </g>
+    );
+  if (kind === 'stetho')
+    return (
+      <g fill="none" stroke={INK} strokeWidth="2.5" strokeLinecap="round">
+        <path d="M40 70 Q40 86 50 86 Q60 86 60 70" />
+        <circle cx="50" cy="90" r="3" fill="#FCE883" />
+      </g>
+    );
+  if (kind === 'hat')
+    return (
+      <g stroke={INK} strokeWidth="2.5" fill="#FCE883">
+        <ellipse cx="50" cy="28" rx="26" ry="6" />
+        <path d="M36 28 Q36 12 50 12 Q64 12 64 28Z" />
       </g>
     );
   if (kind === 'bowtie')

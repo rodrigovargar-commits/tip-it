@@ -27,6 +27,7 @@ function toWorkerDTO(worker) {
     activity: worker.activity,
     occupation: worker.occupation,
     establishment: worker.establishment,
+    yearsExperience: worker.yearsExperience,
     qrCode: worker.qrCode,
     profileUrl: workerProfileUrl(worker.username),
     rating: worker.rating,
@@ -37,7 +38,7 @@ function toWorkerDTO(worker) {
 }
 
 const registerWorker = asyncHandler(async (req, res) => {
-  const { username, bio, publicName, activity, occupation, establishment } = req.body;
+  const { username, bio, publicName, activity, occupation, establishment, yearsExperience } = req.body;
 
   if (req.user.isWorker) {
     throw new AppError('Ya tienes una cuenta para recibir propinas', 409);
@@ -64,6 +65,7 @@ const registerWorker = asyncHandler(async (req, res) => {
     activity: activity || '',
     occupation: occupation || '',
     establishment: establishment || '',
+    yearsExperience: yearsExperience ? Number(yearsExperience) : null,
     qrCode,
     qrUrl: workerTipUrl(username),
   });
@@ -129,6 +131,11 @@ const getByUsername = asyncHandler(async (req, res) => {
       activity: worker.activity,
       occupation: worker.occupation,
       establishment: worker.establishment,
+      yearsExperience: worker.yearsExperience,
+      // Share of paid ratings that are 4 or 5 stars; only shown from 3 ratings on.
+      positivePercent: worker.ratingCount >= 3
+        ? Math.round(((await Transaction.countDocuments({ worker: worker._id, status: 'succeeded', rating: { $gte: 4 } })) / worker.ratingCount) * 100)
+        : null,
       qrCode: worker.qrCode,
       rating: worker.rating,
       ratingCount: worker.ratingCount,
@@ -249,6 +256,9 @@ const updateWorkerProfile = asyncHandler(async (req, res) => {
   ['publicName', 'activity', 'occupation', 'establishment'].forEach((field) => {
     if (req.body[field] !== undefined) worker[field] = req.body[field];
   });
+  if (req.body.yearsExperience !== undefined) {
+    worker.yearsExperience = req.body.yearsExperience === '' || req.body.yearsExperience === null ? null : Number(req.body.yearsExperience);
+  }
   await worker.save();
 
   res.json({ success: true, worker: toWorkerDTO(worker) });

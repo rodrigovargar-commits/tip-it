@@ -28,6 +28,7 @@ import RouteMeta from './components/RouteMeta.jsx';
 import NotFound from './pages/NotFound.jsx';
 import Spinner from './components/Spinner.jsx';
 import TopBar from './components/TopBar.jsx';
+import { PageDecor } from './components/Decor.jsx';
 
 // Old shared links used /reconocer; they keep working.
 function RedirectToComment() {
@@ -39,6 +40,7 @@ export default function App() {
   return (
     <>
       <RouteMeta />
+      <PageDecor />
       <TopBar />
       <Suspense
         fallback={

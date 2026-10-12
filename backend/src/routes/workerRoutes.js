@@ -23,6 +23,7 @@ const profileFieldRules = [
   body('activity').optional({ nullable: true, checkFalsy: true }).isIn(ACTIVITY_IDS).withMessage('Actividad inválida'),
   body('occupation').optional({ nullable: true }).trim().isLength({ max: 60 }),
   body('establishment').optional({ nullable: true }).trim().isLength({ max: 60 }),
+  body('yearsExperience').optional({ nullable: true, checkFalsy: true }).isInt({ min: 0, max: 60 }).withMessage('Los años de experiencia van de 0 a 60'),
 ];
 
 router.post(

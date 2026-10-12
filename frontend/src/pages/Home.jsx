@@ -7,10 +7,21 @@ import {
   HandCoins,
   Heart,
   LifeBuoy,
+  Coins,
+  CreditCard,
+  Compass,
+  Grid2x2,
+  HeartPulse,
   Lock,
   MapPin,
   MessageSquareText,
+  Music,
+  Play,
+  Pointer,
+  Scissors,
   TrendingUp,
+  UtensilsCrossed,
+  Users,
   Zap,
   Plus,
   QrCode,
@@ -23,8 +34,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { trackEvent } from '../utils/analytics.js';
-import Logo, { Wordmark } from '../components/Logo.jsx';
+import Logo, { LogoFull, Wordmark } from '../components/Logo.jsx';
 import IconBadge from '../components/IconBadge.jsx';
+import { Blob, Sparks, Handwritten } from '../components/Decor.jsx';
 import Person from '../components/Person.jsx';
 import SignupSwitch from '../components/SignupSwitch.jsx';
 import LeadForm from '../components/LeadForm.jsx';
@@ -47,20 +59,40 @@ const STEPS = [
   { n: '4', title: 'Cobra y crece', body: 'Ve tu total recibido, tus reseñas y tu reputación desde un solo panel.', bg: 'bg-white' },
 ];
 
-const CLIENT_STEPS = [
-  { icon: ScanLine, title: 'Escanea o busca', body: 'El perfil de la persona, con la cámara o por su usuario. No hace falta descargar nada.' },
-  { icon: MessageSquareText, title: 'Deja tu comentario', body: 'Y/o deja una propina. Tú decides cuánto; no pedimos tu nombre.' },
-  { icon: ShieldCheck, title: 'Paga de forma segura', body: 'Con Apple Pay, Google Pay o tarjeta. TIP-IT nunca ve ni guarda tu tarjeta.' },
-  { icon: Check, title: '¡Listo!', body: 'Tu pago queda confirmado y, si quieres, dejas tu reseña.' },
+const CLIENT_FLOW = [
+  { icon: QrCode, tone: 'yellow', title: 'Escanea o busca', body: 'el perfil de la persona.' },
+  { icon: Pointer, tone: 'pink', title: 'Deja tu comentario', body: 'y/o una propina.' },
+  { icon: CreditCard, tone: 'teal', title: 'Paga de forma segura', body: 'con Apple Pay, Google Pay o tarjeta.' },
+  { icon: Check, tone: 'orange', title: '¡Listo!', body: 'Tu pago queda confirmado y puedes dejar tu comentario.' },
 ];
 
-const WHO = [
-  { person: 'stylist', label: 'Barberos y estilistas', bg: 'bg-punch-orange' },
-  { person: 'musician', label: 'Músicos y artistas de calle', bg: 'bg-punch-pink' },
-  { person: 'cook', label: 'Puestos de comida', bg: 'bg-punch-yellow' },
-  { person: 'waiter', label: 'Meseros y bartenders', bg: 'bg-punch-tealdark text-white' },
-  { person: 'rider', label: 'Repartidores', bg: 'bg-punch-pink' },
-  { person: null, label: 'Todo el que recibe propinas', bg: 'bg-white' },
+// Who it is for. `photo` is left empty on purpose: when real photos (with the
+// person's permission) are added to /public/personas, put the path here and the
+// card shows the photo instead of the illustration.
+const SERVICES = [
+  { person: 'barber', photo: null, icon: Scissors, tone: 'yellow', label: 'Barberos', sub: 'y estilistas', note: 'Por tu corte, tu estilo.', bg: 'bg-punch-yellow/60' },
+  { person: 'stylist', photo: null, icon: Sparkles, tone: 'pink', label: 'Belleza', sub: 'y uñas', note: 'Por hacerte sentir increíble.', bg: 'bg-punch-pink/60' },
+  { person: 'musician', photo: null, icon: Music, tone: 'orange', label: 'Músicos', sub: 'y artistas', note: 'Por llenar la calle de música.', bg: 'bg-punch-orange/40' },
+  { person: 'waiter', photo: null, icon: UtensilsCrossed, tone: 'teal', label: 'Meseros', sub: 'y bartenders', note: 'Por tu atención.', bg: 'bg-punch-teal/25' },
+  { person: 'cook', photo: null, icon: HandCoins, tone: 'yellow', label: 'Comida', sub: 'y puestos', note: 'Por el sabor de cada día.', bg: 'bg-punch-yellow/60' },
+  { person: 'doctor', photo: null, icon: HeartPulse, tone: 'pink', label: 'Salud', sub: 'y bienestar', note: 'Por su atención y cuidado.', bg: 'bg-punch-pink/60' },
+  { person: 'guide', photo: null, icon: Compass, tone: 'orange', label: 'Guías', sub: 'de turistas', note: 'Por experiencias memorables.', bg: 'bg-punch-orange/40' },
+  { person: null, photo: null, icon: Grid2x2, tone: 'teal', label: 'Y cualquier', sub: 'persona que dé un servicio', note: 'Todos los servicios merecen reconocimiento.', bg: 'bg-punch-teal/25' },
+];
+
+// What people who receive tips told us in interviews (no names, no stars, no
+// invented numbers).
+const VOICES = [
+  '“A veces los pacientes quieren dejar propina, pero no siempre traen efectivo y eso hace más difícil recibirla.”',
+  '“Muchos clientes no saben cómo dejar una propina si no tienen monedas o billetes, aunque sí quieran hacerlo.”',
+  '“Una opción para recibir propinas digitalmente podría facilitar el proceso, porque el cliente podría hacerlo desde su celular sin necesitar efectivo.”',
+];
+
+const PILLARS = [
+  { icon: Heart, tone: 'yellow', title: 'Comentarios', body: 'Deja valoraciones y comentarios.' },
+  { icon: Coins, tone: 'orange', title: 'Recompensas', body: 'Propinas de forma rápida y segura.' },
+  { icon: Star, tone: 'pink', title: 'Reputación', body: 'Ayuda a fortalecer su perfil profesional.' },
+  { icon: Users, tone: 'teal', title: 'Oportunidades', body: 'Tus valoraciones pueden darte más visibilidad y nuevos clientes.' },
 ];
 
 const NUMBERS = [
@@ -70,10 +102,6 @@ const NUMBERS = [
 ];
 
 const FEATURES = [
-  { icon: Heart, title: 'Comentarios', body: 'Deja valoraciones y comentarios cuando alguien te atienda bien.' },
-  { icon: HandCoins, title: 'Recompensas', body: 'Propinas de forma rápida y segura, con tarjeta o con tu celular.' },
-  { icon: Star, title: 'Reputación', body: 'Cada comentario suma a tu perfil público. Con el tiempo es tu currículum.' },
-  { icon: TrendingUp, title: 'Oportunidades', body: 'Tus valoraciones pueden darte más visibilidad y nuevos clientes.' },
   { icon: QrCode, title: 'Un QR que es tuyo', body: 'Descárgalo listo para imprimir, en español e inglés, o mándalo por WhatsApp.' },
   { icon: Wallet, title: 'Tu lana, a tu banco', body: 'Ves tu saldo y tus pagos en un solo panel. TIP-IT no retiene tu dinero.' },
 ];
@@ -174,9 +202,9 @@ function Squiggle({ className = '' }) {
 // "Pill" button with a hard offset shadow.
 function Cta({ to, href, children, tone = 'ink', where, className = '' }) {
   const tones = {
-    ink: 'bg-punch-ink text-punch-yellow shadow-[4px_4px_0_0_#FCE883] hover:shadow-[2px_2px_0_0_#FCE883]',
-    orange: 'bg-punch-orange text-punch-ink shadow-[4px_4px_0_0_#0A2F2F] hover:shadow-[2px_2px_0_0_#0A2F2F]',
-    white: 'bg-white text-punch-ink shadow-[4px_4px_0_0_#0A2F2F] hover:shadow-[2px_2px_0_0_#0A2F2F]',
+    ink: 'bg-punch-ink text-white hover:bg-punch-ink/90',
+    orange: 'bg-punch-orange text-punch-ink shadow-[0_4px_0_0_#0A2F2F] hover:shadow-[0_2px_0_0_#0A2F2F]',
+    white: 'bg-white/80 text-punch-ink hover:bg-punch-yellow',
     ghost: 'bg-transparent text-punch-ink hover:bg-punch-ink/10',
   };
   const cls = `inline-flex items-center justify-center gap-2 rounded-full border-2 border-punch-ink px-6 py-3.5 font-display text-base font-extrabold transition-all hover:translate-x-0.5 hover:translate-y-0.5 active:translate-x-1 active:translate-y-1 ${tones[tone]} ${className}`;
@@ -218,75 +246,99 @@ function SectionTitle({ eyebrow, children, className = '' }) {
 
 /* ------------------------------------------------------------- phone mock */
 
-// A worker's public tipping page, as the client sees it.
+// A person's public page and checkout, as the client sees it (illustrative).
 function PhoneMock() {
   return (
-    <div className="relative mx-auto w-[280px] sm:w-[310px]">
-      <div className="absolute -left-10 top-10 h-64 w-64 rounded-full border-2 border-punch-ink bg-punch-yellow sm:h-72 sm:w-72" />
-      <div className="absolute -bottom-6 -right-8 h-40 w-40 rounded-full border-2 border-punch-ink bg-punch-pink" />
+    <div className="relative mx-auto w-[285px] sm:w-[310px]">
+      <Blob color="yellow" className="-left-24 top-6 h-72 w-72" />
+      <Blob color="orange" className="-bottom-10 -left-16 h-60 w-60" />
+      <Blob color="pink" className="-right-24 top-0 h-64 w-64 opacity-90" />
+      <Blob color="teal" className="-bottom-16 -right-24 h-56 w-56" />
 
-      <div className="relative rotate-2 rounded-[2.6rem] border-2 border-punch-ink bg-punch-ink p-2.5 shadow-[8px_8px_0_0_#0A2F2F]">
-        <div className="rounded-[2.1rem] bg-punch-cream px-5 pb-6 pt-5 text-punch-ink">
-          <p className="mb-2 text-center text-[10px] font-extrabold uppercase tracking-widest text-punch-ink/70">
-            Ejemplo de cómo se ve tu página
+      <Handwritten className="-right-4 -top-14 w-36 -rotate-6 text-right sm:-right-16">
+        Rápido
+        <br />
+        Seguro
+        <br />
+        Sin efectivo
+      </Handwritten>
+
+      <div className="relative rotate-1 rounded-[2.6rem] border-[3px] border-punch-ink bg-punch-ink p-2 shadow-[0_30px_60px_-20px_rgba(10,47,47,0.55)]">
+        <div className="rounded-[2.2rem] bg-punch-cream px-4 pb-5 pt-4 text-punch-ink">
+          <p className="mb-2 text-center text-[9px] font-extrabold uppercase tracking-widest text-punch-ink/50">
+            Ejemplo ilustrativo
           </p>
-          <div className="flex flex-col items-center text-center">
-            <span className="flex h-24 w-24 items-end justify-center overflow-hidden rounded-full border-2 border-punch-ink bg-punch-pink">
-              <Person kind="stylist" size={92} />
+          <div className="flex justify-center">
+            <LogoFull size={22} />
+          </div>
+
+          <div className="mt-3 flex items-center gap-2.5">
+            <span className="flex h-12 w-12 shrink-0 items-end justify-center overflow-hidden rounded-full border-2 border-punch-ink bg-punch-pink">
+              <Person kind="stylist" size={48} />
             </span>
-            <p className="mt-3 rounded-full border-2 border-punch-ink bg-punch-tealdark px-4 py-0.5 font-display text-lg font-extrabold text-white">
-              Rafa
-            </p>
-            <p className="mt-1.5 text-[11px] font-bold uppercase tracking-wider text-punch-ink/70">
-              Barbero · Coyoacán
-            </p>
-            <p className="mt-1.5 text-xs leading-snug text-punch-ink/80">
-              Gracias por tu visita.
-            </p>
-            <p className="mt-1.5 text-[11px] font-semibold italic text-punch-ink/60">
-              Un buen servicio merece ser reconocido.
-            </p>
+            <div className="min-w-0 leading-tight">
+              <p className="font-display text-base font-extrabold">Mariana</p>
+              <p className="text-[11px] font-medium text-punch-ink/60">Terapeuta de spa · CDMX</p>
+            </div>
           </div>
 
-          <div className="mt-4 grid grid-cols-3 gap-2 text-center font-display text-base font-extrabold">
-            <span className="rounded-2xl border-2 border-punch-ink bg-white py-1.5">$20</span>
-            <span className="rounded-2xl border-2 border-punch-ink bg-punch-orange py-1.5 shadow-[3px_3px_0_0_#0A2F2F]">
-              $50
+          <div className="mt-3 grid grid-cols-2 gap-1 rounded-full bg-white p-0.5 text-center font-display text-[11px] font-extrabold">
+            <span className="rounded-full bg-punch-yellow py-1.5">Dejar propina</span>
+            <span className="py-1.5 text-punch-ink/70">Comentar</span>
+          </div>
+
+          <div className="mt-2.5 grid grid-cols-3 gap-1.5 text-center font-display text-sm font-extrabold">
+            <span className="rounded-xl border border-punch-ink/25 bg-white py-2">$20</span>
+            <span className="rounded-xl border-2 border-punch-ink bg-punch-orange py-2">$50</span>
+            <span className="rounded-xl border border-punch-ink/25 bg-white py-2">$100</span>
+          </div>
+          <div className="mt-1.5 rounded-xl border border-punch-ink/25 bg-white py-2 text-center text-[12px] font-bold">
+            $ Otro monto
+          </div>
+
+          <div className="mt-2.5 flex items-center gap-2 rounded-xl bg-white p-2">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-punch-tealdark text-[11px] font-extrabold text-white">
+              %
             </span>
-            <span className="rounded-2xl border-2 border-punch-ink bg-white py-1.5">$100</span>
+            <span className="flex-1 text-[10px] font-semibold leading-tight">Apoya para que reciba el 100% de tu propina</span>
+            <span className="relative h-4 w-8 shrink-0 rounded-full bg-punch-tealdark">
+              <span className="absolute right-0.5 top-0.5 h-3 w-3 rounded-full bg-white" />
+            </span>
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-1 rounded-full border-2 border-punch-ink/30 bg-white p-0.5 text-center font-display text-[11px] font-extrabold">
-            <span className="rounded-full bg-punch-yellow py-1">Dejar propina</span>
-            <span className="py-1 text-punch-ink/70">Comentar</span>
-          </div>
-
-          <div className="mt-3 rounded-full border-2 border-punch-ink bg-punch-tealdark py-2.5 text-center font-display text-base font-extrabold text-white">
-            Dejar propina
+          <div className="mt-2.5 rounded-xl bg-punch-ink py-2.5 text-center text-[13px] font-bold text-white">Pagar con Apple Pay</div>
+          <div className="mt-1.5 rounded-xl border border-punch-ink/25 bg-white py-2.5 text-center text-[13px] font-bold">Pagar con Google Pay</div>
+          <div className="mt-1.5 flex items-center gap-1.5 rounded-xl border border-punch-ink/15 bg-white/70 px-3 py-2 text-[11px] font-semibold text-punch-ink/70">
+            <CreditCard size={13} /> Pagar con tarjeta
           </div>
         </div>
       </div>
 
       <div
-        style={{ '--r': '-6deg' }}
-        className="absolute -left-6 top-24 z-10 flex animate-floaty items-center gap-2 rounded-2xl border-2 border-punch-ink bg-white px-3.5 py-2.5 shadow-[4px_4px_0_0_#0A2F2F] motion-reduce:animate-none sm:-left-12"
-      >
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-punch-yellow">
-          <Sparkles size={16} />
-        </span>
-        <span className="font-display text-sm font-extrabold leading-tight text-punch-ink">
-          +$50
-          <br />
-          <span className="font-sans text-[11px] font-medium text-punch-ink/70">propina nueva</span>
-        </span>
-      </div>
-      <div
         style={{ '--r': '5deg' }}
-        className="absolute -bottom-5 -right-4 z-10 animate-floaty rounded-2xl border-2 border-punch-ink bg-punch-pink px-3.5 py-2.5 shadow-[4px_4px_0_0_#0A2F2F] [animation-delay:1.5s] motion-reduce:animate-none sm:-right-10"
+        className="absolute -right-6 top-16 z-10 w-36 animate-floaty rounded-2xl bg-white p-3 shadow-[0_14px_30px_-10px_rgba(10,47,47,0.35)] motion-reduce:animate-none sm:-right-24"
       >
-        <span className="flex items-center gap-2 font-display text-sm font-extrabold text-punch-ink">
-          <Heart size={15} fill="currentColor" /> ¡Gracias por el corte!
+        <span className="absolute -right-3 -top-3 flex h-8 w-8 items-center justify-center rounded-xl bg-punch-ink text-punch-orange">
+          <Heart size={16} fill="currentColor" />
         </span>
+        <p className="font-display text-sm font-extrabold leading-tight">¡Gracias por tu servicio!</p>
+        <div className="mt-1.5 flex gap-0.5 text-punch-orange">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <Star key={i} size={13} fill="currentColor" strokeWidth={0} />
+          ))}
+        </div>
+      </div>
+
+      <div
+        style={{ '--r': '-3deg' }}
+        className="absolute -bottom-6 -right-6 z-10 w-44 animate-floaty rounded-2xl bg-white p-3 shadow-[0_14px_30px_-10px_rgba(10,47,47,0.35)] [animation-delay:1.5s] motion-reduce:animate-none sm:-right-24"
+      >
+        <p className="flex items-center gap-1.5 font-display text-sm font-extrabold">
+          <MessageSquareText size={15} className="text-punch-tealdark" /> Tú decides
+        </p>
+        <p className="mt-1 text-[11px] font-medium leading-snug text-punch-ink/80">
+          Deja un comentario, una propina o las dos cosas.
+        </p>
       </div>
     </div>
   );
@@ -334,7 +386,7 @@ function PayBox() {
 
   return (
     <div className="relative z-20 mx-auto -mt-10 max-w-4xl px-5 sm:-mt-12">
-      <div className="flex flex-col gap-5 rounded-[2rem] border-2 border-punch-ink bg-white p-5 shadow-[8px_8px_0_0_#0A2F2F] sm:flex-row sm:items-center sm:p-6">
+      <div className="flex flex-col gap-5 rounded-[2rem] border border-punch-ink/15 bg-white p-5 shadow-[0_24px_60px_-24px_rgba(10,47,47,0.45)] sm:flex-row sm:items-center sm:p-6">
         <div className="sm:w-2/5">
           <p className="font-display text-2xl font-extrabold leading-tight">¿Vas a dejar propina?</p>
           <p className="mt-1 text-sm font-medium text-punch-ink/70">
@@ -408,69 +460,72 @@ export default function Home() {
 
   return (
     <div className={`min-h-screen overflow-x-hidden bg-punch-cream font-sans text-punch-ink ${user ? 'pb-24 md:pb-0' : ''}`}>
-      {/* ---------- Nav + Hero ---------- */}
-      <div className="bg-punch-orange" id="top">
-        <section className="mx-auto grid max-w-6xl items-center gap-14 px-5 pb-24 pt-10 md:grid-cols-[1.15fr_1fr] md:pb-32 md:pt-14">
-          <div>
-            <span className="inline-flex items-center gap-2 rounded-full border-2 border-punch-ink bg-punch-yellow px-4 py-1.5 font-display text-sm font-extrabold">
-              <HandCoins size={16} />{' '}
+      {/* ---------- Hero ---------- */}
+      <div className="relative overflow-hidden bg-punch-cream" id="top">
+        <Blob color="yellow" round className="-left-28 top-40 h-60 w-60" />
+        <Blob color="pink" className="-right-24 -top-24 h-80 w-80 opacity-70" />
+        <section className="relative mx-auto grid max-w-6xl items-center gap-16 px-5 pb-20 pt-10 md:grid-cols-[1.05fr_1fr] md:pb-28 md:pt-16">
+          <div className="relative">
+            <span className="inline-flex items-center gap-2 rounded-full border-2 border-punch-orange bg-punch-yellow px-4 py-1.5 font-display text-xs font-extrabold uppercase tracking-wider">
               {user ? `Hola, ${user.name?.split(' ')[0] || 'bienvenido'}` : 'Tu servicio vale'}
             </span>
-            <h1 className="mt-6 font-display text-[2.6rem] font-extrabold leading-[0.97] tracking-tight sm:text-6xl lg:text-7xl">
-              Que se{' '}
-              <span className="relative inline-block -rotate-1 rounded-2xl bg-punch-yellow px-3 pb-1">
-                reconozca.
-              </span>
+            <h1 className="relative mt-6 font-display text-[3.6rem] font-extrabold leading-[0.92] tracking-tight sm:text-7xl lg:text-[6.2rem]">
+              Que se
+              <br />
+              reconozca.
+              <Sparks className="-right-2 top-0 hidden sm:block lg:right-6" />
             </h1>
-            <p className="mt-7 max-w-xl text-lg font-medium leading-relaxed sm:text-xl">
+            <p className="mt-7 max-w-xl text-xl font-bold leading-snug">
               TIP-IT es la plataforma de reconocimiento digital para personas que brindan servicios.
-              Recibe propinas, valoraciones y comentarios que fortalecen tu reputación, aunque nadie
-              traiga efectivo.
             </p>
-            <div className="mt-9 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+            <p className="mt-3 max-w-xl text-lg font-medium leading-relaxed text-punch-ink/70">
+              Recibe propinas, valoraciones y comentarios que fortalecen tu reputación y generan más oportunidades.
+            </p>
+            <div className="mt-9 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
               {user ? (
                 <>
                   <Cta to={myAccount} where="hero" tone="ink" className="text-lg">
-                    {worker ? 'Mi panel' : 'Pagar una propina'} <ArrowRight size={20} />
+                    {worker ? 'Mi panel' : 'Dejar una propina'} <ArrowRight size={20} />
                   </Cta>
                   <Cta to={worker ? '/worker/qr' : '/history'} where="hero_2" tone="white" className="text-lg">
                     {worker ? 'Mi QR' : 'Mi historial'}
                   </Cta>
                 </>
               ) : (
-                <Cta to={signup} where="hero" tone="ink" className="text-lg">
-                  Crear mi QR gratis <ArrowRight size={20} />
-                </Cta>
+                <>
+                  <Cta to={signup} where="hero" tone="ink" className="text-lg">
+                    Crear mi QR gratis <ArrowRight size={20} />
+                  </Cta>
+                  <a
+                    href="#como-funciona"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-punch-ink bg-white/80 px-6 py-3.5 font-display text-lg font-extrabold transition hover:bg-punch-yellow"
+                  >
+                    <Play size={16} fill="currentColor" /> Conoce cómo funciona
+                  </a>
+                </>
               )}
-              <a
-                href="#como-funciona"
-                className="font-display text-base font-extrabold underline decoration-2 underline-offset-4"
-              >
-                Conoce cómo funciona
-              </a>
             </div>
-            <ul className="mt-8 grid max-w-xl grid-cols-2 gap-x-4 gap-y-4 text-left">
+            <ul className="mt-10 grid max-w-2xl grid-cols-2 gap-x-5 gap-y-5 text-left lg:grid-cols-4">
               {[
                 [Zap, 'yellow', 'En segundos', 'Sin registros complicados'],
                 [Lock, 'pink', 'Pago seguro', 'Apple Pay, Google Pay o tarjeta'],
                 [Star, 'yellow', 'Más que propinas', 'Comentarios y reputación'],
                 [MapPin, 'pink', 'Cualquier servicio', 'Funciona en cualquier lugar'],
               ].map(([Icon, tone, title, body]) => (
-                <li key={title} className="flex items-center gap-2.5">
-                  <IconBadge icon={Icon} tone={tone} size={38} />
+                <li key={title} className="flex items-start gap-2.5">
+                  <IconBadge icon={Icon} tone={tone} size={36} />
                   <span className="leading-tight">
                     <span className="block font-display text-sm font-extrabold">{title}</span>
-                    <span className="block text-xs font-medium text-punch-ink/80">{body}</span>
+                    <span className="mt-0.5 block text-xs font-medium text-punch-ink/70">{body}</span>
                   </span>
                 </li>
               ))}
             </ul>
-            <p className="mt-5 text-sm font-semibold">Cuenta gratis · Sin efectivo, sin fricción · Hecho en CDMX</p>
             {!user && (
               <button
                 type="button"
                 onClick={openHelp}
-                className="mt-3 inline-flex items-center gap-2 rounded-full border-2 border-punch-ink bg-white/80 px-4 py-2 font-display text-sm font-extrabold transition hover:bg-punch-yellow"
+                className="mt-6 inline-flex items-center gap-2 rounded-full border-2 border-punch-ink bg-white/80 px-4 py-2 font-display text-sm font-extrabold transition hover:bg-punch-yellow"
               >
                 <LifeBuoy size={16} /> ¿No te animas solo? Te ayudamos en persona
               </button>
@@ -511,7 +566,7 @@ export default function Home() {
             {PAINS.map((p, i) => (
               <Reveal key={p.quote} delay={i * 90}>
                 <div
-                  className={`${p.bg} ${p.tilt} ${i % 2 ? 'sm:ml-10' : 'sm:mr-10'} rounded-3xl border-2 border-punch-ink p-5 shadow-[5px_5px_0_0_#0A2F2F]`}
+                  className={`${p.bg} ${p.tilt} ${i % 2 ? 'sm:ml-10' : 'sm:mr-10'} rounded-3xl border border-punch-ink/15 p-5 shadow-[0_12px_32px_-16px_rgba(10,47,47,0.4)]`}
                 >
                   <p className="font-display text-2xl font-extrabold">{p.quote}</p>
                   <p className="mt-1 text-punch-ink/80">{p.note}</p>
@@ -526,21 +581,45 @@ export default function Home() {
         </div>
       </section>
 
-      <Wave above="bg-punch-cream" below="text-punch-yellow" />
-
       {/* ---------- Cómo funciona ---------- */}
-      <section id="como-funciona" className="bg-punch-yellow py-14 sm:py-20">
-        <div className="mx-auto max-w-6xl px-5">
+      <section id="como-funciona" className="relative overflow-hidden py-14 sm:py-20">
+        <Blob color="yellow" round className="-right-20 top-10 h-48 w-48 opacity-70" />
+        <div className="relative mx-auto max-w-6xl px-5">
           <Reveal>
-            <SectionTitle eyebrow="Cómo funciona">Cuatro pasos y ya estás cobrando.</SectionTitle>
+            <SectionTitle eyebrow="Cómo funciona">Cuatro pasos, listo en segundos.</SectionTitle>
           </Reveal>
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+
+          <Reveal className="mt-10">
+            <ol className="grid gap-5 rounded-[2rem] bg-white/80 p-6 shadow-[0_14px_40px_-18px_rgba(10,47,47,0.35)] sm:grid-cols-2 lg:grid-cols-[repeat(4,1fr)] lg:items-start lg:gap-3 lg:p-8">
+              {CLIENT_FLOW.map(({ icon, tone, title, body }, i) => (
+                <li key={title} className="flex items-start gap-3 lg:relative">
+                  <span className="flex shrink-0 items-center gap-2">
+                    {i === 0 && (
+                      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-punch-yellow font-display text-lg font-extrabold">
+                        1
+                      </span>
+                    )}
+                    <IconBadge icon={icon} tone={tone} size={i === 3 ? 56 : 48} />
+                  </span>
+                  <span className="leading-snug">
+                    <span className="block font-display text-base font-extrabold">{title}</span>
+                    <span className="mt-0.5 block text-sm font-medium text-punch-ink/70">{body}</span>
+                  </span>
+                  {i < 3 && <ArrowRight aria-hidden="true" size={18} className="absolute -right-2 top-4 hidden text-punch-ink/40 lg:block" />}
+                </li>
+              ))}
+            </ol>
+          </Reveal>
+
+          <Reveal className="mt-16">
+            <p className="font-display text-2xl font-extrabold sm:text-3xl">Y si recibes propinas, así empiezas.</p>
+            <p className="mt-1 font-medium text-punch-ink/70">Cuatro pasos y ya estás cobrando.</p>
+          </Reveal>
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {STEPS.map((s, i) => (
               <Reveal key={s.n} delay={i * 90}>
-                <div
-                  className={`${s.bg} ${i % 2 ? 'lg:mt-8' : ''} h-full rounded-3xl border-2 border-punch-ink p-6 shadow-[6px_6px_0_0_#0A2F2F]`}
-                >
-                  <span className="font-display text-7xl font-extrabold leading-none">{s.n}</span>
+                <div className={`${s.bg} ${i % 2 ? 'lg:mt-8' : ''} h-full rounded-3xl p-6 shadow-[0_14px_36px_-16px_rgba(10,47,47,0.4)]`}>
+                  <span className="font-display text-7xl font-extrabold leading-none opacity-90">{s.n}</span>
                   <p className="mt-4 font-display text-2xl font-extrabold leading-tight">{s.title}</p>
                   <p className="mt-2 text-base font-medium leading-relaxed opacity-90">{s.body}</p>
                 </div>
@@ -548,19 +627,6 @@ export default function Home() {
             ))}
           </div>
 
-          <Reveal className="mt-16">
-            <p className="font-display text-2xl font-extrabold sm:text-3xl">Y tu cliente, ¿qué hace?</p>
-            <p className="mt-1 font-medium">Menos de un minuto, sin app y sin cuenta.</p>
-            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {CLIENT_STEPS.map(({ icon: Icon, title, body }, ci) => (
-                <div key={title} className="rounded-3xl border-2 border-punch-ink bg-punch-cream p-5">
-                  <IconBadge icon={Icon} tone={['yellow', 'pink', 'orange', 'teal'][ci % 4]} size={48} />
-                  <p className="mt-3 font-display text-lg font-extrabold">{title}</p>
-                  <p className="mt-1 text-sm font-medium leading-relaxed">{body}</p>
-                </div>
-              ))}
-            </div>
-          </Reveal>
           <Reveal className="mt-12 text-center">
             <Cta to={signup} where="steps" tone="ink" className="text-lg">
               {user ? 'Ir a mi cuenta' : 'Empieza ahora'} <ArrowRight size={20} />
@@ -568,15 +634,12 @@ export default function Home() {
           </Reveal>
           {!user && (
             <Reveal className="mt-10">
-              <div className="flex flex-col items-center gap-4 rounded-3xl border-2 border-punch-ink bg-white p-6 text-center shadow-[6px_6px_0_0_#0A2F2F] sm:flex-row sm:text-left">
-                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-punch-ink bg-punch-pink">
-                  <LifeBuoy size={26} />
-                </span>
+              <div className="flex flex-col items-center gap-4 rounded-3xl bg-punch-yellow/60 p-6 text-center sm:flex-row sm:text-left">
+                <IconBadge icon={LifeBuoy} tone="pink" size={56} />
                 <div className="flex-1">
                   <p className="font-display text-2xl font-extrabold">¿Te late pero no te animas solo?</p>
-                  <p className="mt-1 font-medium text-slate-400">
-                    Déjanos tu correo y te ayudamos a armar tu cuenta y tu QR en
-                    persona, en unos 10 minutos.
+                  <p className="mt-1 font-medium text-punch-ink/70">
+                    Déjanos tu correo y te ayudamos a armar tu cuenta y tu QR en persona, en unos 10 minutos.
                   </p>
                 </div>
                 <button type="button" onClick={openHelp} className="btn-primary shrink-0">
@@ -588,65 +651,115 @@ export default function Home() {
         </div>
       </section>
 
-      <Wave above="bg-punch-yellow" below="text-punch-cream" flip />
 
-      {/* ---------- Para quién ---------- */}
-      <section id="para-quien" className="mx-auto max-w-6xl px-5 py-14 sm:py-20">
+
+      {/* ---------- En cualquier servicio ---------- */}
+      <section id="para-quien" className="relative mx-auto max-w-6xl px-5 py-14 sm:py-20">
         <Reveal>
-          <SectionTitle eyebrow="En cualquier servicio">
-            Si das buen servicio,{' '}
-            <span className="relative inline-block text-punch-tealdark">
-              es para ti.
-              <Squiggle className="text-punch-orange" />
-            </span>
-          </SectionTitle>
-          <p className="mt-6 max-w-2xl text-lg font-medium">
-            TIP-IT conecta a las personas que brindan servicios con quienes valoran su trabajo. Estos son los que más nos escriben:
+          <SectionTitle eyebrow="En cualquier servicio">Reconoce el buen servicio, en todas partes.</SectionTitle>
+          <p className="mt-5 max-w-2xl text-lg font-medium text-punch-ink/80">
+            TIP-IT conecta a las personas que brindan servicios con quienes valoran su trabajo.
           </p>
         </Reveal>
-        <div className="mt-12 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
-          {WHO.map(({ person, label, bg }, i) => (
-            <Reveal key={label} delay={(i % 3) * 80}>
-              <div
-                className={`${bg} flex h-full flex-col items-start gap-4 rounded-3xl border-2 border-punch-ink p-5 shadow-[5px_5px_0_0_#0A2F2F] transition hover:-translate-y-1 hover:-rotate-1 sm:p-7`}
-              >
-                <span className="flex h-20 w-20 items-end justify-center overflow-hidden rounded-full border-2 border-punch-ink bg-punch-cream sm:h-24 sm:w-24">
-                  {person ? (
-                    <Person kind={person} size={96} />
+        <ul className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-8 lg:gap-3">
+          {SERVICES.map(({ person, photo, icon, tone, label, sub, note, bg }, i) => (
+            <Reveal key={label + sub} delay={(i % 4) * 70}>
+              <li className="list-none">
+                <div className={`${bg} relative flex h-36 items-end justify-center overflow-hidden rounded-3xl sm:h-40`}>
+                  {photo ? (
+                    <img src={photo} alt="" className="h-full w-full object-cover" />
+                  ) : person ? (
+                    <Person kind={person} size={150} />
                   ) : (
-                    <span className="flex h-full w-full items-center justify-center text-punch-ink">
-                      <HandCoins size={34} />
+                    <span className="flex h-full w-full items-center justify-center text-punch-ink/70">
+                      <HandCoins size={44} />
                     </span>
                   )}
-                </span>
-                <p className="font-display text-xl font-extrabold leading-tight sm:text-2xl">{label}</p>
-              </div>
+                </div>
+                <div className="relative -mt-5 ml-2">
+                  <IconBadge icon={icon} tone={tone} size={40} className="ring-4 ring-punch-cream" />
+                </div>
+                <p className="mt-1.5 font-display text-sm font-extrabold leading-tight">
+                  {label}
+                  <span className="block font-sans text-xs font-semibold text-punch-ink/70">{sub}</span>
+                </p>
+                <p className="mt-1 text-xs font-medium leading-snug text-punch-ink/60">{note}</p>
+              </li>
             </Reveal>
           ))}
+        </ul>
+      </section>
+
+      {/* ---------- Más que propinas ---------- */}
+      <section className="relative overflow-hidden py-14 sm:py-20">
+        <Blob color="pink" className="-left-24 bottom-0 h-72 w-72 opacity-60" />
+        <div className="relative mx-auto max-w-6xl px-5">
+          <div className="grid items-center gap-8 lg:grid-cols-[0.9fr_1.6fr]">
+            <Reveal>
+              <div className="rounded-[2rem] bg-punch-yellow/70 p-7 sm:p-9">
+                <Eyebrow>Más que propinas</Eyebrow>
+                <h2 className="mt-4 font-display text-4xl font-extrabold leading-[1] tracking-tight sm:text-5xl">
+                  Una plataforma de reconocimiento.
+                </h2>
+                <p className="mt-5 text-base font-medium leading-relaxed text-punch-ink/80">
+                  TIP-IT te permite agradecer, recompensar y construir la reputación de las personas que hacen mejores
+                  experiencias en tu día a día.
+                </p>
+              </div>
+            </Reveal>
+            <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
+              {PILLARS.map(({ icon, tone, title, body }, i) => (
+                <Reveal key={title} delay={i * 80}>
+                  <div className="text-center">
+                    <IconBadge icon={icon} tone={tone} size={84} className="mx-auto" />
+                    <p className="mt-4 font-display text-lg font-extrabold">{title}</p>
+                    <p className="mt-1 text-sm font-medium leading-snug text-punch-ink/70">{body}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-10 grid gap-4 sm:grid-cols-2">
+            {FEATURES.map(({ icon, title, body }, i) => (
+              <Reveal key={title} delay={i * 80}>
+                <div className="flex h-full items-start gap-4 rounded-3xl bg-white/80 p-5 shadow-[0_12px_32px_-16px_rgba(10,47,47,0.35)]">
+                  <IconBadge icon={icon} tone={i ? 'teal' : 'orange'} size={48} />
+                  <div>
+                    <p className="font-display text-lg font-extrabold">{title}</p>
+                    <p className="mt-1 text-sm font-medium leading-relaxed text-punch-ink/70">{body}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ---------- Tu página ---------- */}
-      <section className="border-y-2 border-punch-ink bg-punch-pink py-16 sm:py-24">
-        <div className="mx-auto max-w-6xl px-5">
+      {/* ---------- Voces ---------- */}
+      <section className="mx-auto max-w-6xl px-5 py-10 sm:py-16">
+        <div className="grid items-start gap-8 lg:grid-cols-[0.8fr_2fr]">
           <Reveal>
-            <SectionTitle eyebrow="Más que propinas">Una plataforma de reconocimiento.</SectionTitle>
-            <p className="mt-6 max-w-2xl text-lg font-medium leading-relaxed">
-              TIP-IT te permite agradecer, recompensar y construir la reputación de las personas que
-              hacen mejores experiencias en tu día a día. Cuando alguien escanea tu QR no ve un
-              formulario aburrido: ve a ti.
+            <Eyebrow>Voces reales</Eyebrow>
+            <h2 className="mt-4 font-display text-4xl font-extrabold leading-[1] tracking-tight sm:text-5xl">
+              Pequeños gestos, grandes historias.
+            </h2>
+            <p className="mt-4 text-base font-medium text-punch-ink/70">
+              Esto nos han dicho personas que reciben propinas en su trabajo.
             </p>
           </Reveal>
-          <div className="mt-10 grid gap-5 sm:grid-cols-2">
-            {FEATURES.map(({ icon: Icon, title, body }, i) => (
-              <Reveal key={title} delay={i * 80}>
-                <div className="flex h-full items-start gap-4 rounded-3xl border-2 border-punch-ink bg-white p-5 shadow-[5px_5px_0_0_#0A2F2F]">
-                  <IconBadge icon={Icon} tone={['yellow', 'orange', 'pink', 'teal'][i % 4]} size={52} />
-                  <div>
-                    <p className="font-display text-xl font-extrabold">{title}</p>
-                    <p className="mt-1 font-medium leading-relaxed text-punch-ink/80">{body}</p>
+          <div className="grid gap-4 md:grid-cols-3">
+            {VOICES.map((q, i) => (
+              <Reveal key={i} delay={i * 90}>
+                <figure className="h-full rounded-3xl bg-white/90 p-5 shadow-[0_12px_32px_-16px_rgba(10,47,47,0.35)]">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-punch-pink font-display font-extrabold">
+                      {['P', 'C', 'T'][i]}
+                    </span>
+                    <figcaption className="text-xs font-bold text-punch-ink/60">Persona entrevistada</figcaption>
                   </div>
-                </div>
+                  <blockquote className="mt-3 text-sm font-medium leading-relaxed text-punch-ink/85">{q}</blockquote>
+                </figure>
               </Reveal>
             ))}
           </div>
@@ -665,7 +778,7 @@ export default function Home() {
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {NUMBERS.map((c, i) => (
               <Reveal key={c.big} delay={i * 90}>
-                <div className="h-full rounded-3xl border-2 border-punch-ink bg-punch-tealdark p-7 shadow-[6px_6px_0_0_#0A2F2F] ring-2 ring-white/20">
+                <div className="h-full rounded-3xl border border-punch-ink/15 bg-punch-tealdark p-7 shadow-[0_14px_36px_-16px_rgba(10,47,47,0.4)] ring-2 ring-white/20">
                   <p className="font-display text-5xl font-extrabold text-punch-yellow sm:text-6xl">{c.big}</p>
                   <p className="mt-2 font-display text-xl font-extrabold">{c.title}</p>
                   <p className="mt-3 text-lg leading-relaxed text-white">{c.body}</p>
@@ -695,7 +808,7 @@ export default function Home() {
           {FAQ.map((f) => (
             <details
               key={f.q}
-              className="group rounded-2xl border-2 border-punch-ink bg-white px-5 py-4 shadow-[4px_4px_0_0_#0A2F2F] open:bg-punch-yellow"
+              className="group rounded-2xl border border-punch-ink/15 bg-white px-5 py-4 shadow-[0_10px_28px_-14px_rgba(10,47,47,0.4)] open:bg-punch-yellow"
             >
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-display text-lg font-extrabold [&::-webkit-details-marker]:hidden">
                 {f.q}
@@ -747,7 +860,7 @@ export default function Home() {
           </Reveal>
 
           <Reveal delay={120}>
-            <div className="rounded-[2rem] border-2 border-punch-ink bg-punch-cream p-6 shadow-[8px_8px_0_0_#0A2F2F] sm:p-8">
+            <div className="rounded-[2rem] border-2 border-punch-ink bg-punch-cream p-6 shadow-[0_24px_60px_-24px_rgba(10,47,47,0.45)] sm:p-8">
               {user ? (
                 <div className="text-center">
                   <p className="font-display text-2xl font-extrabold">¡Ya estás dentro!</p>

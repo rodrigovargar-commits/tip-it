@@ -48,6 +48,13 @@ const workerSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    yearsExperience: {
+      // Optional, entered by the person themselves
+      type: Number,
+      min: 0,
+      max: 60,
+      default: null,
+    },
     establishment: {
       type: String,
       maxlength: 60,

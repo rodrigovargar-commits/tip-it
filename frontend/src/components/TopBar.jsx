@@ -138,14 +138,17 @@ export default function TopBar() {
               >
                 <ScanLine size={16} /> Escanear
               </Link>
-              <Link to="/login" className="hidden font-display text-sm font-extrabold hover:underline md:inline">
-                Iniciar sesión
-              </Link>
               <Link
                 to="/register?role=worker"
-                className="rounded-full border-2 border-punch-ink bg-punch-ink px-4 py-2 font-display text-sm font-extrabold text-punch-yellow shadow-[3px_3px_0_0_#FCE883] transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[1px_1px_0_0_#FCE883]"
+                className="rounded-full border-2 border-punch-ink bg-punch-ink px-4 py-2 font-display text-sm font-extrabold text-white transition hover:bg-punch-ink/90"
               >
-                Crea tu cuenta
+                Crear mi QR
+              </Link>
+              <Link
+                to="/login"
+                className="hidden rounded-full border-2 border-punch-ink bg-white/70 px-4 py-2 font-display text-sm font-extrabold transition hover:bg-punch-yellow md:inline-flex"
+              >
+                Iniciar sesión
               </Link>
             </>
           )}
