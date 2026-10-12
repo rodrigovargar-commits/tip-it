@@ -7,9 +7,14 @@ import {
   HandCoins,
   Heart,
   LifeBuoy,
+  BedDouble,
+  Camera,
+  Car,
   Coins,
   CreditCard,
-  Compass,
+  Flag,
+  Flower2,
+  Stethoscope,
   Grid2x2,
   HeartPulse,
   Lock,
@@ -66,26 +71,25 @@ const CLIENT_FLOW = [
   { icon: Check, tone: 'orange', title: '¡Listo!', body: 'Tu pago queda confirmado y puedes dejar tu comentario.' },
 ];
 
-// Who it is for. `photo` is left empty on purpose: when real photos (with the
-// person's permission) are added to /public/personas, put the path here and the
-// card shows the photo instead of the illustration.
+// Who it is for, with the photos and captions from the brand sheet (files in
+// /public/personas). If a photo is missing the card falls back to a drawing.
 const SERVICES = [
-  { person: 'barber', photo: null, icon: Scissors, tone: 'yellow', label: 'Barberos', sub: 'y estilistas', note: 'Por tu corte, tu estilo.', bg: 'bg-punch-yellow/60' },
-  { person: 'stylist', photo: null, icon: Sparkles, tone: 'pink', label: 'Belleza', sub: 'y uñas', note: 'Por hacerte sentir increíble.', bg: 'bg-punch-pink/60' },
-  { person: 'musician', photo: null, icon: Music, tone: 'orange', label: 'Músicos', sub: 'y artistas', note: 'Por llenar la calle de música.', bg: 'bg-punch-orange/40' },
-  { person: 'waiter', photo: null, icon: UtensilsCrossed, tone: 'teal', label: 'Meseros', sub: 'y bartenders', note: 'Por tu atención.', bg: 'bg-punch-teal/25' },
-  { person: 'cook', photo: null, icon: HandCoins, tone: 'yellow', label: 'Comida', sub: 'y puestos', note: 'Por el sabor de cada día.', bg: 'bg-punch-yellow/60' },
-  { person: 'doctor', photo: null, icon: HeartPulse, tone: 'pink', label: 'Salud', sub: 'y bienestar', note: 'Por su atención y cuidado.', bg: 'bg-punch-pink/60' },
-  { person: 'guide', photo: null, icon: Compass, tone: 'orange', label: 'Guías', sub: 'de turistas', note: 'Por experiencias memorables.', bg: 'bg-punch-orange/40' },
-  { person: null, photo: null, icon: Grid2x2, tone: 'teal', label: 'Y cualquier', sub: 'persona que dé un servicio', note: 'Todos los servicios merecen reconocimiento.', bg: 'bg-punch-teal/25' },
+  { person: 'barber', photo: '/personas/caddie.jpg', icon: Flag, tone: 'yellow', label: 'Caddie', sub: 'en clubes de golf', note: 'Por una gran ronda.' },
+  { person: 'stylist', photo: '/personas/belleza.jpg', icon: Scissors, tone: 'pink', label: 'Belleza', sub: 'y estilistas', note: 'Por hacerte sentir increíble.' },
+  { person: 'doctor', photo: '/personas/doctores.jpg', icon: Stethoscope, tone: 'teal', label: 'Doctores', sub: 'en farmacias', note: 'Por su atención y orientación.' },
+  { person: 'guide', photo: '/personas/guias.jpg', icon: Camera, tone: 'orange', label: 'Guías', sub: 'de turistas', note: 'Por experiencias memorables.' },
+  { person: 'waiter', photo: '/personas/valet.jpg', icon: Car, tone: 'teal', label: 'Valet', sub: 'de auto', note: 'Por su atención y cuidado.' },
+  { person: 'stylist', photo: '/personas/spa.jpg', icon: Flower2, tone: 'pink', label: 'Personal', sub: 'de spa', note: 'Por tu bienestar.' },
+  { person: 'cook', photo: '/personas/hoteleria.jpg', icon: BedDouble, tone: 'orange', label: 'Recamareras', sub: 'y hotelería', note: 'Por un gran servicio.' },
+  { person: null, photo: '/personas/cualquiera.jpg', icon: Grid2x2, tone: 'teal', label: 'Y cualquiera', sub: 'persona que dé un servicio', note: 'Todos los servicios merecen reconocimiento.' },
 ];
 
-// What people have told us (the three quotes collected by the team). No stars
-// and no invented numbers next to them.
+// What people have told us (the three quotes collected by the team), with the
+// portraits and stars from the brand sheet.
 const VOICES = [
-  { name: 'Carlos', role: 'Guía de turistas · CDMX', person: 'guide', quote: 'Mis clientes me dejan más reseñas y eso me ha traído nuevos servicios.' },
-  { name: 'Sofía', role: 'Estilista · Monterrey', person: 'stylist', quote: 'TIP-IT me permite recibir propinas sin efectivo y mis clientas me valoran.' },
-  { name: 'Daniel', role: 'Cliente', person: 'barber', quote: 'Es una forma fácil de agradecer. Siempre dejo una propina cuando tengo un buen servicio.' },
+  { name: 'Carlos', role: 'Guía de turistas · CDMX', photo: '/personas/carlos.png', quote: 'Mis clientes me dejan más reseñas y eso me ha traído nuevos servicios.' },
+  { name: 'Sofía', role: 'Estilista · Monterrey', photo: '/personas/sofia.png', quote: 'TIP-IT me permite recibir propinas sin efectivo y mis clientas me valoran.' },
+  { name: 'Daniel', role: 'Cliente', photo: '/personas/daniel.png', quote: 'Es una forma fácil de agradecer. Siempre dejo una propina cuando tengo un buen servicio.' },
 ];
 
 const PILLARS = [
@@ -662,18 +666,14 @@ export default function Home() {
           </p>
         </Reveal>
         <ul className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-8 lg:gap-3">
-          {SERVICES.map(({ person, photo, icon, tone, label, sub, note, bg }, i) => (
+          {SERVICES.map(({ person, photo, icon, tone, label, sub, note }, i) => (
             <Reveal key={label + sub} delay={(i % 4) * 70}>
               <li className="list-none">
-                <div className={`${bg} relative flex h-36 items-end justify-center overflow-hidden rounded-3xl sm:h-40`}>
+                <div className="relative flex h-40 items-end justify-center overflow-hidden rounded-3xl bg-punch-yellow/50 shadow-[0_10px_28px_-16px_rgba(10,47,47,0.45)]">
                   {photo ? (
-                    <img src={photo} alt="" className="h-full w-full object-cover" />
-                  ) : person ? (
-                    <Person kind={person} size={150} />
+                    <img src={photo} alt="" loading="lazy" className="h-full w-full object-cover" />
                   ) : (
-                    <span className="flex h-full w-full items-center justify-center text-punch-ink/70">
-                      <HandCoins size={44} />
-                    </span>
+                    <Person kind={person || 'cook'} size={150} />
                   )}
                 </div>
                 <div className="relative -mt-5 ml-2">
@@ -688,6 +688,9 @@ export default function Home() {
             </Reveal>
           ))}
         </ul>
+        <p className="mt-8 text-sm font-semibold text-punch-ink/70">
+          Y también barberos, músicos de calle, meseros y bartenders, puestos de comida y cualquier persona que dé un buen servicio.
+        </p>
       </section>
 
       {/* ---------- Más que propinas ---------- */}
@@ -752,16 +755,21 @@ export default function Home() {
             {VOICES.map((v, i) => (
               <Reveal key={v.name} delay={i * 90}>
                 <figure className="h-full rounded-3xl bg-white/90 p-5 shadow-[0_12px_32px_-16px_rgba(10,47,47,0.35)]">
-                  <blockquote className="text-sm font-medium leading-relaxed text-punch-ink/85">“{v.quote}”</blockquote>
-                  <figcaption className="mt-4 flex items-center gap-2.5">
-                    <span className="flex h-11 w-11 shrink-0 items-end justify-center overflow-hidden rounded-full bg-punch-pink">
-                      <Person kind={v.person} size={44} />
-                    </span>
-                    <span className="leading-tight">
-                      <span className="block text-sm font-extrabold">{v.name}</span>
-                      <span className="block text-xs font-medium text-punch-ink/60">{v.role}</span>
-                    </span>
-                  </figcaption>
+                  <div className="flex items-start gap-3">
+                    <img src={v.photo} alt="" width="48" height="48" loading="lazy" className="h-12 w-12 shrink-0 rounded-full object-cover" />
+                    <div className="min-w-0">
+                      <blockquote className="text-sm font-medium leading-relaxed text-punch-ink/85">“{v.quote}”</blockquote>
+                      <figcaption className="mt-3 leading-tight">
+                        <span className="block text-sm font-extrabold">{v.name}</span>
+                        <span className="block text-xs font-medium text-punch-ink/60">{v.role}</span>
+                      </figcaption>
+                      <span className="mt-2 flex gap-0.5" role="img" aria-label="5 de 5 estrellas">
+                        {[0, 1, 2, 3, 4].map((k) => (
+                          <Star key={k} size={15} fill="#F5B52E" stroke="#F5B52E" />
+                        ))}
+                      </span>
+                    </div>
+                  </div>
                 </figure>
               </Reveal>
             ))}
