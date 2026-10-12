@@ -80,12 +80,12 @@ const SERVICES = [
   { person: null, photo: null, icon: Grid2x2, tone: 'teal', label: 'Y cualquier', sub: 'persona que dé un servicio', note: 'Todos los servicios merecen reconocimiento.', bg: 'bg-punch-teal/25' },
 ];
 
-// What people who receive tips told us in interviews (no names, no stars, no
-// invented numbers).
+// What people have told us (the three quotes collected by the team). No stars
+// and no invented numbers next to them.
 const VOICES = [
-  '“A veces los pacientes quieren dejar propina, pero no siempre traen efectivo y eso hace más difícil recibirla.”',
-  '“Muchos clientes no saben cómo dejar una propina si no tienen monedas o billetes, aunque sí quieran hacerlo.”',
-  '“Una opción para recibir propinas digitalmente podría facilitar el proceso, porque el cliente podría hacerlo desde su celular sin necesitar efectivo.”',
+  { name: 'Carlos', role: 'Guía de turistas · CDMX', person: 'guide', quote: 'Mis clientes me dejan más reseñas y eso me ha traído nuevos servicios.' },
+  { name: 'Sofía', role: 'Estilista · Monterrey', person: 'stylist', quote: 'TIP-IT me permite recibir propinas sin efectivo y mis clientas me valoran.' },
+  { name: 'Daniel', role: 'Cliente', person: 'barber', quote: 'Es una forma fácil de agradecer. Siempre dejo una propina cuando tengo un buen servicio.' },
 ];
 
 const PILLARS = [
@@ -740,25 +740,28 @@ export default function Home() {
       <section className="mx-auto max-w-6xl px-5 py-10 sm:py-16">
         <div className="grid items-start gap-8 lg:grid-cols-[0.8fr_2fr]">
           <Reveal>
-            <Eyebrow>Voces reales</Eyebrow>
+            <Eyebrow>Historias reales</Eyebrow>
             <h2 className="mt-4 font-display text-4xl font-extrabold leading-[1] tracking-tight sm:text-5xl">
               Pequeños gestos, grandes historias.
             </h2>
             <p className="mt-4 text-base font-medium text-punch-ink/70">
-              Esto nos han dicho personas que reciben propinas en su trabajo.
+              Esto nos han dicho quienes dan y reciben propinas.
             </p>
           </Reveal>
           <div className="grid gap-4 md:grid-cols-3">
-            {VOICES.map((q, i) => (
-              <Reveal key={i} delay={i * 90}>
+            {VOICES.map((v, i) => (
+              <Reveal key={v.name} delay={i * 90}>
                 <figure className="h-full rounded-3xl bg-white/90 p-5 shadow-[0_12px_32px_-16px_rgba(10,47,47,0.35)]">
-                  <div className="flex items-center gap-2.5">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-punch-pink font-display font-extrabold">
-                      {['P', 'C', 'T'][i]}
+                  <blockquote className="text-sm font-medium leading-relaxed text-punch-ink/85">“{v.quote}”</blockquote>
+                  <figcaption className="mt-4 flex items-center gap-2.5">
+                    <span className="flex h-11 w-11 shrink-0 items-end justify-center overflow-hidden rounded-full bg-punch-pink">
+                      <Person kind={v.person} size={44} />
                     </span>
-                    <figcaption className="text-xs font-bold text-punch-ink/60">Persona entrevistada</figcaption>
-                  </div>
-                  <blockquote className="mt-3 text-sm font-medium leading-relaxed text-punch-ink/85">{q}</blockquote>
+                    <span className="leading-tight">
+                      <span className="block text-sm font-extrabold">{v.name}</span>
+                      <span className="block text-xs font-medium text-punch-ink/60">{v.role}</span>
+                    </span>
+                  </figcaption>
                 </figure>
               </Reveal>
             ))}
