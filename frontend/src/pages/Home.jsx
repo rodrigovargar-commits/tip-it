@@ -673,21 +673,22 @@ export default function Home() {
           {SERVICES.map(({ person, photo, svg, tone, label, sub, note }, i) => (
             <Reveal key={label + sub} delay={(i % 4) * 70}>
               <li className="list-none">
-                <div className="relative flex h-40 items-end justify-center overflow-hidden rounded-3xl bg-punch-yellow/50 shadow-[0_10px_28px_-16px_rgba(10,47,47,0.45)]">
+                {/* The photos are small (about 110 px), so the tile stays at their own size: bigger would look blurry. */}
+                <div className="relative mx-auto flex h-[7.25rem] w-28 items-end justify-center overflow-hidden rounded-3xl bg-punch-yellow/50 shadow-[0_10px_28px_-16px_rgba(10,47,47,0.45)] sm:mx-0">
                   {photo ? (
-                    <img src={photo} alt="" loading="lazy" className="h-full w-full object-cover" />
+                    <img src={photo} alt="" width="112" height="116" loading="lazy" className="h-full w-full object-cover" />
                   ) : (
                     <Person kind={person || 'cook'} size={150} />
                   )}
                 </div>
-                <div className="relative -mt-5 ml-2">
+                <div className="relative -mt-5 ml-2 flex justify-center sm:block">
                   <IconBadge svg={svg} tone={tone} size={40} className="ring-4 ring-punch-cream" />
                 </div>
-                <p className="mt-1.5 font-display text-sm font-extrabold leading-tight">
+                <p className="mt-1.5 text-center font-display text-sm font-extrabold leading-tight sm:text-left">
                   {label}
                   <span className="block font-sans text-xs font-semibold text-punch-ink/70">{sub}</span>
                 </p>
-                <p className="mt-1 text-xs font-medium leading-snug text-punch-ink/60">{note}</p>
+                <p className="mt-1 text-center text-xs font-medium leading-snug text-punch-ink/60 sm:text-left">{note}</p>
               </li>
             </Reveal>
           ))}
