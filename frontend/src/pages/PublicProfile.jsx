@@ -95,18 +95,18 @@ export default function PublicProfile() {
 
   return (
     <div className="page-shell !pt-0 md:!pt-8">
-      {/* Photo: full width on a phone, a rounded card on a computer. */}
-      <div className="relative -mx-5 h-72 overflow-hidden border-b-2 border-punch-ink bg-punch-pink md:mx-0 md:rounded-3xl md:border-2">
+      {/* Photo: about a quarter of the screen, so the profile itself gets the room. */}
+      <div className="relative -mx-5 h-[25svh] min-h-[170px] overflow-hidden border-b-2 border-punch-ink bg-punch-pink md:mx-0 md:rounded-3xl md:border-2">
         {worker.avatarUrl && smallPhoto ? (
           <div className="flex h-full w-full items-center justify-center bg-punch-yellow">
-            <img src={worker.avatarUrl} alt={`Foto de ${name}`} className="h-48 w-48 rounded-full border-4 border-punch-ink object-cover" />
+            <img src={worker.avatarUrl} alt={`Foto de ${name}`} className="h-28 w-28 rounded-full border-4 border-punch-ink object-cover" />
           </div>
         ) : worker.avatarUrl ? (
           <img
             src={worker.avatarUrl}
             alt={`Foto de ${name}`}
             onLoad={(e) => setSmallPhoto(e.target.naturalWidth < 560)}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover object-[50%_22%]"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-punch-yellow">
