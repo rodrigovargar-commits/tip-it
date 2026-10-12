@@ -132,17 +132,17 @@ export default function PublicProfile() {
             <Avatar src={worker.avatarUrl} name={name} size={84} />
           </span>
           <div className="min-w-0 pb-1">
-            <h1 className="break-words text-2xl font-extrabold leading-tight">{name}</h1>
-            {detail && <p className="truncate text-sm font-semibold text-slate-400">{detail}</p>}
+            <h1 className="break-words text-3xl font-extrabold leading-tight">{name}</h1>
+            {detail && <p className="truncate text-base font-semibold text-slate-400">{detail}</p>}
             {worker.establishment && <p className="truncate text-xs text-slate-500">{worker.establishment}</p>}
           </div>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm">
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-base">
           {worker.ratingCount > 0 ? (
             <span className="flex items-center gap-1">
-              <Star size={15} fill="#FF8243" stroke="#FF8243" />
-              <span className="font-bold">{worker.rating}</span>
+              <Star size={20} fill="#FF8243" stroke="#FF8243" />
+              <span className="font-display text-xl font-extrabold">{worker.rating}</span>
               <span className="text-slate-500">({worker.ratingCount})</span>
             </span>
           ) : (
@@ -157,30 +157,13 @@ export default function PublicProfile() {
           )}
         </div>
 
-        {worker.bio && (
-          <p className="mt-3 rounded-2xl bg-white/80 px-4 py-3 text-center text-sm italic text-slate-300">“{worker.bio}”</p>
-        )}
-
-        {stats.length > 0 && (
-          <dl className="mt-4 grid divide-x divide-punch-ink/15 rounded-2xl bg-white/80 py-3 text-center" style={{ gridTemplateColumns: `repeat(${stats.length}, minmax(0, 1fr))` }}>
-            {stats.map(({ icon: Icon, value, label }) => (
-              <div key={label} className="px-1">
-                <Icon size={18} className="mx-auto text-punch-orange" aria-hidden="true" />
-                <dd className="mt-1 font-display text-xl font-extrabold">{value}</dd>
-                <dt className="text-[11px] font-semibold leading-tight text-slate-500">{label}</dt>
-              </div>
-            ))}
-          </dl>
-        )}
-
-        <p className="mt-5 text-center text-sm font-bold text-slate-400">Un buen servicio merece ser reconocido.</p>
-        <div className="mt-3 space-y-3">
-          <Link to={`/p/${worker.username}/comentar`} className="btn-primary w-full gap-2">
-            <Star size={17} fill="#FCE883" stroke="#FCE883" /> Dejar un comentario
+        <div className="mt-4 space-y-3">
+          <Link to={`/p/${worker.username}/comentar`} className="btn-primary w-full gap-2.5 !py-4 text-lg">
+            <Star size={22} fill="#FCE883" stroke="#FCE883" /> Dejar un comentario
           </Link>
           {worker.readyForTips ? (
-            <Link to={`/pagar/${worker.username}`} className="btn-accent w-full gap-2 text-lg">
-              <HandCoins size={18} /> Dejar propina
+            <Link to={`/pagar/${worker.username}`} className="btn-accent w-full gap-2.5 !py-4 text-xl">
+              <HandCoins size={24} /> Dejar propina
             </Link>
           ) : (
             <p className="rounded-2xl bg-white/80 p-3 text-center text-sm text-slate-400">
@@ -189,9 +172,25 @@ export default function PublicProfile() {
           )}
         </div>
 
+        {worker.bio && (
+          <p className="mt-3 rounded-2xl bg-white/80 px-4 py-3 text-center text-base italic text-slate-300">“{worker.bio}”</p>
+        )}
+
+        {stats.length > 0 && (
+          <dl className="mt-4 grid divide-x divide-punch-ink/15 rounded-2xl bg-white/80 py-3 text-center" style={{ gridTemplateColumns: `repeat(${stats.length}, minmax(0, 1fr))` }}>
+            {stats.map(({ icon: Icon, value, label }) => (
+              <div key={label} className="px-1">
+                <Icon size={22} className="mx-auto text-punch-orange" aria-hidden="true" />
+                <dd className="mt-1 font-display text-2xl font-extrabold">{value}</dd>
+                <dt className="text-xs font-semibold leading-tight text-slate-500">{label}</dt>
+              </div>
+            ))}
+          </dl>
+        )}
+
         <section className="mt-8" aria-labelledby="reviews-title">
           <div className="flex items-baseline justify-between">
-            <h2 id="reviews-title" className="font-display text-xl font-extrabold">
+            <h2 id="reviews-title" className="font-display text-2xl font-extrabold">
               Lo que dicen de {firstName}
             </h2>
             {reviews.length > 3 && (
