@@ -227,5 +227,13 @@ describe('years of experience and the share of 4-5 star ratings', () => {
     await Worker.findByIdAndUpdate(worker._id, { ratingSum: 11, ratingCount: 3 });
     res = await request(app).get('/api/workers/rafa');
     expect(res.body.worker.positivePercent).toBe(67); // 2 of 3
+
+    // A stale counter must not push the share past 100%.
+    await mk('pi_p4', 5);
+    await mk('pi_p5', 5);
+    await Worker.findByIdAndUpdate(worker._id, { ratingSum: 11, ratingCount: 3 });
+    res = await request(app).get('/api/workers/rafa');
+    expect(res.body.worker.positivePercent).toBe(80); // 4 of 5
+    expect(res.body.worker.positivePercent).toBeLessThanOrEqual(100);
   });
 });

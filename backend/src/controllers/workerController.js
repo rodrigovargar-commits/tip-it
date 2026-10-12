@@ -115,6 +115,11 @@ const getByUsername = asyncHandler(async (req, res) => {
     Recognition.countDocuments({ worker: worker._id, status: 'published' }),
   ]);
 
+  const [ratedTotal, ratedPositive] = await Promise.all([
+    Transaction.countDocuments({ worker: worker._id, status: 'succeeded', rating: { $ne: null } }),
+    Transaction.countDocuments({ worker: worker._id, status: 'succeeded', rating: { $gte: 4 } }),
+  ]);
+
   const recognitions = await Recognition.find({ worker: worker._id, status: 'published' })
     .sort({ createdAt: -1 })
     .limit(10)
@@ -131,10 +136,9 @@ const getByUsername = asyncHandler(async (req, res) => {
       occupation: worker.occupation,
       establishment: worker.establishment,
       yearsExperience: worker.yearsExperience,
-      // Share of paid ratings that are 4 or 5 stars; only shown from 3 ratings on.
-      positivePercent: worker.ratingCount >= 3
-        ? Math.round(((await Transaction.countDocuments({ worker: worker._id, status: 'succeeded', rating: { $gte: 4 } })) / worker.ratingCount) * 100)
-        : null,
+      // Share of rated payments that are 4 or 5 stars; only shown from 3 ratings on.
+      // Both numbers come from the same set of payments, so it can never pass 100.
+      positivePercent: ratedTotal >= 3 ? Math.min(100, Math.round((ratedPositive / ratedTotal) * 100)) : null,
       qrCode: worker.qrCode,
       rating: worker.rating,
       ratingCount: worker.ratingCount,

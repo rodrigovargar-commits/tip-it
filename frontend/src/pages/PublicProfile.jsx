@@ -89,7 +89,7 @@ export default function PublicProfile() {
   // Only real numbers: each one appears when there is data behind it.
   const stats = [
     worker.recognitionCount > 0 && { icon: Users, value: worker.recognitionCount, label: 'comentarios' },
-    worker.positivePercent !== null && worker.positivePercent !== undefined && { icon: Heart, value: `${worker.positivePercent}%`, label: 'califican con 4 o 5 estrellas' },
+    worker.positivePercent !== null && worker.positivePercent !== undefined && { icon: Heart, value: `${worker.positivePercent}%`, label: 'lo recomendarían' },
     worker.yearsExperience > 0 && { icon: CalendarDays, value: worker.yearsExperience, label: worker.yearsExperience === 1 ? 'año de experiencia' : 'años de experiencia' },
   ].filter(Boolean);
 
