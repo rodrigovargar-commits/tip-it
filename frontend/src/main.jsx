@@ -6,6 +6,7 @@ import { Analytics } from '@vercel/analytics/react';
 import App from './App.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import './index.css';
+import { registerSW } from 'virtual:pwa-register';
 
 // When launched from the home-screen icon (standalone PWA), iOS/Android
 // sometimes resume on the last route that was open instead of the app's
@@ -21,6 +22,25 @@ try {
 } catch {
   // ignore (private mode / storage or matchMedia unavailable)
 }
+
+// Keep the app up to date. Without this, someone who already opened the site (or
+// installed it on the home screen) keeps seeing the OLD version from the cache
+// until they close everything. Now it checks for a new version when the app comes
+// back to the foreground and every 30 minutes, and reloads once when one is ready.
+const updateSW = registerSW({
+  immediate: true,
+  onNeedRefresh() {
+    updateSW(true);
+  },
+  onRegisteredSW(_url, registration) {
+    if (!registration) return;
+    const check = () => registration.update().catch(() => {});
+    setInterval(check, 30 * 60 * 1000);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') check();
+    });
+  },
+});
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
