@@ -490,9 +490,7 @@ function Confirmation({ worker, receipt, user }) {
           </span>
         )}
         <h1 className="mt-3 text-4xl font-extrabold">{ok ? '¡Gracias!' : 'Estamos confirmando tu pago'}</h1>
-        {ok ? (
-          <p className="mt-1 text-sm font-semibold text-slate-400">Pago confirmado.</p>
-        ) : (
+        {ok ? null : (
           <p className="mt-1 text-sm text-slate-400">No pudimos confirmar el estado todavía. No vuelvas a pagar: toca “Consultar estado”.</p>
         )}
       </div>
@@ -524,9 +522,7 @@ function Confirmation({ worker, receipt, user }) {
         </p>
       )}
       {ok && (
-        <p className="text-xs text-slate-500">
-          El pago está confirmado; el depósito a la cuenta de {firstName} puede tardar unos días.
-        </p>
+        <p className="text-center text-sm font-semibold text-slate-400">El pago está confirmado.</p>
       )}
 
       {!ok && (
