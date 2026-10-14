@@ -49,6 +49,12 @@ app.use(express.json({ limit: '3mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(mongoSanitize());
 
+// Registered before the limiter on purpose: the keep-warm ping and uptime
+// monitors call it every few minutes and must never be counted or blocked.
+app.get('/api/health', (req, res) => {
+  res.json({ success: true, status: 'ok', timestamp: new Date().toISOString() });
+});
+
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 300,
@@ -58,10 +64,6 @@ const apiLimiter = rateLimit({
   message: { success: false, message: 'Demasiadas solicitudes, intenta más tarde.' },
 });
 app.use('/api', apiLimiter);
-
-app.get('/api/health', (req, res) => {
-  res.json({ success: true, status: 'ok', timestamp: new Date().toISOString() });
-});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
