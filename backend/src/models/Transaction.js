@@ -44,6 +44,15 @@ const transactionSchema = new mongoose.Schema(
       type: String,
       default: 'mxn',
     },
+    // Cheqpay: the idempotency key we gave the payment link (matches the webhook's
+    // paymentOrder.externalId) and the provider's own ids, once known.
+    provider: { type: String, enum: ['stripe', 'cheqpay'], default: 'stripe' },
+    // No default on purpose: a unique sparse index still counts an explicit null, so
+    // Stripe payments must leave this field missing, not null.
+    cheqpayExternalId: { type: String, index: { unique: true, sparse: true } },
+    cheqpayInvoiceId: { type: String, default: null },
+    // For Cheqpay payments this holds 'cheqpay:<externalId>': the field stays required
+    // and unique so the existing index does not change.
     stripePaymentIntentId: {
       type: String,
       required: true,
