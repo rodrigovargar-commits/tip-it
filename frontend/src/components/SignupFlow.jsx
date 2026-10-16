@@ -328,7 +328,7 @@ export default function SignupFlow({ channels, defaultRole = 'worker' }) {
           <FormField label="Nombre público" hint="Como quieres que te llamen tus clientes.">
             {(p) => <input {...p} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" maxLength={60} className="input-field" required />}
           </FormField>
-          <FormField label="Usuario" error={usernameError} hint={usernameState === 'free' ? '¡Disponible!' : 'Será parte de tu enlace y de tu QR.'}>
+          <FormField label="Cómo quieres que te vean las personas" error={usernameError} hint={usernameState === 'free' ? '¡Disponible!' : 'Será tu nombre en tu enlace y en tu QR.'}>
             {(p) => (
               <div className="flex items-center rounded-2xl border-2 border-punch-ink/30 bg-white px-4 focus-within:border-punch-ink focus-within:ring-2 focus-within:ring-punch-yellow">
                 <span className="text-slate-500">@</span>

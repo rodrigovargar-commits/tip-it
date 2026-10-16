@@ -26,7 +26,7 @@ export default function RegisterForm({ defaultRole = 'client' }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (needsUsername && !form.username.trim()) {
-      toast.error('Elige un username para tu perfil');
+      toast.error('Escribe cómo quieres que te vean las personas');
       return;
     }
 
@@ -123,22 +123,32 @@ export default function RegisterForm({ defaultRole = 'client' }) {
         />
 
         {needsUsername && (
-          <div className="flex items-center rounded-2xl border-2 border-punch-ink/30 bg-white px-4 focus-within:border-punch-ink focus-within:ring-2 focus-within:ring-punch-yellow">
-            <span className="text-slate-500">@</span>
-            <input
-              name="username"
-              autoComplete="username"
-              autoCapitalize="none"
-              autoCorrect="off"
-              value={form.username}
-              onChange={handleChange}
-              placeholder="tu_username"
-              className="w-full bg-transparent px-2 py-3 text-slate-100 outline-none"
-              minLength={3}
-              maxLength={30}
-              pattern="[a-zA-Z0-9_.]+"
-              required
-            />
+          <div>
+            <label htmlFor="register-username" className="mb-1.5 block text-base font-bold text-punch-ink">
+              Cómo quieres que te vean las personas
+            </label>
+            <div className="flex items-center rounded-2xl border-2 border-punch-ink/30 bg-white px-4 focus-within:border-punch-ink focus-within:ring-2 focus-within:ring-punch-yellow">
+              <span className="text-slate-500">@</span>
+              <input
+                id="register-username"
+                name="username"
+                autoComplete="username"
+                autoCapitalize="none"
+                autoCorrect="off"
+                value={form.username}
+                onChange={handleChange}
+                placeholder="tunombre"
+                aria-describedby="register-username-hint"
+                className="w-full bg-transparent px-2 py-3 text-slate-100 outline-none"
+                minLength={3}
+                maxLength={30}
+                pattern="[a-zA-Z0-9_.]+"
+                required
+              />
+            </div>
+            <p id="register-username-hint" className="mt-1 text-sm text-slate-500">
+              Será tu nombre en tu enlace y en tu QR. Solo letras, números, punto y guion bajo.
+            </p>
           </div>
         )}
 

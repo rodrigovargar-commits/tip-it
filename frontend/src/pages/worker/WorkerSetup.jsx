@@ -95,7 +95,7 @@ export default function WorkerSetup() {
       <PageHeader
         eyebrow="Casi listo"
         title="Configura tu perfil"
-        subtitle="Elige tu username único. Con él generamos tu QR para recibir propinas."
+        subtitle="Elige cómo quieres que te vean las personas. Con eso generamos tu QR para recibir propinas."
       />
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
@@ -106,7 +106,7 @@ export default function WorkerSetup() {
               name="username"
               value={form.username}
               onChange={handleChange}
-              placeholder="usuario"
+              placeholder="tunombre"
               className="w-full bg-transparent px-2 py-3 text-slate-100 outline-none"
               minLength={3}
               maxLength={30}
