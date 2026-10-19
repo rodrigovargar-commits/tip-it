@@ -15,6 +15,7 @@ const tipRoutes = require('./routes/tipRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const leadRoutes = require('./routes/leadRoutes');
+const trackRoutes = require('./routes/trackRoutes');
 
 const app = express();
 
@@ -49,6 +50,12 @@ app.use(express.json({ limit: '3mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(mongoSanitize());
 
+// Registered before the limiter on purpose: the keep-warm ping and uptime
+// monitors call it every few minutes and must never be counted or blocked.
+app.get('/api/health', (req, res) => {
+  res.json({ success: true, status: 'ok', timestamp: new Date().toISOString() });
+});
+
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 300,
@@ -59,10 +66,6 @@ const apiLimiter = rateLimit({
 });
 app.use('/api', apiLimiter);
 
-app.get('/api/health', (req, res) => {
-  res.json({ success: true, status: 'ok', timestamp: new Date().toISOString() });
-});
-
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/workers', workerRoutes);
@@ -70,6 +73,7 @@ app.use('/api/tips', tipRoutes);
 app.use('/api/contacts', contactRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/leads', leadRoutes);
+app.use('/api/track', trackRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ success: false, message: 'Recurso no encontrado' });

@@ -17,4 +17,14 @@ jobs:
     timeout-minutes: 2
     steps:
       - name: Ping health endpoint
-        run: curl -fsS --max-time 60 --retry 2 https://tip-it-backend-65q4.onrender.com/api/health
+        # Prints the status and headers even when it fails, so a 429 shows who
+        # sent it (the app's own limiter or Render's edge).
+        run: |
+          for i in 1 2 3; do
+            code=$(curl -sS -o /tmp/body -D /tmp/headers -w '%{http_code}' --max-time 60 https://tip-it-backend-65q4.onrender.com/api/health || true)
+            echo "attempt $i -> HTTP $code"
+            if [ "$code" = "200" ]; then exit 0; fi
+            cat /tmp/headers /tmp/body 2>/dev/null | head -30
+            sleep 30
+          done
+          exit 1

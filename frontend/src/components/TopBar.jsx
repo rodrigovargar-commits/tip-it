@@ -11,7 +11,6 @@ import Avatar from './Avatar.jsx';
 // also once you're signed in.
 const HELP_IN_PERSON = { href: '/#ayuda', label: 'Ayuda en persona' };
 const SITE_LINKS = [
-  { href: '/#que-es', label: 'Qué es' },
   { href: '/#como-funciona', label: 'Cómo funciona' },
   { href: '/#para-quien', label: 'Para quién' },
   { href: '/#preguntas', label: 'Preguntas' },
