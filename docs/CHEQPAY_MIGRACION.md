@@ -86,18 +86,20 @@ Giros de Cheqpay: Servicios profesionales, Barberías, Estéticas, Música, Espe
 
 Lo que esto resuelve: no pasamos por la regulación de manejar fondos y Apple Pay y Google Pay se mantienen, aunque falta saber por dónde.
 
-## 6. Lo que sigue sin saberse
+## 6. Respuestas de Cheqpay del 19 de octubre y lo que sigue abierto
 
-Credenciales sandbox creadas el 12 de octubre (clave pública y privada). Las claves no se guardan en el repositorio: van en `backend/.env` y en las variables de Render (`CHEQPAY_PUBLIC_KEY`, `CHEQPAY_SECRET_KEY`).
+**Respondido**
+- **Claves:** funcionaban mal porque el merchant estaba desactivado en su sandbox. Ya lo activaron y la misma clave funciona (verificado: consulta de clientes y de enlaces de pago responden 200; un enlace de pago de $20 se creó bien y repetir el mismo `externalId` devuelve el mismo enlace).
+- **Monto:** en los enlaces de pago va **en pesos** (por ejemplo 20.00).
+- **`externalId`:** el del webhook (`data.paymentOrder.externalId`) es el mismo que mandamos al crear el enlace.
+- **Tarjetas de prueba:** Visa 4000 0000 0000 2503 y Mastercard 5200 0000 0000 2151, cualquier fecha futura y CVC de 3 dígitos. Los rechazos se simulan con el monto (9000.xx). Los montos de 1,000 pesos o más disparan 3D Secure.
+- **Apple Pay y Google Pay:** **todavía no están liberados** en Cheqpay (en pruebas de su lado). Pasar a producción con Cheqpay hoy significaría perderlos frente a Stripe.
 
-Preguntas pendientes para Cheqpay (mensaje listo en `Preguntas_para_Cheqpay.txt`):
-
-1. **Apple Pay y Google Pay:** ¿van en el SDK, en la página alojada o por otro camino? El panel solo muestra Tarjeta y SPEI.
-2. **Unidad de `amount`:** el inicio rápido dice centavos (`10000` = $100) y la especificación dice pesos (`100.5`). Se confirma en sandbox.
-3. **Webhooks:** eventos de alta de usuarios y de liquidación, y el formato exacto de la firma.
-4. **Sandbox:** usuarios y tarjetas de prueba.
-5. **Alta de usuarios:** si hay forma de enviar los datos por API (hoy es el formulario de Fillout) y cómo avisan cuando queda aprobado.
-6. **`x-merchant-id`:** la especificación lo marca obligatorio en las órdenes de pago; confirmar si es el identificador de cada usuario.
+**Sigue abierto**
+1. **Alta de las personas que reciben propinas.** Cheqpay entendió "alta de usuarios" como usuarios de su suite y dijo que no hay endpoint público para eso. No quedó claro cómo se liquida a cada persona (modelo agregador, directo a cada usuario) ni cómo se registra su cuenta. Es la pregunta decisiva.
+2. **Repartir un cobro entre varias cuentas** (cuenta de negocio de HOSTEC).
+3. **Cuánto de la tasa de 3.3% + $1.30 corresponde a TIP-IT** y cuándo se paga.
+4. **Webhooks de alta y liquidación**, y la fecha de Apple Pay y Google Pay.
 
 ## 7. Efecto en la comisión de TIP-IT
 
