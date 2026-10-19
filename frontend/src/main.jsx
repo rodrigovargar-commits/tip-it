@@ -8,6 +8,9 @@ import ErrorBoundary, { reloadOnceForUpdate } from './components/ErrorBoundary.j
 import { AuthProvider } from './context/AuthContext.jsx';
 import './index.css';
 import { registerSW } from 'virtual:pwa-register';
+import { captureSource } from './utils/attribution.js';
+
+captureSource();
 
 // When launched from the home-screen icon (standalone PWA), iOS/Android
 // sometimes resume on the last route that was open instead of the app's

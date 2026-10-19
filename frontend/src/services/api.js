@@ -9,6 +9,12 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  try {
+    const src = localStorage.getItem('tipit_src');
+    if (src) config.headers['X-Tipit-Source'] = src;
+  } catch {
+    // storage blocked
+  }
   return config;
 });
 

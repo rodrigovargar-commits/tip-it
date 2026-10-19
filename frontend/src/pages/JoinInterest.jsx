@@ -1,4 +1,5 @@
 import { Link, useSearchParams } from 'react-router-dom';
+import { getSource } from '../utils/attribution.js';
 import {
   QrCode,
   Smartphone,
@@ -38,7 +39,7 @@ function scrollToForm() {
 
 export default function JoinInterest() {
   const [searchParams] = useSearchParams();
-  const source = searchParams.get('src') || 'landing';
+  const source = searchParams.get('src') || getSource() || 'landing';
 
   return (
     <div className="min-h-screen bg-punch-cream text-punch-ink">

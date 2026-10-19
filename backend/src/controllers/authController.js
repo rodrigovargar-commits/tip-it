@@ -7,6 +7,8 @@ const { readVerificationToken } = require('../utils/otp/service');
 const { otpRequired } = require('./otpController');
 const { normalizeEmail } = require('../utils/otp/normalize');
 
+const cleanSource = require('../utils/cleanSource');
+
 const register = asyncHandler(async (req, res) => {
   const { name, email, phone, password, verificationToken } = req.body;
 
@@ -41,6 +43,7 @@ const register = asyncHandler(async (req, res) => {
     if (existingPhone) throw new AppError('Ya existe una cuenta con ese teléfono', 409);
   }
 
+  data.source = cleanSource(req.headers['x-tipit-source']);
   const user = await User.create(data);
   const token = generateToken(user._id);
 
@@ -77,6 +80,7 @@ const guestLogin = asyncHandler(async (req, res) => {
       phone: phone.trim(),
       email: email ? email.toLowerCase().trim() : undefined,
       isGuest: true,
+      source: cleanSource(req.headers['x-tipit-source']),
     });
   }
 

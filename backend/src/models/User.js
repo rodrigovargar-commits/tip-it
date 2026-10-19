@@ -73,6 +73,8 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // Which ad/link brought them (campaign tag from the link), for measuring ads.
+    source: { type: String, trim: true, maxlength: 50, default: '' },
   },
   { timestamps: true }
 );

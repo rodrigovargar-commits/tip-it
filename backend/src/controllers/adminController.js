@@ -4,6 +4,7 @@ const User = require('../models/User');
 const Worker = require('../models/Worker');
 const Transaction = require('../models/Transaction');
 const Lead = require('../models/Lead');
+const Visit = require('../models/Visit');
 const { sendLeadEmail } = require('../utils/notifyLead');
 const ensureWorkerQRs = require('../utils/ensureWorkerQRs');
 const { publicBaseUrl } = require('../utils/publicUrl');
@@ -99,6 +100,29 @@ const getStats = asyncHandler(async (req, res) => {
 // The actual contact list from the /unete landing — name, phone, category,
 // zone — so a real person can follow up on WhatsApp. Newest first, capped
 // at 200 per page (?before=<ISO date> to paginate further back).
+// Ads report: for every source tag, how many sessions reached the site, how
+// many left their details on /unete, and how many created an account. Visits
+// are counted by our own server, so they do not depend on cookies or Analytics.
+const getSources = asyncHandler(async (req, res) => {
+  const days = Math.min(Math.max(Number(req.query.days) || 30, 1), 365);
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const [visits, leads, users] = await Promise.all([
+    Visit.aggregate([{ $match: { createdAt: { $gte: since } } }, { $group: { _id: '$source', n: { $sum: 1 } } }]),
+    Lead.aggregate([{ $match: { createdAt: { $gte: since } } }, { $group: { _id: '$source', n: { $sum: 1 } } }]),
+    User.aggregate([
+      { $match: { createdAt: { $gte: since }, isGuest: false } },
+      { $group: { _id: { $ifNull: ['$source', ''] }, n: { $sum: 1 } } },
+    ]),
+  ]);
+  const rows = {};
+  const row = (k) => (rows[k] = rows[k] || { source: k, visits: 0, leads: 0, accounts: 0 });
+  visits.forEach((v) => (row(v._id || 'directo').visits = v.n));
+  leads.forEach((v) => (row(v._id || 'directo').leads = v.n));
+  users.forEach((v) => (row(v._id || 'directo').accounts = v.n));
+  const sources = Object.values(rows).sort((a, b) => b.visits - a.visits);
+  res.json({ success: true, days, sources });
+});
+
 const getLeads = asyncHandler(async (req, res) => {
   const filter = {};
   if (req.query.before) {
@@ -247,4 +271,4 @@ module.exports = {
   otpStatus,
   workerStatus,
   regenerateQrs,
-  testEmail, getStats, getLeads, updateLead };
+  testEmail, getStats, getLeads, getSources, updateLead };
