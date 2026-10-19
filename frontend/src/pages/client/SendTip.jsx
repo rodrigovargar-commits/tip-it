@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, ExpressCheckoutElement, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -115,11 +115,12 @@ function SummaryRow({ label, value, suffix, strong, note }) {
 
 /* ------------------------------------------------------------ the checkout */
 
-function Checkout({ worker, username, user, onPaid }) {
+function Checkout({ worker, username, user, onPaid, initialFeeInfo }) {
   const stripe = useStripe();
   const elements = useElements();
 
-  const [feeInfo, setFeeInfo] = useState({ feePercent: 6, feeFixedCents: 400 });
+  const [feeInfo, setFeeInfo] = useState(initialFeeInfo);
+  const isCheqpay = feeInfo.provider === 'cheqpay';
   const [choice, setChoice] = useState(DEFAULT_PRESET); // a preset in cents, or 'other'
   const [otherText, setOtherText] = useState('');
   const [coverFee, setCoverFee] = useState(false);
@@ -132,17 +133,14 @@ function Checkout({ worker, username, user, onPaid }) {
 
   useEffect(() => {
     trackEvent('checkout_view', { origin: 'qr' });
-    api
-      .get('/tips/fee-info')
-      .then(({ data }) => setFeeInfo({ feePercent: data.feePercent, feeFixedCents: data.feeFixedCents }))
-      .catch(() => {});
   }, []);
 
   const parsed = choice === 'other' ? parseAmountInput(otherText) : { cents: choice, error: null };
   const tipCents = parsed.cents;
   const q = tipCents ? quote(tipCents, coverFee, feeInfo) : null;
   const tooLow = q && q.net <= 0;
-  const ready = Boolean(q) && !tooLow;
+  const belowMin = Boolean(isCheqpay && q && feeInfo.minCents && q.total < feeInfo.minCents);
+  const ready = Boolean(q) && !tooLow && !belowMin;
   const name = worker.name || `@${worker.username}`;
   const firstName = name.split(' ')[0];
 
@@ -154,7 +152,33 @@ function Checkout({ worker, username, user, onPaid }) {
   // A new amount or choice means a new quote: forget any payment started for the old one.
   const quoteKey = ready ? `${tipCents}:${coverFee}` : null;
 
+  // Cheqpay: the person pays on Cheqpay's hosted page and comes back here.
+  const payCheqpay = async () => {
+    if (submitting) return;
+    if (!ready) {
+      toast.error(parsed.error || 'Elige cuánto quieres dejar.');
+      return;
+    }
+    setSubmitting(true);
+    setNotice('');
+    try {
+      const { data } = await api.post('/tips/create-link', { username, amount: tipCents / 100, coverFee });
+      if (data.amount !== q.total) {
+        setNotice(`Actualizamos el total a ${formatCents(data.amount)}. Revísalo antes de pagar.`);
+        setSubmitting(false);
+        return;
+      }
+      trackEvent('payment_attempted', { currency: 'MXN', method: 'cheqpay_hosted' });
+      window.location.assign(data.url);
+    } catch (err) {
+      trackEvent('checkout_error', { screen: 'pay' });
+      toast.error(getErrorMessage(err));
+      setSubmitting(false);
+    }
+  };
+
   const pay = async () => {
+    if (isCheqpay) return payCheqpay();
     if (!stripe || !elements || submitting) return;
     if (!ready) {
       toast.error(parsed.error || 'Elige cuánto quieres dejar.');
@@ -308,12 +332,31 @@ function Checkout({ worker, username, user, onPaid }) {
           Con este importe no alcanza para cubrir el procesamiento. Elige un monto mayor o cubre el costo tú.
         </p>
       )}
+      {belowMin && (
+        <p role="alert" className="rounded-2xl border-2 border-red-700/40 bg-red-50 p-3 text-sm font-semibold text-red-800">
+          El monto mínimo es de {formatCents(feeInfo.minCents)}. Elige uno mayor.
+        </p>
+      )}
       {notice && (
         <p role="status" className="rounded-2xl border-2 border-punch-ink bg-punch-yellow/60 p-3 text-sm font-semibold">
           {notice}
         </p>
       )}
 
+      {isCheqpay ? (
+        <section aria-labelledby="method-title" className="space-y-3">
+          <h2 id="method-title" className="font-display text-xl font-extrabold">
+            Método de pago
+          </h2>
+          <div className="flex items-center gap-2 rounded-2xl border-2 border-punch-ink/25 bg-white p-3.5 text-sm font-bold">
+            <IconBadge icon={CreditCard} tone="pink" size={28} /> Pagas con tarjeta en una página segura y regresas aquí.
+          </div>
+          <button type="button" onClick={pay} disabled={submitting || !ready} className="btn-accent w-full text-lg">
+            {submitting ? 'Abriendo el pago…' : q ? `Pagar ${formatCents(q.total)} MXN` : 'Elige un monto'}
+          </button>
+        </section>
+      ) : (
+        <>
       <section aria-labelledby="method-title" className="space-y-3">
         <h2 id="method-title" className="font-display text-xl font-extrabold">
           Método de pago
@@ -381,8 +424,10 @@ function Checkout({ worker, username, user, onPaid }) {
           {submitting ? 'Procesando…' : q ? `Pagar ${formatCents(q.total)} MXN` : 'Elige un monto'}
         </button>
       )}
+        </>
+      )}
       <p className="flex items-center justify-center gap-1.5 text-center text-xs text-slate-500">
-        <ShieldCheck size={13} /> Pago seguro, procesado por Stripe. TIP-IT no guarda tu tarjeta.
+        <ShieldCheck size={13} /> Pago seguro, procesado por {isCheqpay ? 'Cheqpay' : 'Stripe'}. TIP-IT no guarda tu tarjeta.
       </p>
       <p className="text-center text-xs text-slate-500">
         Al pagar aceptas los{' '}
@@ -590,6 +635,41 @@ export default function SendTip() {
   const [loading, setLoading] = useState(true);
   const [receipt, setReceipt] = useState(null);
   const [savingContact, setSavingContact] = useState(false);
+  const [feeInfo, setFeeInfo] = useState(null);
+
+  // Coming back from Cheqpay's hosted page: ask the server what happened.
+  const [search, setSearch] = useSearchParams();
+  const ref = search.get('ref');
+  const [returning, setReturning] = useState(Boolean(ref));
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    api
+      .get('/tips/fee-info')
+      .then(({ data }) => setFeeInfo({ provider: data.provider || 'stripe', feePercent: data.feePercent, feeFixedCents: data.feeFixedCents, minCents: data.minCents }))
+      .catch(() => setFeeInfo({ provider: 'stripe', feePercent: 6, feeFixedCents: 400 }));
+  }, []);
+
+  useEffect(() => {
+    if (!ref) return;
+    let alive = true;
+    const invoice = search.get('cp_invoice_id');
+    api
+      .post('/tips/confirm', {
+        paymentIntentId: `cheqpay:${ref}`,
+        ...(invoice && /^[a-f\d]{24}$/i.test(invoice) ? { invoiceId: invoice } : {}),
+      })
+      .then(({ data }) => {
+        if (!alive) return;
+        if (data.transaction.status === 'failed') setFailed(true);
+        else setReceipt({ transaction: data.transaction, paymentIntentId: `cheqpay:${ref}` });
+      })
+      .catch(() => alive && setFailed(true))
+      .finally(() => alive && setReturning(false));
+    return () => {
+      alive = false;
+    };
+  }, [ref]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     (async () => {
@@ -637,7 +717,7 @@ export default function SendTip() {
     }
   };
 
-  if (loading) {
+  if (loading || !feeInfo) {
     // A skeleton of the page, so something friendly shows instantly even if the
     // server is still waking up.
     return (
@@ -661,6 +741,37 @@ export default function SendTip() {
   }
 
   if (!worker) return null;
+
+  if (returning) {
+    return (
+      <div className="page-shell items-center text-center" aria-busy="true">
+        <p className="mt-24 font-display text-2xl font-extrabold">Confirmando tu pago…</p>
+        <p className="mt-2 text-sm font-medium text-slate-400">No cierres esta página ni vuelvas a pagar.</p>
+      </div>
+    );
+  }
+
+  if (failed && !receipt) {
+    return (
+      <div className="page-shell items-center text-center">
+        <p className="mt-16 font-display text-3xl font-extrabold">El pago no se completó</p>
+        <p className="mt-3 max-w-sm text-slate-400">No se hizo ningún cobro. Puedes intentarlo de nuevo.</p>
+        <button
+          type="button"
+          onClick={() => {
+            setFailed(false);
+            setSearch({}, { replace: true });
+          }}
+          className="btn-primary mt-6"
+        >
+          Intentar de nuevo
+        </button>
+        <Link to={`/p/${worker.username}`} className="btn-secondary mt-3">
+          Volver al perfil
+        </Link>
+      </div>
+    );
+  }
 
   if (!worker.readyForTips && !receipt) {
     return (
@@ -718,8 +829,8 @@ export default function SendTip() {
           </div>
 
           <div className="mt-6">
-            <Elements stripe={getStripe()} options={elementsOptions}>
-              <Checkout worker={worker} username={username} user={user} onPaid={setReceipt} />
+            <Elements stripe={feeInfo.provider === 'cheqpay' ? null : getStripe()} options={elementsOptions}>
+              <Checkout worker={worker} username={username} user={user} onPaid={setReceipt} initialFeeInfo={feeInfo} />
             </Elements>
           </div>
 

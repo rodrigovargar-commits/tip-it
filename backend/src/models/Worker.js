@@ -85,6 +85,9 @@ const workerSchema = new mongoose.Schema(
     // the person fills it once; sent to Cheqpay when it gives us the way to do it.
     cheqpay: {
       status: { type: String, enum: ['none', 'collected', 'submitted', 'approved', 'rejected'], default: 'none' },
+      // Cheqpay does each person's onboarding itself; once approved, the id of that
+      // person's merchant there is saved by an admin (PATCH /api/admin/cheqpay/:username).
+      merchantId: { type: String, maxlength: 60, trim: true, default: '' },
       legalName: { type: String, maxlength: 120, trim: true, default: '' },
       // RFC is optional for Persona Física; stored encrypted when DATA_ENCRYPTION_KEY is set.
       rfc: { type: String, maxlength: 200, default: '', set: encryptField, get: decryptField },

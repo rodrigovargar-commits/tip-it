@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const { canReceiveTips } = require('../payments/provider');
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
 const Worker = require('../models/Worker');
@@ -32,7 +33,7 @@ function toWorkerDTO(worker) {
     rating: worker.rating,
     ratingCount: worker.ratingCount,
     tipCount: worker.tipCount,
-    readyForTips: Boolean(worker.stripeOnboardingComplete),
+    readyForTips: canReceiveTips(worker),
   };
 }
 
@@ -147,7 +148,7 @@ const getByUsername = asyncHandler(async (req, res) => {
       thanksCount: await Transaction.countDocuments({ worker: worker._id, status: 'succeeded', thanked: true }),
       name: worker.publicName || worker.user?.name,
       avatarUrl: worker.user?.avatarUrl,
-      readyForTips: Boolean(worker.stripeOnboardingComplete),
+      readyForTips: canReceiveTips(worker),
       // Authors are anonymous unless they chose a nickname; the payer's real
       // name is never shown. "paid" reviews come from a real payment; the
       // others were left without one and are labelled as such.

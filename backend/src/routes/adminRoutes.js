@@ -1,6 +1,6 @@
 const express = require('express');
 const requireAdminKey = require('../middleware/adminKey');
-const { getStats, getLeads, getSources, updateLead, testEmail, regenerateQrs, workerStatus, getRecognitions, moderateRecognition, otpStatus } = require('../controllers/adminController');
+const { getStats, getLeads, getSources, updateLead, testEmail, regenerateQrs, workerStatus, updateCheqpayStatus, getRecognitions, moderateRecognition, otpStatus } = require('../controllers/adminController');
 
 const router = express.Router();
 
@@ -16,5 +16,6 @@ router.get('/worker-status', workerStatus);
 router.get('/recognitions', getRecognitions);
 router.get('/recognitions/:id/:decision', (req, res, next) => { req.body = { status: req.params.decision === 'approve' ? 'published' : 'rejected' }; moderateRecognition(req, res, next); });
 router.get('/otp-status', otpStatus);
+router.patch('/cheqpay/:username', express.json(), updateCheqpayStatus);
 
 module.exports = router;

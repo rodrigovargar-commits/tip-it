@@ -21,8 +21,22 @@ export function parseAmountInput(text) {
   return { cents, error: null };
 }
 
-// Same rule as the server: commission = percent of the tip + a fixed amount.
-export function quote(tipCents, coverFee, { feePercent, feeFixedCents }) {
+// Same rules as the server. Stripe: commission = percent of the tip + a fixed
+// amount. Cheqpay: one rate on the whole charge, so covering the fee raises the
+// charge just enough for the person to receive the full tip.
+export function quote(tipCents, coverFee, info) {
+  const { feePercent, feeFixedCents } = info;
+  if (info.provider === 'cheqpay') {
+    const feeOf = (gross) => Math.round((gross * feePercent) / 100) + feeFixedCents;
+    const netOf = (gross) => gross - feeOf(gross);
+    let total = tipCents;
+    if (coverFee) {
+      total = Math.ceil((tipCents + feeFixedCents) / (1 - feePercent / 100));
+      while (netOf(total) < tipCents) total += 1;
+      while (netOf(total - 1) >= tipCents) total -= 1;
+    }
+    return { fee: feeOf(total), total, net: netOf(total), tip: tipCents };
+  }
   const fee = Math.round((tipCents * feePercent) / 100) + feeFixedCents;
   const total = coverFee ? tipCents + fee : tipCents;
   return { fee, total, net: total - fee, tip: tipCents };

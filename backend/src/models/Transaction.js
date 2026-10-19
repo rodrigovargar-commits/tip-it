@@ -50,6 +50,8 @@ const transactionSchema = new mongoose.Schema(
     // No default on purpose: a unique sparse index still counts an explicit null, so
     // Stripe payments must leave this field missing, not null.
     cheqpayExternalId: { type: String, index: { unique: true, sparse: true } },
+    cheqpayLinkId: { type: String, default: null },
+    cheqpayMerchantId: { type: String, default: null },
     cheqpayInvoiceId: { type: String, default: null },
     // For Cheqpay payments this holds 'cheqpay:<externalId>': the field stays required
     // and unique so the existing index does not change.

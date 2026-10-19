@@ -177,6 +177,24 @@ const testEmail = asyncHandler(async (req, res) => {
 
 // Rebuilds every worker's QR from the current public address.
 // /api/admin/regenerate-qrs?key=...  (add &force=1 to rebuild even the ones that look right)
+// Cheqpay does the onboarding of each person. When it approves one, an admin
+// records the result here: status 'submitted' | 'approved' | 'rejected' and, for
+// approved, the id of the person's merchant at Cheqpay.
+const updateCheqpayStatus = asyncHandler(async (req, res) => {
+  const { status, merchantId } = req.body;
+  if (!['submitted', 'approved', 'rejected'].includes(status)) throw new AppError('Estado inválido', 400);
+  const worker = await Worker.findOne({ username: String(req.params.username).toLowerCase() });
+  if (!worker) throw new AppError('Perfil no encontrado', 404);
+  if (status === 'approved' && !/^[a-f\d]{24}$/i.test(String(merchantId || ''))) {
+    throw new AppError('Para aprobar hace falta el merchant id de Cheqpay (24 caracteres)', 400);
+  }
+  worker.cheqpay.status = status;
+  if (status === 'approved') worker.cheqpay.merchantId = String(merchantId);
+  worker.cheqpay.updatedAt = new Date();
+  await worker.save();
+  res.json({ success: true, username: worker.username, status: worker.cheqpay.status, hasMerchant: Boolean(worker.cheqpay.merchantId) });
+});
+
 const regenerateQrs = asyncHandler(async (req, res) => {
   const result = await ensureWorkerQRs({ force: req.query.force === '1' });
   res.json({ success: true, publicUrl: publicBaseUrl(), ...result });
@@ -271,4 +289,5 @@ module.exports = {
   otpStatus,
   workerStatus,
   regenerateQrs,
+  updateCheqpayStatus,
   testEmail, getStats, getLeads, getSources, updateLead };

@@ -101,17 +101,26 @@ export default function CheqpayAlta() {
         <div className="mt-6 card flex gap-3 !bg-punch-yellow">
           <ShieldCheck size={22} className="mt-0.5 shrink-0" />
           <div className="flex-1">
-            <p className="font-display text-lg font-extrabold">Tus datos ya están guardados</p>
-            <p className="mt-1 text-sm font-medium">
-              {form.legalName} · {giroLabel}
-              {form.giro === 'otros' && form.giroOther ? ` (${form.giroOther})` : ''}
-            </p>
-            <p className="mt-2 text-sm text-slate-400">
-              Con esto se da de alta tu cuenta de cobros. Mientras la conexión automática está lista, puedes abrir el formulario de Cheqpay y poner estos mismos datos.
-            </p>
-            <a href={app.formUrl} target="_blank" rel="noopener noreferrer" className="btn-primary mt-3 w-full gap-2">
-              <ExternalLink size={16} /> Abrir el formulario de Cheqpay
-            </a>
+            {app.status === 'approved' ? (
+              <>
+                <p className="font-display text-lg font-extrabold">Tu cuenta de cobros está activa</p>
+                <p className="mt-1 text-sm text-slate-400">Ya puedes recibir propinas con tu QR.</p>
+              </>
+            ) : (
+              <>
+                <p className="font-display text-lg font-extrabold">{app.status === 'submitted' ? 'Cheqpay está revisando tu alta' : 'Tus datos ya están guardados'}</p>
+                <p className="mt-1 text-sm font-medium">
+                  {form.legalName} · {giroLabel}
+                  {form.giro === 'otros' && form.giroOther ? ` (${form.giroOther})` : ''}
+                </p>
+                <p className="mt-2 text-sm text-slate-400">
+                  Cheqpay es quien hace tu alta. Abre su formulario y llénalo con estos mismos datos. Cuando te aprueben, activamos tu perfil para recibir propinas.
+                </p>
+                <a href={app.formUrl} target="_blank" rel="noopener noreferrer" className="btn-primary mt-3 w-full gap-2">
+                  <ExternalLink size={16} /> Abrir el formulario de Cheqpay
+                </a>
+              </>
+            )}
           </div>
         </div>
       )}

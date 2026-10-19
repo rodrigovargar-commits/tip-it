@@ -60,4 +60,11 @@ describe('Cheqpay client', () => {
     global.fetch = jest.fn().mockRejectedValue(new Error('boom'));
     await expect(getInvoice('1')).rejects.toMatchObject({ statusCode: 502 });
   });
+
+  it('uses a given merchant id instead of the default one', async () => {
+    process.env.CHEQPAY_MERCHANT_ID = 'default_merchant';
+    global.fetch = ok({});
+    await getInvoice('inv1', 'person_merchant');
+    expect(global.fetch.mock.calls[0][1].headers['x-merchant-id']).toBe('person_merchant');
+  });
 });

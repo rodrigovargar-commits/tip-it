@@ -7,12 +7,13 @@ const baseUrl = () => process.env.CHEQPAY_API_URL || 'https://api.sandbox.cheqpa
 
 const centsToPesos = (cents) => Math.round(cents) / 100;
 
-async function request(path, { method = 'GET', body } = {}) {
+async function request(path, { method = 'GET', body, merchantId } = {}) {
   const key = process.env.CHEQPAY_SECRET_KEY;
   if (!key) throw new AppError('Los cobros con Cheqpay no están configurados', 503);
 
   const headers = { 'x-api-key': key, 'Content-Type': 'application/json', Accept: 'application/json' };
-  if (process.env.CHEQPAY_MERCHANT_ID) headers['x-merchant-id'] = process.env.CHEQPAY_MERCHANT_ID;
+  const merchant = merchantId || process.env.CHEQPAY_MERCHANT_ID;
+  if (merchant) headers['x-merchant-id'] = merchant;
 
   let res;
   try {
@@ -45,10 +46,11 @@ async function request(path, { method = 'GET', body } = {}) {
 
 // One hosted checkout for one tip. `externalId` makes the call idempotent, so a
 // retry of the same tip returns the same link instead of creating a second one.
-async function createPaymentLink({ amountCents, name, description, redirectUrl, cancelUrl, externalId, reference, metadata, expiresAt }) {
+async function createPaymentLink({ merchantId, amountCents, name, description, redirectUrl, cancelUrl, externalId, reference, metadata, expiresAt }) {
   const price = centsToPesos(amountCents);
   return request('/lps/payment-links', {
     method: 'POST',
+    merchantId,
     body: {
       name,
       description,
@@ -66,6 +68,6 @@ async function createPaymentLink({ amountCents, name, description, redirectUrl, 
   });
 }
 
-const getInvoice = (id) => request(`/lps/invoices/${encodeURIComponent(id)}`);
+const getInvoice = (id, merchantId) => request(`/lps/invoices/${encodeURIComponent(id)}`, { merchantId });
 
 module.exports = { createPaymentLink, getInvoice, centsToPesos };
