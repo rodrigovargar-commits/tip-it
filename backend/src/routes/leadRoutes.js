@@ -2,7 +2,7 @@ const express = require('express');
 const { body } = require('express-validator');
 const validate = require('../middleware/validate');
 const { guestLimiter } = require('../middleware/rateLimiter');
-const { createLead } = require('../controllers/leadController');
+const { createLead, createLeadFromManychat } = require('../controllers/leadController');
 
 const router = express.Router();
 
@@ -32,5 +32,8 @@ router.post(
   validate,
   createLead
 );
+
+// ManyChat posts chat leads here (shared secret in X-Manychat-Secret).
+router.post('/manychat', guestLimiter, createLeadFromManychat);
 
 module.exports = router;

@@ -6,6 +6,18 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--prefix", "frontend"],
       "port": 5173
+    },
+    {
+      "name": "portal-demo-api",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["MONGO_URI=mongodb://localhost:27017/tipit-portal-demo", "ADMIN_STATS_KEY=demo-key", "MANYCHAT_SECRET=demo-manychat", "PORT=5055", "CLIENT_URL=*", "RESEND_API_KEY=", "node", "backend/src/server.js"],
+      "port": 5055
+    },
+    {
+      "name": "portal-demo-web",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["VITE_API_URL=http://localhost:5055/api", "npm", "run", "dev", "--prefix", "frontend", "--", "--port", "5174", "--strictPort"],
+      "port": 5174
     }
   ]
 }

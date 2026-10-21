@@ -21,6 +21,7 @@ const Contacts = lazy(() => import('./pages/Contacts.jsx'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy.jsx'));
 const Terms = lazy(() => import('./pages/Terms.jsx'));
 const HowItWorks = lazy(() => import('./pages/HowItWorks.jsx'));
+const AdminPortal = lazy(() => import('./pages/AdminPortal.jsx'));
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import BottomNav from './components/BottomNav.jsx';
 import CookieBanner from './components/CookieBanner.jsx';
@@ -64,6 +65,8 @@ export default function App() {
         <Route path="/privacidad" element={<PrivacyPolicy />} />
         <Route path="/terminos" element={<Terms />} />
         <Route path="/como-funciona" element={<HowItWorks />} />
+        {/* Owner's private portal; gated by the admin key, not by an account. */}
+        <Route path="/admin" element={<AdminPortal />} />
 
         <Route
           path="/worker/setup"

@@ -12,6 +12,8 @@ const stripe = require('../config/stripe');
 const Recognition = require('../models/Recognition');
 const { availableChannels, providerFor } = require('../utils/otp/providers');
 const { sendCode } = require('../utils/otp/service');
+const { LEAD_STAGES } = require('../models/Lead');
+const { categoryFromText, cleanInstagram } = require('../utils/leadFields');
 
 const getStats = asyncHandler(async (req, res) => {
   const [
@@ -132,24 +134,147 @@ const getLeads = asyncHandler(async (req, res) => {
   if (req.query.category) filter.category = req.query.category;
   if (req.query.contacted === 'true') filter.contacted = true;
   if (req.query.contacted === 'false') filter.contacted = false;
+  if (LEAD_STAGES.includes(req.query.stage)) filter.stage = req.query.stage;
 
-  const leads = await Lead.find(filter).sort({ createdAt: -1 }).limit(200);
+  const leads = await Lead.find(filter).sort({ createdAt: -1 }).limit(200).lean();
+
+  // Did this lead go on to create an account, and has it received tips?
+  // Matched by email, the one field both sides always have.
+  const emails = [...new Set(leads.map((l) => l.email).filter(Boolean))];
+  const users = emails.length
+    ? await User.find({ email: { $in: emails }, isGuest: false }).select('email worker').populate('worker', 'username tipCount stripeOnboardingComplete').lean()
+    : [];
+  const byEmail = new Map(users.map((u) => [u.email, u]));
+  leads.forEach((l) => {
+    const u = byEmail.get(l.email);
+    l.account = u
+      ? {
+          username: u.worker?.username || null,
+          ready: Boolean(u.worker?.stripeOnboardingComplete),
+          tips: u.worker?.tipCount || 0,
+        }
+      : null;
+    l.stage = l.stage || (l.contacted ? 'contactado' : 'nuevo');
+  });
   res.json({ success: true, count: leads.length, leads });
 });
 
-// Mark a lead as contacted (or not) once someone has actually followed up —
-// keeps /admin/stats' "uncontacted" count meaningful over time.
+// Moves a lead along the follow-up pipeline: stage, next follow-up date, the
+// objection they gave, and a dated note. `contacted` alone still works for the
+// older callers and moves a "nuevo" lead to "contactado".
 const updateLead = asyncHandler(async (req, res) => {
-  if (typeof req.body.contacted !== 'boolean') {
-    throw new AppError('contacted debe ser true o false', 400);
-  }
-  const lead = await Lead.findByIdAndUpdate(
-    req.params.id,
-    { contacted: req.body.contacted },
-    { new: true }
-  );
+  const { contacted, stage, nextFollowUp, objection, note, phone, instagram } = req.body || {};
+  const lead = await Lead.findById(req.params.id);
   if (!lead) throw new AppError('No encontrado', 404);
+  // Leads saved before the pipeline existed have no stage: derive it once.
+  if (lead.$isDefault('stage') && lead.contacted) lead.stage = 'contactado';
+
+  let changed = false;
+  if (contacted !== undefined) {
+    if (typeof contacted !== 'boolean') throw new AppError('contacted debe ser true o false', 400);
+    lead.contacted = contacted;
+    if (contacted && (lead.stage || 'nuevo') === 'nuevo') lead.stage = 'contactado';
+    if (!contacted) lead.stage = 'nuevo';
+    changed = true;
+  }
+  if (stage !== undefined) {
+    if (!LEAD_STAGES.includes(stage)) throw new AppError('Etapa inválida', 400);
+    lead.stage = stage;
+    changed = true;
+  }
+  if (nextFollowUp !== undefined) {
+    if (nextFollowUp === null || nextFollowUp === '') {
+      lead.nextFollowUp = null;
+    } else {
+      const d = new Date(nextFollowUp);
+      if (Number.isNaN(d.getTime())) throw new AppError('Fecha de seguimiento inválida', 400);
+      lead.nextFollowUp = d;
+    }
+    changed = true;
+  }
+  if (objection !== undefined) {
+    lead.objection = String(objection).slice(0, 200);
+    changed = true;
+  }
+  if (phone !== undefined) {
+    lead.phone = String(phone).slice(0, 30);
+    changed = true;
+  }
+  if (instagram !== undefined) {
+    lead.instagram = cleanInstagram(instagram);
+    changed = true;
+  }
+  if (typeof note === 'string' && note.trim()) {
+    lead.notes.push({ text: note.trim().slice(0, 500) });
+    changed = true;
+  }
+  if (!changed) throw new AppError('No hay nada que actualizar', 400);
+  await lead.save();
   res.json({ success: true, lead });
+});
+
+// A prospect found outside the website (a visit in person, an Instagram DM,
+// a referral) added by hand from the portal.
+const createLeadAdmin = asyncHandler(async (req, res) => {
+  const { name, phone, email, instagram, category, zone, source, note, nextFollowUp } = req.body || {};
+  if (!name || !String(name).trim()) throw new AppError('El nombre es obligatorio', 400);
+  const lead = new Lead({
+    name: String(name).slice(0, 100),
+    phone: String(phone || '').slice(0, 30),
+    email: String(email || '').slice(0, 120),
+    instagram: cleanInstagram(instagram),
+    category: categoryFromText(category),
+    zone: String(zone || '').slice(0, 100),
+    source: String(source || 'visita').slice(0, 50),
+    nextFollowUp: nextFollowUp ? new Date(nextFollowUp) : null,
+    notes: note && String(note).trim() ? [{ text: String(note).trim().slice(0, 500) }] : [],
+  });
+  if (lead.nextFollowUp && Number.isNaN(lead.nextFollowUp.getTime())) lead.nextFollowUp = null;
+  try {
+    await lead.save();
+  } catch (err) {
+    if (err.name === 'ValidationError') {
+      throw new AppError(Object.values(err.errors)[0]?.message || 'Datos inválidos', 400);
+    }
+    throw err;
+  }
+  res.status(201).json({ success: true, lead });
+});
+
+// Everyone who opened a receiving account, with how far they got: bank
+// connected, tips received and the date of the last one. This is the list to
+// follow up for activation (an account with no tips is not a user yet).
+const getUsers = asyncHandler(async (req, res) => {
+  const workers = await Worker.find({})
+    .sort({ createdAt: -1 })
+    .limit(300)
+    .select('user username publicName activity stripeOnboardingComplete tipCount createdAt')
+    .populate('user', 'name email phone source createdAt')
+    .lean();
+  const last = await Transaction.aggregate([
+    { $match: { status: 'succeeded', worker: { $in: workers.map((w) => w._id) } } },
+    { $group: { _id: '$worker', lastTipAt: { $max: '$createdAt' }, tips: { $sum: 1 } } },
+  ]);
+  const byWorker = new Map(last.map((t) => [String(t._id), t]));
+  res.json({
+    success: true,
+    users: workers.map((w) => {
+      const t = byWorker.get(String(w._id));
+      return {
+        id: w._id,
+        username: w.username,
+        name: w.publicName || w.user?.name || w.username,
+        email: w.user?.email || '',
+        phone: w.user?.phone || '',
+        source: w.user?.source || '',
+        activity: w.activity || '',
+        ready: Boolean(w.stripeOnboardingComplete),
+        tips: t?.tips || 0,
+        lastTipAt: t?.lastTipAt || null,
+        createdAt: w.createdAt,
+      };
+    }),
+  });
 });
 
 // Sends one sample "new registration" email right now and returns what the
@@ -271,4 +396,4 @@ module.exports = {
   otpStatus,
   workerStatus,
   regenerateQrs,
-  testEmail, getStats, getLeads, getSources, updateLead };
+  testEmail, getStats, getLeads, getSources, updateLead, createLeadAdmin, getUsers };
