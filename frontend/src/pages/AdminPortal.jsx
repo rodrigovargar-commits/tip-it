@@ -316,6 +316,7 @@ function NewLeadForm({ onCreate }) {
       <input name="zone" className="input-field" placeholder="Zona o colonia" maxLength={100} />
       <select name="source" className="input-field" defaultValue="visita">
         <option value="visita">Visita en persona</option>
+        <option value="ad_mensajes">Anuncio (escribió por mensaje)</option>
         <option value="instagram_dm">Mensaje de Instagram</option>
         <option value="whatsapp">WhatsApp</option>
         <option value="referido">Referido</option>
@@ -333,6 +334,152 @@ function NewLeadForm({ onCreate }) {
         </button>
       </div>
     </form>
+  );
+}
+
+// Reads a prospect list exported as CSV (the ones kept in Excel/Sheets) and
+// adds each row as a lead. Columns are matched by name, so the existing lists
+// work as they are: Nombre/Negocio, Instagram, Zona/Dirección, Teléfono or
+// "Cómo contactar" (the first phone number in it), Correo, Segmento/Giro, Nota.
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let cell = '';
+  let quoted = false;
+  const src = text.replace(/^\uFEFF/, '');
+  for (let i = 0; i < src.length; i += 1) {
+    const c = src[i];
+    if (quoted) {
+      if (c === '"' && src[i + 1] === '"') {
+        cell += '"';
+        i += 1;
+      } else if (c === '"') quoted = false;
+      else cell += c;
+    } else if (c === '"') quoted = true;
+    else if (c === ',') {
+      row.push(cell);
+      cell = '';
+    } else if (c === '\n' || c === '\r') {
+      if (c === '\r' && src[i + 1] === '\n') i += 1;
+      row.push(cell);
+      if (row.some((x) => x.trim())) rows.push(row);
+      row = [];
+      cell = '';
+    } else cell += c;
+  }
+  row.push(cell);
+  if (row.some((x) => x.trim())) rows.push(row);
+  return rows;
+}
+
+const norm = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+const firstPhone = (s) => (String(s || '').match(/\d[\d\s-]{8,}\d/) || [''])[0].replace(/\D/g, '');
+
+function rowsToLeads(text) {
+  const [header = [], ...body] = parseCsv(text);
+  const h = header.map(norm);
+  const col = (...names) => h.findIndex((x) => names.some((n) => x.startsWith(n)));
+  const idx = {
+    name: col('nombre', 'negocio', 'name'),
+    instagram: col('instagram'),
+    zone: col('zona', 'direccion', 'colonia'),
+    phone: col('telefono', 'whatsapp', 'celular', 'phone'),
+    contact: col('como contactar', 'contacto'),
+    email: col('correo', 'email'),
+    category: col('segmento', 'giro', 'categoria'),
+    note: col('nota'),
+  };
+  const get = (r, k) => (idx[k] >= 0 ? String(r[idx[k]] || '').trim() : '');
+  return body.map((r) => {
+    const instagram = (get(r, 'instagram').match(/@?[\w.]+/) || [''])[0];
+    return {
+      name: get(r, 'name'),
+      instagram,
+      phone: firstPhone(get(r, 'phone')) || firstPhone(get(r, 'contact')),
+      email: get(r, 'email'),
+      zone: get(r, 'zone').slice(0, 100),
+      category: get(r, 'category'),
+      note: [get(r, 'category'), get(r, 'note')].filter(Boolean).join(' · ').slice(0, 500),
+      source: 'lista_prospectos',
+    };
+  });
+}
+
+function ImportCsv({ leads, onCreate }) {
+  const [rows, setRows] = useState(null);
+  const [result, setResult] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const known = useMemo(() => {
+    const k = new Set();
+    leads.forEach((l) => {
+      if (l.instagram) k.add(`ig:${l.instagram}`);
+      if (l.phone) k.add(`ph:${String(l.phone).replace(/\D/g, '').slice(-10)}`);
+      k.add(`nm:${norm(l.name)}`);
+    });
+    return k;
+  }, [leads]);
+
+  const classify = (r) => {
+    if (!r.name) return 'sin nombre';
+    if (!r.phone && !r.instagram && !r.email) return 'sin contacto';
+    const ig = r.instagram.replace(/^@/, '').toLowerCase();
+    if ((ig && known.has(`ig:${ig}`)) || (r.phone && known.has(`ph:${r.phone.slice(-10)}`)) || known.has(`nm:${norm(r.name)}`)) return 'ya está';
+    return 'ok';
+  };
+
+  const pick = async (file) => {
+    setResult('');
+    const text = await file.text();
+    setRows(rowsToLeads(text).map((r) => ({ ...r, status: classify(r) })));
+  };
+
+  const run = async () => {
+    setBusy(true);
+    let added = 0;
+    let failed = 0;
+    for (const r of rows.filter((x) => x.status === 'ok')) {
+      try {
+        const { status, ...body } = r;
+        await onCreate(body);
+        added += 1;
+      } catch {
+        failed += 1;
+      }
+    }
+    setBusy(false);
+    setRows(null);
+    setResult(`Se agregaron ${added} prospectos${failed ? `, ${failed} fallaron` : ''}.`);
+  };
+
+  const ok = rows ? rows.filter((r) => r.status === 'ok').length : 0;
+  return (
+    <div className="card mt-3 !p-4">
+      <p className="font-display font-extrabold">Importar una lista (CSV)</p>
+      <p className="text-sm text-slate-500">
+        Exporta tu hoja de Excel o Sheets como CSV. Se toman Nombre o Negocio, Instagram, Zona, Teléfono o "Cómo contactar", Correo, Segmento y Nota. No se duplican los que ya están.
+      </p>
+      <input type="file" accept=".csv,text/csv" className="mt-3 block text-sm" onChange={(e) => e.target.files?.[0] && pick(e.target.files[0])} />
+      {rows && (
+        <div className="mt-3 text-sm">
+          <p>
+            {rows.length} filas: <b>{ok} nuevas</b>, {rows.filter((r) => r.status === 'ya está').length} ya estaban,{' '}
+            {rows.filter((r) => r.status === 'sin contacto' || r.status === 'sin nombre').length} sin nombre o sin forma de contacto.
+          </p>
+          <ul className="mt-2 max-h-48 overflow-auto">
+            {rows.map((r, i) => (
+              <li key={i} className={r.status === 'ok' ? '' : 'text-slate-500'}>
+                {r.name || '(sin nombre)'} · {r.instagram || r.phone || r.email || '—'} · {r.status}
+              </li>
+            ))}
+          </ul>
+          <button type="button" disabled={busy || !ok} onClick={run} className="btn-primary mt-3">
+            {busy ? 'Agregando…' : `Agregar ${ok}`}
+          </button>
+        </div>
+      )}
+      {result && <p className="mt-2 text-sm font-bold">{result}</p>}
+    </div>
   );
 }
 
@@ -553,6 +700,7 @@ export default function AdminPortal() {
       {tab === 'prospectos' && (
         <div className="mt-6">
           <NewLeadForm onCreate={createLead} />
+          <ImportCsv leads={leads} onCreate={createLead} />
           <div className="mt-5 flex flex-wrap gap-2">
             {[['abiertos', `Abiertos (${open.length})`], ['todos', `Todos (${leads.length})`], ...LEAD_STAGES.map((s) => [s.id, `${s.label} (${leads.filter((l) => l.stage === s.id).length})`])].map(
               ([id, label]) => (
