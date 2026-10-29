@@ -275,6 +275,18 @@ export default function WorkerDashboard() {
         </div>
       )}
 
+      <Link to="/negocio" className="mt-6 card flex items-center justify-between gap-3 !bg-punch-pink transition hover:-translate-y-0.5">
+        <div>
+          <p className="font-display text-lg font-extrabold">{user?.ownsBusiness ? 'Mi negocio' : '¿Tienes un equipo?'}</p>
+          <p className="text-sm font-medium">
+            {user?.ownsBusiness
+              ? 'Abre el portal con tu equipo, sus propinas, estrellas y reseñas.'
+              : 'Crea tu negocio, comparte un código y conoce cómo les va a tus colaboradores.'}
+          </p>
+        </div>
+        <span aria-hidden="true" className="text-xl">→</span>
+      </Link>
+
       <div className="mt-6 grid grid-cols-2 gap-3">
         <Link to="/worker/qr" className="btn-primary">
           Mi código QR

@@ -7,9 +7,12 @@ import { useAuth } from '../context/AuthContext.jsx';
 export default function useNavLinks() {
   const { user, worker } = useAuth();
   const inicio = { to: '/', label: 'Inicio', icon: Home };
-  // Only people who own a business see its portal in the menu.
-  // With a tip QR of their own the phone bar already has five tabs, so there it lives in Perfil.
-  const negocio = user?.ownsBusiness ? [{ to: '/negocio', label: 'Mi negocio', icon: Store, desktopOnly: Boolean(worker) }] : [];
+  // Everyone signed in can reach the business portal: owners see their team, the rest see how to create one.
+  // On the phone bar it only takes a tab for someone who owns a business and has no tip QR of their own
+  // (with a QR the bar already has five tabs, so there it lives in Perfil and in Mi panel).
+  const negocio = user
+    ? [{ to: '/negocio', label: 'Mi negocio', icon: Store, desktopOnly: !user.ownsBusiness || Boolean(worker) }]
+    : [];
   if (worker) {
     return [
       inicio,
