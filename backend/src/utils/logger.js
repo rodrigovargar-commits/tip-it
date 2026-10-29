@@ -46,6 +46,11 @@ const SECURITY_EVENTS = new Set([
   'admin.access',
   'payment.succeeded',
   'account.deleted',
+  'business.created',
+  'business.code_rotated',
+  'business.member_joined',
+  'business.member_removed',
+  'wallet.apple_pass',
 ]);
 
 // One JSON line per event, with exactly the six PCI 10.2.2 fields (§8.2):

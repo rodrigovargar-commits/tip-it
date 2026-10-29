@@ -15,7 +15,8 @@ const ROLES = [
 export default function RegisterForm({ defaultRole = 'client' }) {
   const navigate = useNavigate();
   const { login, refreshMe } = useAuth();
-  const [role, setRole] = useState(defaultRole); // client | worker | both
+  const isTeam = defaultRole === 'team'; // owner of a business: no tip QR of their own
+  const [role, setRole] = useState(isTeam ? 'client' : defaultRole); // client | worker | both
   const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', username: '' });
   const [loading, setLoading] = useState(false);
 
@@ -48,7 +49,7 @@ export default function RegisterForm({ defaultRole = 'client' }) {
         navigate('/worker/onboarding');
       } else {
         toast.success('¡Cuenta creada!');
-        navigate('/scan');
+        navigate(isTeam ? '/negocio' : '/scan');
       }
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -59,6 +60,12 @@ export default function RegisterForm({ defaultRole = 'client' }) {
 
   return (
     <div>
+      {isTeam ? (
+        <p className="rounded-2xl bg-punch-pink p-3 text-center text-sm font-semibold">
+          Esta cuenta es para administrar tu negocio. Después crearás tu código para el equipo.
+        </p>
+      ) : (
+        <>
       <div className="grid grid-cols-3 gap-2">
         {ROLES.map(({ id, icon: Icon, label }) => (
           <button
@@ -77,6 +84,8 @@ export default function RegisterForm({ defaultRole = 'client' }) {
       <p className="mt-2 text-center text-xs text-slate-500">
         {ROLES.find((r) => r.id === role)?.hint}
       </p>
+        </>
+      )}
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <input

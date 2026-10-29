@@ -320,7 +320,8 @@ export default function Home() {
   };
 
   const myAccount = worker ? '/worker/dashboard' : '/scan';
-  const signup = user ? myAccount : '/register?role=worker';
+  // "Crear mi QR" opens the who-is-it-for screen (me / my team).
+  const signup = user ? myAccount : '/register';
 
   return (
     <div className={`min-h-screen overflow-x-hidden bg-punch-cream font-sans text-punch-ink ${user ? 'pb-24 md:pb-0' : ''}`}>
@@ -613,7 +614,7 @@ export default function Home() {
           <FooterCol title="La app">
             <Link to="/scan">Escanear un QR</Link>
             <Link to="/login">Iniciar sesión</Link>
-            <Link to="/register?role=worker">Crear cuenta</Link>
+            <Link to="/register">Crear cuenta</Link>
             <Link to="/como-funciona">Guía de la app</Link>
           </FooterCol>
           <FooterCol title="Legal y contacto">

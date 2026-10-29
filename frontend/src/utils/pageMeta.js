@@ -39,6 +39,7 @@ const PUBLIC = {
 
 const PRIVATE_TITLES = [
   ['/admin', 'Centro de mando — TIP-IT'],
+  ['/negocio', 'Mi negocio — TIP-IT'],
   ['/worker', 'Mi cuenta — TIP-IT'],
   ['/profile', 'Perfil — TIP-IT'],
   ['/history', 'Historial — TIP-IT'],

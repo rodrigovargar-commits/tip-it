@@ -73,6 +73,8 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // The business this person owns and manages from the business portal.
+    ownedBusiness: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', default: null },
     // Which ad/link brought them (campaign tag from the link), for measuring ads.
     source: { type: String, trim: true, maxlength: 50, default: '' },
   },
@@ -104,6 +106,7 @@ userSchema.methods.toPublicJSON = function toPublicJSON() {
     worker: this.worker,
     avatarUrl: this.avatarUrl,
     isGuest: this.isGuest,
+    ownsBusiness: Boolean(this.ownedBusiness),
     emailVerified: this.emailVerified,
     phoneVerified: this.phoneVerified,
     createdAt: this.createdAt,

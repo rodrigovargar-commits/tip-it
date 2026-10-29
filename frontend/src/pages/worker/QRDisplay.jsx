@@ -1,6 +1,7 @@
 import toast from 'react-hot-toast';
 import PageHeader from '../../components/PageHeader.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
+import WalletButtons from '../../components/WalletButtons.jsx';
 
 // Tropical punch brand tokens (same values as tailwind.config.js `punch`).
 const BRAND = {
@@ -260,6 +261,8 @@ export default function QRDisplay() {
           Compartir
         </button>
       </div>
+
+      <WalletButtons />
 
       <div className="mt-6 w-full rounded-2xl border-2 border-punch-ink/25 bg-white p-4 text-left">
         <p className="font-display font-extrabold">Tu perfil público</p>

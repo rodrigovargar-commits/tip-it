@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { QrCode, MessageSquareText, ShieldAlert, Zap } from 'lucide-react';
+import { QrCode, MessageSquareText, ShieldAlert, Store, Zap } from 'lucide-react';
 import api, { getErrorMessage } from '../../services/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import Spinner from '../../components/Spinner.jsx';
@@ -28,6 +28,29 @@ export default function WorkerDashboard() {
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
   const [payingOut, setPayingOut] = useState(false);
+  const [membership, setMembership] = useState(undefined); // undefined = loading, null = none
+  const pendingCode = (() => {
+    try { return localStorage.getItem('tipit_join_code') || ''; } catch { return ''; }
+  })();
+
+  useEffect(() => {
+    if (!worker) return;
+    api
+      .get('/business/membership')
+      .then(({ data }) => setMembership(data.business))
+      .catch(() => setMembership(null));
+  }, [worker]);
+
+  const leaveBusiness = async () => {
+    if (!window.confirm('¿Salir de este negocio? Dejará de ver tus propinas, estrellas y reseñas.')) return;
+    try {
+      await api.post('/business/leave');
+      setMembership(null);
+      toast.success('Saliste del negocio');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  };
 
   const loadBalance = () => {
     api
@@ -221,6 +244,36 @@ export default function WorkerDashboard() {
           </div>
         </Link>
       </div>
+
+      {membership !== undefined && (
+        <div className="mt-6 card flex items-start gap-3">
+          <Store size={22} className="mt-0.5 shrink-0" />
+          <div className="flex-1">
+            {membership ? (
+              <>
+                <p className="font-display text-lg font-extrabold">Eres parte de {membership.name}</p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Quien administra el negocio ve cuántas propinas recibes, tus estrellas y tus reseñas. No ve cuánto dinero recibes: eso llega directo a tu banco.
+                </p>
+                <button type="button" onClick={leaveBusiness} className="mt-2 text-sm font-bold underline underline-offset-2">
+                  Salir del negocio
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="font-display text-lg font-extrabold">¿Trabajas en un negocio?</p>
+                <p className="mt-1 text-sm text-slate-500">Únete con el código que te dio quien lo administra.</p>
+                <Link
+                  to={pendingCode ? `/negocio/unirme?c=${pendingCode}` : '/negocio/unirme'}
+                  className="btn-secondary mt-2 !py-2 text-sm"
+                >
+                  {pendingCode ? 'Terminar de unirme' : 'Tengo un código'}
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="mt-6 grid grid-cols-2 gap-3">
         <Link to="/worker/qr" className="btn-primary">

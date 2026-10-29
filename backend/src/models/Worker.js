@@ -96,6 +96,10 @@ const workerSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    // The business this person belongs to (joined with its code). The owner of
+    // the business can see this person's tips, ratings and reviews.
+    business: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', default: null, index: true },
+    businessJoinedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

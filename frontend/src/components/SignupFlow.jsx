@@ -63,7 +63,8 @@ export default function SignupFlow({ channels, defaultRole = 'worker' }) {
   const { login, refreshMe, worker } = useAuth();
   const photoInput = useRef(null);
 
-  const [role, setRole] = useState(defaultRole === 'worker' ? 'worker' : 'client');
+  // 'team' = owner of a business: same short steps as paying, then straight to the business portal.
+  const [role, setRole] = useState(defaultRole === 'worker' ? 'worker' : defaultRole === 'team' ? 'team' : 'client');
   const [step, setStep] = useState('contact');
   const [proof, setProof] = useState(null);
   const [activity, setActivity] = useState('');
@@ -123,7 +124,7 @@ export default function SignupFlow({ channels, defaultRole = 'worker' }) {
     try {
       await createAccount();
       toast.success('¡Cuenta creada!');
-      navigate('/scan');
+      navigate(role === 'team' ? '/negocio' : '/scan');
     } catch (err) {
       toast.error(getErrorMessage(err));
     } finally {
@@ -211,7 +212,7 @@ export default function SignupFlow({ channels, defaultRole = 'worker' }) {
               <Logo size={48} className="mb-4" />
               <Heading
                 title="Crea tu cuenta"
-                subtitle={role === 'worker' ? 'Comienza a recibir comentarios y propinas por tu trabajo.' : 'Para guardar tu historial y tus contactos.'}
+                subtitle={role === 'worker' ? 'Comienza a recibir comentarios y propinas por tu trabajo.' : role === 'team' ? 'Para administrar a tu equipo y ver cómo les va.' : 'Para guardar tu historial y tus contactos.'}
               />
             </>
           }
@@ -229,6 +230,7 @@ export default function SignupFlow({ channels, defaultRole = 'worker' }) {
               </Link>
               .
             </p>
+            {role !== 'team' && (
             <button
               type="button"
               onClick={() => setRole(role === 'worker' ? 'client' : 'worker')}
@@ -236,6 +238,7 @@ export default function SignupFlow({ channels, defaultRole = 'worker' }) {
             >
               {role === 'worker' ? 'Solo quiero dar propinas (no necesitas cuenta)' : 'Quiero recibir propinas'}
             </button>
+            )}
             <p className="mt-4 text-center text-sm text-slate-400">
               ¿Ya tienes cuenta?{' '}
               <Link to="/login" className="font-semibold text-brand-400">

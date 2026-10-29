@@ -22,6 +22,8 @@ const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy.jsx'));
 const Terms = lazy(() => import('./pages/Terms.jsx'));
 const HowItWorks = lazy(() => import('./pages/HowItWorks.jsx'));
 const AdminPortal = lazy(() => import('./pages/AdminPortal.jsx'));
+const BusinessPortal = lazy(() => import('./pages/business/BusinessPortal.jsx'));
+const JoinBusiness = lazy(() => import('./pages/business/JoinBusiness.jsx'));
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import BottomNav from './components/BottomNav.jsx';
 import CookieBanner from './components/CookieBanner.jsx';
@@ -67,6 +69,18 @@ export default function App() {
         <Route path="/como-funciona" element={<HowItWorks />} />
         {/* Owner's private portal; gated by the admin key, not by an account. */}
         <Route path="/admin" element={<AdminPortal />} />
+
+        {/* Business portal: the owner sees the team's tips, ratings and reviews; the
+            team joins with a code (the join page works signed out and keeps the code). */}
+        <Route
+          path="/negocio"
+          element={
+            <ProtectedRoute>
+              <BusinessPortal />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/negocio/unirme" element={<JoinBusiness />} />
 
         <Route
           path="/worker/setup"

@@ -16,6 +16,8 @@ const contactRoutes = require('./routes/contactRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const leadRoutes = require('./routes/leadRoutes');
 const trackRoutes = require('./routes/trackRoutes');
+const businessRoutes = require('./routes/businessRoutes');
+const walletRoutes = require('./routes/walletRoutes');
 
 const app = express();
 
@@ -74,6 +76,8 @@ app.use('/api/contacts', contactRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/api/track', trackRoutes);
+app.use('/api/business', businessRoutes);
+app.use('/api/wallet', walletRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ success: false, message: 'Recurso no encontrado' });

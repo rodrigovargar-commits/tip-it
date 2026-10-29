@@ -56,4 +56,14 @@ const recognitionLimiter = rateLimit({
   message: { success: false, message: 'Demasiados envíos, intenta más tarde.' },
 });
 
-module.exports = { authLimiter, tipLimiter, guestLimiter, otpLimiter, recognitionLimiter };
+// Business codes are short; this stops anyone from guessing them in bulk.
+const businessCodeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: skipInTest,
+  message: { success: false, message: 'Demasiados intentos con códigos, intenta más tarde.' },
+});
+
+module.exports = { authLimiter, tipLimiter, guestLimiter, otpLimiter, recognitionLimiter, businessCodeLimiter };

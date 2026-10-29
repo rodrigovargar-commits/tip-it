@@ -101,6 +101,16 @@ export default function Profile() {
     <div className="page-shell">
       <PageHeader eyebrow="Tu cuenta" title="Perfil" subtitle="Tus datos y cómo te ve la gente." />
 
+      <Link to="/negocio" className="mt-6 card flex items-center justify-between gap-3 transition hover:-translate-y-0.5">
+        <div>
+          <p className="font-display text-lg font-extrabold">{user?.ownsBusiness ? 'Mi negocio' : 'Tengo un negocio'}</p>
+          <p className="text-sm text-slate-500">
+            {user?.ownsBusiness ? 'Abre el portal con tu equipo, sus propinas, estrellas y reseñas.' : 'Crea un código para tu equipo y conoce cómo les va: propinas, estrellas y reseñas.'}
+          </p>
+        </div>
+        <span aria-hidden="true" className="text-xl">→</span>
+      </Link>
+
       <div className="mt-6 card flex items-center gap-4 !bg-punch-pink">
         <div className="relative">
           <Avatar src={user?.avatarUrl} name={user?.name} size={72} />

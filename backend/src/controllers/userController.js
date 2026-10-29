@@ -1,3 +1,4 @@
+const { releaseBusinessOf } = require('./businessController');
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
 const crypto = require('crypto');
@@ -56,6 +57,9 @@ const deleteMe = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).select('+password');
   const id = String(user._id);
 
+  // If they own a business, release their team and close it.
+  await releaseBusinessOf(user);
+
   user.name = 'Cuenta eliminada';
   user.email = user.isGuest ? undefined : `deleted-${id}@deleted.invalid`;
   user.phone = '0000000000';
@@ -69,6 +73,8 @@ const deleteMe = asyncHandler(async (req, res) => {
 
   if (user.worker) {
     await Worker.findByIdAndUpdate(user.worker, {
+      business: null,
+      businessJoinedAt: null,
       bio: '',
       experience: '',
       username: `deleted_${crypto.randomBytes(6).toString('hex')}`,

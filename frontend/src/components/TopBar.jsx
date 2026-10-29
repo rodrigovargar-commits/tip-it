@@ -138,7 +138,7 @@ export default function TopBar() {
                 <ScanLine size={16} /> Escanear
               </Link>
               <Link
-                to="/register?role=worker"
+                to="/register"
                 className="rounded-full border-2 border-punch-ink bg-punch-ink px-4 py-2 font-display text-sm font-extrabold text-white transition hover:bg-punch-ink/90"
               >
                 Crear mi QR
