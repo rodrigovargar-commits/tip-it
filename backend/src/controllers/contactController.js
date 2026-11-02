@@ -1,3 +1,4 @@
+const { avatarPath } = require('../utils/avatar');
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
 const { logSecurityEvent } = require('../utils/logger');
@@ -10,7 +11,7 @@ const listContacts = asyncHandler(async (req, res) => {
     .populate({
       path: 'worker',
       select: 'username bio ratingSum ratingCount',
-      populate: { path: 'user', select: 'name avatarUrl' },
+      populate: { path: 'user', select: 'name hasAvatar avatarVersion isWorker' },
     });
 
   res.json({
@@ -25,7 +26,7 @@ const listContacts = asyncHandler(async (req, res) => {
           bio: c.worker.bio,
           rating: c.worker.rating,
           name: c.worker.user?.name,
-          avatarUrl: c.worker.user?.avatarUrl,
+          avatarUrl: avatarPath(c.worker.user),
         },
       })),
   });

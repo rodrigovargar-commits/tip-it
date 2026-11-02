@@ -1,7 +1,9 @@
 const { releaseBusinessOf } = require('./businessController');
+const { avatarPath, avatarBuffer, etagOf } = require('../utils/avatar');
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const Worker = require('../models/Worker');
 const { logSecurityEvent } = require('../utils/logger');
@@ -12,9 +14,10 @@ const getMe = asyncHandler(async (req, res) => {
   // every screen that reads worker.name (QR card, dashboard, reviews) falls
   // back to "@username" and shows the handle twice instead of the real name.
   const worker = user.worker
-    ? { ...user.worker.toObject(), name: user.name, avatarUrl: user.avatarUrl }
+    ? { ...user.worker.toObject(), name: user.name, avatarUrl: avatarPath(user) || user.avatarUrl }
     : null;
   res.json({ success: true, user: user.toPublicJSON(), worker });
+
 });
 
 const updateProfile = asyncHandler(async (req, res) => {
@@ -23,6 +26,13 @@ const updateProfile = asyncHandler(async (req, res) => {
   allowedFields.forEach((field) => {
     if (req.body[field] !== undefined) updates[field] = req.body[field];
   });
+
+  if (updates.avatarUrl !== undefined) {
+    // Keep the flags in step with the photo, so answers can say "has a photo"
+    // (and bust the browser cache) without loading the image.
+    updates.hasAvatar = Boolean(updates.avatarUrl);
+    updates.avatarVersion = Date.now();
+  }
 
   const user = await User.findByIdAndUpdate(req.user._id, updates, {
     new: true,
@@ -65,6 +75,7 @@ const deleteMe = asyncHandler(async (req, res) => {
   user.phone = '0000000000';
   user.document = null;
   user.avatarUrl = null;
+  user.hasAvatar = false;
   user.active = false;
   user.isGuest = true; // no password/email requirements once erased
   user.password = crypto.randomBytes(24).toString('hex'); // unusable, hashed by the pre-save hook
@@ -92,4 +103,27 @@ const deleteMe = asyncHandler(async (req, res) => {
   res.json({ success: true });
 });
 
-module.exports = { getMe, updateProfile, upgradeAccount, deleteMe };
+// The photo of someone with a public profile, resized and cacheable. The address carries the
+// photo's version, so a changed photo gets a new address and the old one can be kept for a year.
+const getAvatar = asyncHandler(async (req, res) => {
+  const user = mongoose.isValidObjectId(req.params.id)
+    ? await User.findById(req.params.id).select('avatarUrl isWorker hasAvatar avatarVersion active')
+    : null;
+  if (!user || !user.active || !user.isWorker || !user.hasAvatar) throw new AppError('Sin foto', 404);
+  const photo = await avatarBuffer(user);
+  if (!photo) throw new AppError('Sin foto', 404);
+
+  const etag = etagOf(photo.buffer);
+  const current = String(req.query.v || '') === String(user.avatarVersion || 0);
+  res.set({
+    'Content-Type': photo.type,
+    ETag: etag,
+    'Cache-Control': current ? 'public, max-age=31536000, immutable' : 'public, max-age=300',
+    // helmet blocks other sites from loading our files by default; the page lives on another address.
+    'Cross-Origin-Resource-Policy': 'cross-origin',
+  });
+  if (req.headers['if-none-match'] === etag) return res.status(304).end();
+  return res.send(photo.buffer);
+});
+
+module.exports = { getMe, updateProfile, upgradeAccount, deleteMe, getAvatar };

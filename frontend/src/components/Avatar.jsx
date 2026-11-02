@@ -1,11 +1,16 @@
+import { photoSrc } from '../utils/avatar.js';
+
 export default function Avatar({ src, name, size = 56, className = '' }) {
   const initial = name?.trim()?.[0]?.toUpperCase() || '?';
 
   if (src) {
     return (
       <img
-        src={src}
+        src={photoSrc(src)}
         alt={name || 'Avatar'}
+        width={size}
+        height={size}
+        decoding="async"
         className={`shrink-0 rounded-full object-cover ${className}`}
         style={{ width: size, height: size }}
       />

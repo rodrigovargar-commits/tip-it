@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const { encryptField, decryptField } = require('../utils/fieldCrypto');
+const { avatarPath } = require('../utils/avatar');
 
 const userSchema = new mongoose.Schema(
   {
@@ -69,6 +70,9 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    // Lets answers say "has a photo" without loading the (large) image itself.
+    hasAvatar: { type: Boolean, default: false },
+    avatarVersion: { type: Number, default: 0 },
     active: {
       type: Boolean,
       default: true,
@@ -104,7 +108,9 @@ userSchema.methods.toPublicJSON = function toPublicJSON() {
     hasDocument: Boolean(this.document),
     isWorker: this.isWorker,
     worker: this.worker,
-    avatarUrl: this.avatarUrl,
+    // People with a public profile get a short address (the photo is served and cached
+    // separately); anyone else keeps it inline, which is rare and small.
+    avatarUrl: avatarPath(this) || this.avatarUrl,
     isGuest: this.isGuest,
     ownsBusiness: Boolean(this.ownedBusiness),
     emailVerified: this.emailVerified,

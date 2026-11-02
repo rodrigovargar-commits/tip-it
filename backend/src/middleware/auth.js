@@ -25,7 +25,8 @@ const protect = asyncHandler(async (req, res, next) => {
     throw new AppError('Token inválido o expirado', 401);
   }
 
-  const user = await User.findById(decoded.sub);
+  // The photo is a large text; no request but /users/me and the photo route needs it.
+  const user = await User.findById(decoded.sub).select('-avatarUrl');
   if (!user || !user.active) {
     throw new AppError('Usuario no encontrado o inactivo', 401);
   }
@@ -60,7 +61,7 @@ const optionalAuth = asyncHandler(async (req, res, next) => {
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
-      const user = await User.findById(decoded.sub);
+      const user = await User.findById(decoded.sub).select('-avatarUrl');
       if (user && user.active) req.user = user;
     } catch {
       // invalid/expired token on an optional route — just proceed anonymous

@@ -6,6 +6,9 @@ const { logger } = require('./utils/logger');
 const PORT = process.env.PORT || 5000;
 
 connectDB().then(() => {
+  require('./utils/avatar')
+    .backfillAvatarFlags(require('./models/User'))
+    .catch((err) => logger.error({ err: err.message }, 'avatar flags backfill failed'));
   // Rebuild any worker QR that doesn't point at the current public address.
   require('./utils/ensureWorkerQRs')().catch((err) => logger.error({ err: err.message }, 'QR check failed'));
 });

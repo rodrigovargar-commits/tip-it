@@ -11,6 +11,7 @@ const { logSecurityEvent } = require('../utils/logger');
 const Recognition = require('../models/Recognition');
 const { ACTIVITY_IDS } = require('../utils/activities');
 const { workerProfileUrl } = require('../utils/publicUrl');
+const { avatarPath } = require('../utils/avatar');
 
 // Explicit output DTO — never hand back the raw Mongo document. It carries
 // internal fields (stripeAccountId, ratingSum, __v) that the client has no
@@ -87,43 +88,38 @@ const registerWorker = asyncHandler(async (req, res) => {
 const getByUsername = asyncHandler(async (req, res) => {
   const worker = await Worker.findOne({ username: req.params.username.toLowerCase() }).populate(
     'user',
-    'name avatarUrl'
+    'name hasAvatar avatarVersion isWorker'
   );
 
   if (!worker) {
     throw new AppError('No encontramos a ese Tip-er', 404);
   }
 
-  await refreshStripeReadiness(worker);
-
-  const reviews = await Transaction.find({
-    worker: worker._id,
-    status: 'succeeded',
-    $or: [{ review: { $ne: '' } }, { comment: { $ne: '' } }, { rating: { $ne: null } }],
-  })
-    .sort({ createdAt: -1 })
-    .limit(10)
-    .select('rating review comment reviewAlias createdAt');
-
   const paidWithWords = {
     worker: worker._id,
     status: 'succeeded',
     $or: [{ review: { $ne: '' } }, { comment: { $ne: '' } }, { rating: { $ne: null } }],
   };
-  const [paidCount, unpaidCount] = await Promise.all([
+  const succeeded = { worker: worker._id, status: 'succeeded' };
+
+  // Everything this page needs, asked at once (they used to run one after another,
+  // which is most of the wait on a profile that is opened by scanning a QR).
+  const [, reviews, paidCount, unpaidCount, ratedTotal, ratedPositive, recognitions, thanksCount] = await Promise.all([
+    refreshStripeReadiness(worker),
+    Transaction.find(paidWithWords)
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .select('rating review comment reviewAlias createdAt'),
     Transaction.countDocuments(paidWithWords),
     Recognition.countDocuments({ worker: worker._id, status: 'published' }),
+    Transaction.countDocuments({ ...succeeded, rating: { $ne: null } }),
+    Transaction.countDocuments({ ...succeeded, rating: { $gte: 4 } }),
+    Recognition.find({ worker: worker._id, status: 'published' })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .select('rating comment alias createdAt'),
+    Transaction.countDocuments({ ...succeeded, thanked: true }),
   ]);
-
-  const [ratedTotal, ratedPositive] = await Promise.all([
-    Transaction.countDocuments({ worker: worker._id, status: 'succeeded', rating: { $ne: null } }),
-    Transaction.countDocuments({ worker: worker._id, status: 'succeeded', rating: { $gte: 4 } }),
-  ]);
-
-  const recognitions = await Recognition.find({ worker: worker._id, status: 'published' })
-    .sort({ createdAt: -1 })
-    .limit(10)
-    .select('rating comment alias createdAt');
 
   res.json({
     success: true,
@@ -144,9 +140,9 @@ const getByUsername = asyncHandler(async (req, res) => {
       ratingCount: worker.ratingCount,
       tipCount: worker.tipCount,
       recognitionCount: paidCount + unpaidCount,
-      thanksCount: await Transaction.countDocuments({ worker: worker._id, status: 'succeeded', thanked: true }),
+      thanksCount,
       name: worker.publicName || worker.user?.name,
-      avatarUrl: worker.user?.avatarUrl,
+      avatarUrl: avatarPath(worker.user),
       readyForTips: Boolean(worker.stripeOnboardingComplete),
       // Authors are anonymous unless they chose a nickname; the payer's real
       // name is never shown. "paid" reviews come from a real payment; the

@@ -64,10 +64,13 @@ app.get('/api/health', (req, res) => {
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 300,
+  // Per IP, and a whole restaurant or phone network can share one: leave room for many people scanning.
+  // Sign-in and money routes have their own, much tighter limits.
+  max: 600,
   standardHeaders: true,
   legacyHeaders: false,
-  skip: () => process.env.NODE_ENV === 'test',
+  // Photos are cached by the browser and served from memory; they should never use up someone's allowance.
+  skip: (req) => process.env.NODE_ENV === 'test' || /^\/users\/[a-f0-9]{24}\/avatar$/.test(req.path),
   message: { success: false, message: 'Demasiadas solicitudes, intenta más tarde.' },
 });
 app.use('/api', apiLimiter);

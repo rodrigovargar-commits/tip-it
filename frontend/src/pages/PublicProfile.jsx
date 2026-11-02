@@ -1,3 +1,4 @@
+import { photoSrc } from '../utils/avatar.js';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -100,12 +101,14 @@ export default function PublicProfile() {
       <div className="relative -mx-5 h-[25svh] min-h-[170px] overflow-hidden border-b-2 border-punch-ink bg-punch-pink md:mx-0 md:rounded-3xl md:border-2">
         {worker.avatarUrl && smallPhoto ? (
           <div className="flex h-full w-full items-center justify-center bg-punch-yellow">
-            <img src={worker.avatarUrl} alt={`Foto de ${name}`} className="h-28 w-28 rounded-full border-4 border-punch-ink object-cover" />
+            <img src={photoSrc(worker.avatarUrl)} alt={`Foto de ${name}`} width="112" height="112" className="h-28 w-28 rounded-full border-4 border-punch-ink object-cover" />
           </div>
         ) : worker.avatarUrl ? (
           <img
-            src={worker.avatarUrl}
+            src={photoSrc(worker.avatarUrl)}
             alt={`Foto de ${name}`}
+            fetchpriority="high"
+            decoding="async"
             onLoad={(e) => setSmallPhoto(e.target.naturalWidth < 560)}
             className="h-full w-full object-cover object-[50%_22%]"
           />

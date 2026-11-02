@@ -9,6 +9,7 @@ const User = require('../models/User');
 const Transaction = require('../models/Transaction');
 const Recognition = require('../models/Recognition');
 const { publicBaseUrl } = require('../utils/publicUrl');
+const { avatarPath } = require('../utils/avatar');
 const { generateBusinessCode, normalizeBusinessCode, formatBusinessCode } = require('../utils/businessCode');
 
 const PERIODS = [7, 30, 90, 365];
@@ -203,7 +204,7 @@ const getOverview = asyncHandler(async (req, res) => {
   const days = PERIODS.includes(Number(req.query.days)) ? Number(req.query.days) : 30;
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-  const workers = await Worker.find({ business: business._id }).populate('user', 'name avatarUrl');
+  const workers = await Worker.find({ business: business._id }).populate('user', 'name hasAvatar avatarVersion isWorker');
   const ids = workers.map((w) => w._id);
 
   const [periodTx, periodRec, pendingCount] = ids.length
@@ -274,7 +275,7 @@ const getOverview = asyncHandler(async (req, res) => {
         id: x.worker._id,
         username: x.worker.username,
         name: x.worker.publicName || x.worker.user?.name || x.worker.username,
-        avatarUrl: x.worker.user?.avatarUrl || null,
+        avatarUrl: avatarPath(x.worker.user),
         occupation: x.worker.occupation,
         joinedAt: x.worker.businessJoinedAt,
         location: x.locationId ? { id: x.locationId, name: nameOf.get(x.locationId) || '' } : null,

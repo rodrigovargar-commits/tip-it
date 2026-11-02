@@ -2,11 +2,13 @@ const express = require('express');
 const { body } = require('express-validator');
 const validate = require('../middleware/validate');
 const { protect } = require('../middleware/auth');
-const { getMe, updateProfile, upgradeAccount, deleteMe } = require('../controllers/userController');
+const { getMe, updateProfile, upgradeAccount, deleteMe, getAvatar } = require('../controllers/userController');
 
 const router = express.Router();
 
 router.get('/me', protect, getMe);
+// Public: the photo of someone who has a public profile (see utils/avatar.js).
+router.get('/:id/avatar', getAvatar);
 router.delete('/me', protect, deleteMe);
 
 router.put(
