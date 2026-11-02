@@ -21,6 +21,16 @@ Si la persona ya tiene sesión, "Para mí" va a su QR y "Para mi equipo" a su po
    propinas, estrellas y reseñas (no el dinero). Sin esa aceptación el servidor rechaza la unión.
 4. El dueño ve el resumen (7/30/90 días), el equipo y las reseñas con filtros por persona y estrellas.
 
+## Varios equipos o ubicaciones
+Un negocio puede tener varios **equipos** (sucursal, turno, área). Cada uno tiene su propio **nombre y código**. En `/negocio`:
+- Pestaña **Equipos**: crear, renombrar, borrar (solo si está vacío y queda al menos uno), cambiar el código y compartirlo.
+- Pestaña **Resumen**: filtros por equipo y **Comparar equipos** (personas, propinas, estrellas y reseñas de cada uno, con "Más" y "Mejor").
+- Pestaña **Reseñas**: filtro por equipo, persona y estrellas.
+- El dueño puede **mover** a una persona de un equipo a otro. Una persona puede cambiar de equipo dentro del mismo negocio usando el código de otro equipo, pero no entrar a otro negocio sin salir del primero.
+- Con un solo equipo la pantalla es la de siempre (sin etiquetas de equipo); aparecen cuando hay dos o más.
+- Los negocios creados antes de que existieran los equipos se convierten solos en un equipo "Principal" con el mismo código y las mismas personas (nadie tiene que hacer nada).
+API nueva: `POST /api/business/locations`, `PATCH /api/business/locations/:id`, `POST /api/business/locations/:id/code/rotate`, `DELETE /api/business/locations/:id`, `PATCH /api/business/members/:workerId {locationId}`, y `?location=` en `overview` y `reviews`. Se quitó `POST /api/business/code/rotate` (ahora es por equipo).
+
 ## Reglas
 - Un dueño tiene un negocio; una persona pertenece a un negocio a la vez y puede salir cuando quiera (desde su panel).
 - El dueño puede quitar a alguien y cambiar el código (el equipo que ya está se queda; el código viejo deja de servir).
@@ -50,5 +60,4 @@ El teléfono abre un enlace firmado que dura 10 minutos y solo sirve para el pas
 
 ## Pendiente (siguientes etapas)
 - Un solo QR por negocio que reparta cada propina entre varias personas (etapa 3, depende de la liquidación de Cheqpay).
-- Varias sucursales por negocio, con reseñas por sucursal.
 - Probar los pases con las cuentas reales de Apple y Google (hoy se prueban con llaves de prueba).

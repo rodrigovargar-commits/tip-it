@@ -6,10 +6,14 @@ const { businessCodeLimiter } = require('../middleware/rateLimiter');
 const {
   createBusiness,
   getMyBusiness,
-  rotateCode,
+  createLocation,
+  renameLocation,
+  rotateLocationCode,
+  deleteLocation,
   getOverview,
   getReviews,
   removeMember,
+  moveMember,
   lookupCode,
   joinBusiness,
   leaveBusiness,
@@ -27,10 +31,18 @@ router.post(
   createBusiness
 );
 router.get('/me', getMyBusiness);
-router.post('/code/rotate', rotateCode);
 router.get('/overview', getOverview);
 router.get('/reviews', getReviews);
+
+// Teams / places of the business, each with its own name and code.
+const nameRule = body('name').trim().isLength({ min: 2, max: 60 }).withMessage('El nombre debe tener de 2 a 60 caracteres');
+router.post('/locations', [nameRule], validate, createLocation);
+router.patch('/locations/:id', [nameRule], validate, renameLocation);
+router.post('/locations/:id/code/rotate', rotateLocationCode);
+router.delete('/locations/:id', deleteLocation);
+
 router.delete('/members/:workerId', removeMember);
+router.patch('/members/:workerId', [body('locationId').isString().notEmpty()], validate, moveMember);
 
 // Team member: look up a code, join with consent, leave.
 router.get('/lookup', businessCodeLimiter, lookupCode);

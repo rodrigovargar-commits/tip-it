@@ -48,7 +48,7 @@ export default function JoinBusiness() {
     try {
       await api.post('/business/join', { code, accept: true });
       try { localStorage.removeItem(PENDING_KEY); } catch { /* storage blocked */ }
-      toast.success(`Ya eres parte de ${found.name}`);
+      toast.success(`Ya eres parte de ${found.name}${found.location ? ` (${found.location})` : ''}`);
       navigate('/worker/dashboard');
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -93,7 +93,7 @@ export default function JoinBusiness() {
 
           {found && (
             <>
-              <p className="rounded-2xl bg-punch-yellow p-3 font-display text-lg font-extrabold">{found.name}</p>
+              <p className="rounded-2xl bg-punch-yellow p-3 font-display text-lg font-extrabold">{found.name}{found.location ? <span className="block text-sm font-bold">{found.location}</span> : null}</p>
               <label className="flex items-start gap-3 text-sm font-medium">
                 <input type="checkbox" className="mt-1 h-5 w-5 shrink-0" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} />
                 <span>

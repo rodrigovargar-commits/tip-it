@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Copy, Share2, RefreshCw, Star, Users, HandCoins, MessageSquareText, UserMinus } from 'lucide-react';
+import { Copy, Share2, RefreshCw, Star, Users, HandCoins, MessageSquareText, UserMinus, MapPin, Plus, Trash2, Pencil } from 'lucide-react';
 import api, { getErrorMessage } from '../../services/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
@@ -74,17 +74,18 @@ function CreateBusiness({ onCreated }) {
   );
 }
 
-function CodeCard({ business, onRotate }) {
+function CodeCard({ business, location, onRotate, title = 'Código de tu negocio', tone = '!bg-punch-yellow' }) {
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(business.codeText);
+      await navigator.clipboard.writeText(location.codeText);
       toast.success('Código copiado');
     } catch {
       toast.error('No se pudo copiar. Selecciónalo y cópialo a mano.');
     }
   };
   const share = async () => {
-    const text = `Únete a ${business.name} en TIP-IT. Entra a este enlace con tu cuenta: ${business.joinUrl} (código ${business.codeText})`;
+    const where = business.locations.length > 1 ? ` (${location.name})` : '';
+    const text = `Únete a ${business.name}${where} en TIP-IT. Entra a este enlace con tu cuenta: ${location.joinUrl} (código ${location.codeText})`;
     try {
       if (navigator.share) await navigator.share({ title: 'Únete a mi negocio en TIP-IT', text });
       else window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
@@ -93,10 +94,10 @@ function CodeCard({ business, onRotate }) {
     }
   };
   return (
-    <div className="card !bg-punch-yellow">
-      <p className="text-xs font-bold uppercase tracking-wide">Código de tu negocio</p>
-      <p className="mt-1 select-all font-display text-4xl font-extrabold tracking-[0.15em] md:text-5xl" aria-label={`Código ${business.codeText.split('').join(' ')}`}>
-        {business.codeText}
+    <div className={`card ${tone}`}>
+      <p className="text-xs font-bold uppercase tracking-wide">{title}</p>
+      <p className="mt-1 select-all font-display text-4xl font-extrabold tracking-[0.15em] md:text-5xl" aria-label={`Código ${location.codeText.split('').join(' ')}`}>
+        {location.codeText}
       </p>
       <p className="mt-1 text-sm font-medium">Compártelo con tu equipo. Cada persona lo escribe (o abre el enlace) desde su cuenta para unirse.</p>
       <div className="mt-3 grid grid-cols-2 gap-2">
@@ -107,17 +108,64 @@ function CodeCard({ business, onRotate }) {
           <Share2 size={15} className="mr-1.5" /> Compartir
         </button>
       </div>
-      <button type="button" onClick={onRotate} className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold underline underline-offset-2">
-        <RefreshCw size={12} /> Cambiar el código (el equipo que ya está se queda)
+      <button type="button" onClick={() => onRotate(location)} className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold underline underline-offset-2">
+        <RefreshCw size={12} /> Cambiar el código (las personas que ya están se quedan)
       </button>
     </div>
   );
 }
 
-function Overview({ data, days, setDays, onRemove }) {
-  const t = data.totals.period;
+function Compare({ locations }) {
+  const maxTips = Math.max(1, ...locations.map((l) => l.period.tips));
+  const bestTips = Math.max(...locations.map((l) => l.period.tips));
+  const bestRating = Math.max(0, ...locations.map((l) => l.period.rating || 0));
   return (
     <>
+      <h2 className="mt-8 font-display text-xl font-extrabold">Comparar equipos</h2>
+      <p className="text-sm text-slate-500">Lo mismo en cada equipo o ubicación, en el periodo que elegiste.</p>
+      <ul className="mt-3 grid gap-3">
+        {locations.map((l) => (
+          <li key={l.id} className="card !p-4">
+            <div className="flex items-center justify-between gap-2">
+              <p className="flex items-center gap-1.5 font-display text-lg font-extrabold"><MapPin size={16} /> {l.name}</p>
+              <span className="text-xs font-bold text-slate-500">{l.members} {l.members === 1 ? 'persona' : 'personas'}</span>
+            </div>
+            <div className="mt-2 h-3 overflow-hidden rounded-full bg-punch-ink/10" role="img" aria-label={`${l.period.tips} propinas`}>
+              <div className="h-full rounded-full bg-punch-orange" style={{ width: `${(l.period.tips / maxTips) * 100}%` }} />
+            </div>
+            <dl className="mt-3 grid grid-cols-3 gap-x-4 text-sm">
+              <div>
+                <dt className="text-xs font-bold uppercase text-slate-500">Propinas</dt>
+                <dd className="font-display text-lg font-extrabold">
+                  {l.period.tips}
+                  {l.period.tips > 0 && l.period.tips === bestTips && locations.length > 1 && <span className="ml-1.5 rounded-full bg-punch-yellow px-2 py-0.5 text-[10px] font-bold">Más</span>}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-bold uppercase text-slate-500">Estrellas</dt>
+                <dd>
+                  <Stars value={l.period.rating} />
+                  {l.period.rating && l.period.rating === bestRating && locations.length > 1 && <span className="ml-1.5 rounded-full bg-punch-yellow px-2 py-0.5 text-[10px] font-bold">Mejor</span>}
+                </dd>
+              </div>
+              <div><dt className="text-xs font-bold uppercase text-slate-500">Reseñas</dt><dd className="font-display text-lg font-extrabold">{l.period.reviews}</dd></div>
+            </dl>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+function Overview({ data, days, setDays, location, setLocation, onRemove, onMove, onRotate }) {
+  const t = data.totals.period;
+  const many = data.locations.length > 1;
+  return (
+    <>
+      {!many && (
+        <div className="mt-6"><CodeCard business={data.business} location={data.business.locations[0]} onRotate={onRotate} /></div>
+      )}
+
       <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="Periodo">
         {PERIODS.map((p) => (
           <button
@@ -132,6 +180,22 @@ function Overview({ data, days, setDays, onRemove }) {
         ))}
       </div>
 
+      {many && (
+        <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Equipo">
+          {[{ id: '', name: 'Todo el negocio' }, ...data.locations].map((l) => (
+            <button
+              key={l.id || 'all'}
+              type="button"
+              onClick={() => setLocation(l.id)}
+              aria-pressed={location === l.id}
+              className={`rounded-full border-2 border-punch-ink px-4 py-1.5 font-display text-sm font-extrabold transition ${location === l.id ? 'bg-punch-orange' : 'bg-white hover:bg-punch-yellow'}`}
+            >
+              {l.name}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
         <div className="card !bg-punch-pink">
           <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide"><Users size={14} /> Personas</p>
@@ -144,7 +208,7 @@ function Overview({ data, days, setDays, onRemove }) {
         <div className="card">
           <p className="text-xs font-bold uppercase tracking-wide">Estrellas</p>
           <p className="mt-1 text-2xl"><Stars value={t.rating} /></p>
-          <p className="text-xs text-slate-500">promedio del equipo</p>
+          <p className="text-xs text-slate-500">promedio</p>
         </div>
         <div className="card">
           <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide"><MessageSquareText size={14} /> Reseñas</p>
@@ -157,7 +221,9 @@ function Overview({ data, days, setDays, onRemove }) {
         </p>
       )}
 
-      <h2 className="mt-8 font-display text-xl font-extrabold">Tu equipo</h2>
+      {many && !location && <Compare locations={data.locations} />}
+
+      <h2 className="mt-8 font-display text-xl font-extrabold">{many && location ? 'Personas de este equipo' : 'Tu equipo'}</h2>
       {!data.members.length ? (
         <div className="mt-3">
           <EmptyState person="stylist" title="Aún nadie se une" body="Comparte tu código. Cuando alguien de tu equipo lo use, aparecerá aquí con sus números." />
@@ -181,6 +247,19 @@ function Overview({ data, days, setDays, onRemove }) {
                   <UserMinus size={16} />
                 </button>
               </div>
+              {many && (
+                <label className="mt-2 flex items-center gap-2 text-xs font-bold text-slate-500">
+                  <MapPin size={13} /> Equipo
+                  <select
+                    className="rounded-full border-2 border-punch-ink/30 bg-white px-2 py-1 text-xs font-bold text-punch-ink"
+                    value={m.location?.id || ''}
+                    onChange={(e) => onMove(m, e.target.value)}
+                    aria-label={`Equipo de ${m.name}`}
+                  >
+                    {data.locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+                  </select>
+                </label>
+              )}
               <dl className="mt-3 grid grid-cols-3 gap-x-4 gap-y-2 text-sm">
                 <div><dt className="text-xs font-bold uppercase text-slate-500">Propinas</dt><dd className="font-display text-lg font-extrabold">{m.period.tips}</dd></div>
                 <div><dt className="text-xs font-bold uppercase text-slate-500">Estrellas</dt><dd><Stars value={m.period.rating} /></dd></div>
@@ -198,8 +277,83 @@ function Overview({ data, days, setDays, onRemove }) {
   );
 }
 
-function Reviews({ members }) {
+function Teams({ business, onChanged, onRotate }) {
+  const [name, setName] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const add = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await api.post('/business/locations', { name });
+      setName('');
+      toast.success('Equipo creado');
+      onChanged();
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+  const rename = async (l) => {
+    const next = window.prompt('Nuevo nombre del equipo o ubicación', l.name);
+    if (!next || next.trim().length < 2 || next.trim() === l.name) return;
+    try {
+      await api.patch(`/business/locations/${l.id}`, { name: next.trim() });
+      onChanged();
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  };
+  const remove = async (l) => {
+    if (!window.confirm(`¿Borrar el equipo ${l.name}? Su código dejará de servir.`)) return;
+    try {
+      await api.delete(`/business/locations/${l.id}`);
+      toast.success('Equipo borrado');
+      onChanged();
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  };
+
+  return (
+    <div className="mt-6">
+      <p className="text-sm font-medium text-slate-500">
+        Si tu negocio tiene varias ubicaciones o turnos, crea un equipo para cada uno. Cada equipo tiene su propio nombre y código, y podrás comparar cómo le va a cada uno.
+      </p>
+      <div className="mt-4 grid gap-4">
+        {business.locations.map((l, i) => (
+          <div key={l.id}>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="flex items-center gap-1.5 font-display text-lg font-extrabold"><MapPin size={16} /> {l.name} <span className="text-xs font-bold text-slate-500">· {l.memberCount} {l.memberCount === 1 ? 'persona' : 'personas'}</span></p>
+              <span className="flex gap-1.5">
+                <button type="button" onClick={() => rename(l)} aria-label={`Cambiar nombre de ${l.name}`} className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-punch-ink/30 hover:bg-punch-yellow"><Pencil size={14} /></button>
+                {business.locations.length > 1 && l.memberCount === 0 && (
+                  <button type="button" onClick={() => remove(l)} aria-label={`Borrar ${l.name}`} className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-punch-ink/30 text-rose-700 hover:bg-rose-50"><Trash2 size={14} /></button>
+                )}
+              </span>
+            </div>
+            <CodeCard business={business} location={l} onRotate={onRotate} title={`Código de ${l.name}`} tone={i % 2 ? '!bg-punch-pink' : '!bg-punch-yellow'} />
+          </div>
+        ))}
+      </div>
+
+      <form onSubmit={add} className="mt-6 card space-y-3">
+        <p className="flex items-center gap-1.5 font-display text-lg font-extrabold"><Plus size={18} /> Agregar equipo o ubicación</p>
+        <FormField label="Nombre" hint="Por ejemplo: Sucursal Norte, Turno de noche, Terraza.">
+          {(p) => <input {...p} className="input-field" value={name} onChange={(e) => setName(e.target.value)} minLength={2} maxLength={60} placeholder="Sucursal Norte" required />}
+        </FormField>
+        <button type="submit" disabled={saving || name.trim().length < 2} className="btn-primary w-full">
+          {saving ? 'Creando...' : 'Crear equipo y su código'}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function Reviews({ members, locations }) {
   const [member, setMember] = useState('');
+  const [location, setLocation] = useState('');
   const [stars, setStars] = useState('');
   const [items, setItems] = useState([]);
   const [next, setNext] = useState(null);
@@ -211,6 +365,7 @@ function Reviews({ members }) {
       try {
         const params = { limit: 20 };
         if (member) params.member = member;
+        if (location) params.location = location;
         if (stars) params.stars = stars;
         if (before) params.before = before;
         const { data } = await api.get('/business/reviews', { params });
@@ -222,7 +377,7 @@ function Reviews({ members }) {
         setLoading(false);
       }
     },
-    [member, stars]
+    [member, stars, location]
   );
 
   useEffect(() => {
@@ -231,12 +386,22 @@ function Reviews({ members }) {
 
   return (
     <div className="mt-6">
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className={`grid gap-3 ${locations.length > 1 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+        {locations.length > 1 && (
+          <FormField label="Equipo">
+            {(p) => (
+              <select {...p} className="input-field" value={location} onChange={(e) => { setLocation(e.target.value); setMember(''); }}>
+                <option value="">Todos los equipos</option>
+                {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+              </select>
+            )}
+          </FormField>
+        )}
         <FormField label="Persona">
           {(p) => (
             <select {...p} className="input-field" value={member} onChange={(e) => setMember(e.target.value)}>
               <option value="">Todo el equipo</option>
-              {members.map((m) => (
+              {members.filter((m) => !location || m.location?.id === location).map((m) => (
                 <option key={m.id} value={m.username}>{m.name}</option>
               ))}
             </select>
@@ -266,7 +431,7 @@ function Reviews({ members }) {
           {items.map((r) => (
             <li key={`${r.kind}-${r.id}`} className="card !p-4">
               <div className="flex items-center justify-between gap-2">
-                <p className="font-display font-extrabold">{r.member.name}</p>
+                <p className="font-display font-extrabold">{r.member.name}{r.member.location && locations.length > 1 ? <span className="ml-1.5 text-xs font-bold text-slate-500">· {r.member.location}</span> : null}</p>
                 <span className="shrink-0 text-xs text-slate-500">{timeAgo(r.createdAt)}</span>
               </div>
               <div className="mt-1 flex items-center gap-2">
@@ -300,6 +465,7 @@ export default function BusinessPortal() {
   const [overview, setOverview] = useState(null);
   const [days, setDays] = useState(30);
   const [tab, setTab] = useState('resumen');
+  const [location, setLocation] = useState('');
 
   const loadBusiness = useCallback(async () => {
     try {
@@ -314,12 +480,12 @@ export default function BusinessPortal() {
 
   const loadOverview = useCallback(async () => {
     try {
-      const { data } = await api.get('/business/overview', { params: { days } });
+      const { data } = await api.get('/business/overview', { params: { days, ...(location ? { location } : {}) } });
       setOverview(data);
     } catch (err) {
       toast.error(getErrorMessage(err));
     }
-  }, [days]);
+  }, [days, location]);
 
   useEffect(() => {
     loadBusiness();
@@ -329,15 +495,31 @@ export default function BusinessPortal() {
     if (business) loadOverview();
   }, [business, loadOverview]);
 
-  const rotate = async () => {
-    if (!window.confirm('Se creará un código nuevo y el anterior dejará de servir. Quien ya está en tu equipo se queda. ¿Continuar?')) return;
+  const rotate = async (loc) => {
+    if (!window.confirm('Se creará un código nuevo y el anterior dejará de servir. Las personas que ya están se quedan. ¿Continuar?')) return;
     try {
-      const { data } = await api.post('/business/code/rotate');
-      setBusiness(data.business);
+      await api.post(`/business/locations/${loc.id}/code/rotate`);
       toast.success('Código nuevo listo');
+      await loadBusiness();
+      loadOverview();
     } catch (err) {
       toast.error(getErrorMessage(err));
     }
+  };
+
+  const move = async (m, locationId) => {
+    try {
+      await api.patch(`/business/members/${m.id}`, { locationId });
+      toast.success(`${m.name} cambió de equipo`);
+      loadOverview();
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  };
+
+  const teamsChanged = async () => {
+    await loadBusiness();
+    loadOverview();
   };
 
   const remove = async (m) => {
@@ -360,12 +542,11 @@ export default function BusinessPortal() {
     <div className="page-shell md:!max-w-4xl">
       <PageHeader eyebrow="Mi negocio" title={business.name} subtitle="Cuántas propinas, estrellas y reseñas tiene cada persona de tu equipo." />
 
-      <div className="mt-6"><CodeCard business={business} onRotate={rotate} /></div>
-
-      <div className="mt-6 flex gap-2" role="tablist" aria-label="Secciones">
+      <div className="mt-6 flex flex-wrap gap-2" role="tablist" aria-label="Secciones">
         {[
           { id: 'resumen', label: 'Resumen', icon: HandCoins },
           { id: 'resenas', label: 'Reseñas', icon: MessageSquareText },
+          { id: 'equipos', label: 'Equipos', icon: MapPin },
         ].map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -383,9 +564,11 @@ export default function BusinessPortal() {
       {!overview ? (
         <div className="mt-8 flex justify-center"><Spinner /></div>
       ) : tab === 'resumen' ? (
-        <Overview data={overview} days={days} setDays={setDays} onRemove={remove} />
+        <Overview data={overview} days={days} setDays={setDays} location={location} setLocation={setLocation} onRemove={remove} onMove={move} onRotate={rotate} />
+      ) : tab === 'resenas' ? (
+        <Reviews members={overview.members} locations={overview.locations} />
       ) : (
-        <Reviews members={overview.members} />
+        <Teams business={business} onChanged={teamsChanged} onRotate={rotate} />
       )}
 
       {worker && <WalletButtons />}

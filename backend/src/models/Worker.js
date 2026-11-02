@@ -100,6 +100,8 @@ const workerSchema = new mongoose.Schema(
     // the business can see this person's tips, ratings and reviews.
     business: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', default: null, index: true },
     businessJoinedAt: { type: Date, default: null },
+    // The team or place inside that business they joined (see Location).
+    location: { type: mongoose.Schema.Types.ObjectId, ref: 'Location', default: null, index: true },
   },
   { timestamps: true }
 );

@@ -7,6 +7,7 @@ const app = require('../../src/app');
 const User = require('../../src/models/User');
 const Worker = require('../../src/models/Worker');
 const Business = require('../../src/models/Business');
+const Location = require('../../src/models/Location');
 const Transaction = require('../../src/models/Transaction');
 const Recognition = require('../../src/models/Recognition');
 const { normalizeBusinessCode, generateBusinessCode } = require('../../src/utils/businessCode');
@@ -62,9 +63,11 @@ describe('creating a business', () => {
     const res = await request(app).post('/api/business').set(owner.auth).send({ name: 'Barbería La Navaja' });
     expect(res.status).toBe(201);
     expect(res.body.business.name).toBe('Barbería La Navaja');
-    expect(res.body.business.code).toMatch(/^[A-Z2-9]{8}$/);
-    expect(res.body.business.codeText).toMatch(/^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
-    expect(res.body.business.joinUrl).toContain(`/negocio/unirme?c=${res.body.business.code}`);
+    const [main] = res.body.business.locations;
+    expect(res.body.business.locations).toHaveLength(1);
+    expect(main.code).toMatch(/^[A-Z2-9]{8}$/);
+    expect(main.codeText).toMatch(/^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
+    expect(main.joinUrl).toContain(`/negocio/unirme?c=${main.code}`);
 
     const me = await request(app).get('/api/users/me').set(owner.auth);
     expect(me.body.user.ownsBusiness).toBe(true);
@@ -105,7 +108,7 @@ describe('joining with the code', () => {
     const owner = await makeUser('Dueño Uno');
     const created = await request(app).post('/api/business').set(owner.auth).send({ name: 'Clínica Sonrisa' });
     const member = await makeUser('Persona Uno', { worker: true });
-    return { owner, member, code: created.body.business.code };
+    return { owner, member, code: created.body.business.locations[0].code };
   }
 
   it('shows the business name for a code before joining', async () => {
@@ -151,11 +154,11 @@ describe('joining with the code', () => {
     await request(app).post('/api/business/join').set(member.auth).send({ code, accept: true });
     const owner2 = await makeUser('Dueño Dos');
     const second = await request(app).post('/api/business').set(owner2.auth).send({ name: 'Otro lugar' });
-    const blocked = await request(app).post('/api/business/join').set(member.auth).send({ code: second.body.business.code, accept: true });
+    const blocked = await request(app).post('/api/business/join').set(member.auth).send({ code: second.body.business.locations[0].code, accept: true });
     expect(blocked.status).toBe(409);
 
     await request(app).post('/api/business/leave').set(member.auth);
-    const ok = await request(app).post('/api/business/join').set(member.auth).send({ code: second.body.business.code, accept: true });
+    const ok = await request(app).post('/api/business/join').set(member.auth).send({ code: second.body.business.locations[0].code, accept: true });
     expect(ok.status).toBe(200);
   });
 });
@@ -166,7 +169,7 @@ describe('owner portal', () => {
     const created = await request(app).post('/api/business').set(owner.auth).send({ name: 'Barbería La Navaja' });
     const a = await makeUser('Ana Barbera', { worker: true });
     const b = await makeUser('Beto Barbero', { worker: true });
-    const code = created.body.business.code;
+    const code = created.body.business.locations[0].code;
     await request(app).post('/api/business/join').set(a.auth).send({ code, accept: true });
     await request(app).post('/api/business/join').set(b.auth).send({ code, accept: true });
     const wa = await Worker.findById(a.user.worker);
@@ -248,11 +251,12 @@ describe('owner portal', () => {
     expect(ms.body.business).toBeNull();
   });
 
-  it('rotating the code invalidates the old one but keeps the team', async () => {
-    const { owner, b, code } = await team();
-    const res = await request(app).post('/api/business/code/rotate').set(owner.auth);
-    expect(res.body.business.code).not.toBe(code);
-    expect(res.body.business.memberCount).toBe(2);
+  it('rotating a team code invalidates the old one but keeps the people', async () => {
+    const { owner, b, code, business } = await team();
+    const id = business.locations[0].id;
+    const res = await request(app).post(`/api/business/locations/${id}/code/rotate`).set(owner.auth);
+    expect(res.body.location.code).not.toBe(code);
+    expect(res.body.location.memberCount).toBe(2);
     const lookup = await request(app).get(`/api/business/lookup?code=${code}`).set(b.auth);
     expect(lookup.status).toBe(404);
   });
@@ -264,5 +268,128 @@ describe('owner portal', () => {
     expect(await Business.countDocuments({})).toBe(0);
     const ms = await request(app).get('/api/business/membership').set(a.auth);
     expect(ms.body.business).toBeNull();
+  });
+});
+
+
+describe('several teams or places in one business', () => {
+  async function chain() {
+    const owner = await makeUser('Dueña Cadena');
+    const created = await request(app).post('/api/business').set(owner.auth).send({ name: 'Cafés Cadena' });
+    const centro = created.body.business.locations[0];
+    await request(app).patch(`/api/business/locations/${centro.id}`).set(owner.auth).send({ name: 'Centro' });
+    const norte = (await request(app).post('/api/business/locations').set(owner.auth).send({ name: 'Norte' })).body.location;
+    const a = await makeUser('Ana Centro', { worker: true });
+    const b = await makeUser('Beto Norte', { worker: true });
+    const c = await makeUser('Caro Norte', { worker: true });
+    await request(app).post('/api/business/join').set(a.auth).send({ code: centro.code, accept: true });
+    await request(app).post('/api/business/join').set(b.auth).send({ code: norte.code, accept: true });
+    await request(app).post('/api/business/join').set(c.auth).send({ code: norte.code, accept: true });
+    const [wa, wb, wc] = await Promise.all([a, b, c].map((x) => Worker.findById(x.user.worker)));
+    return { owner, a, b, c, wa, wb, wc, centro, norte };
+  }
+
+  it('gives each team its own name and code, and shows the team when joining', async () => {
+    const { owner, norte, a } = await chain();
+    expect(norte.code).toMatch(/^[A-Z2-9]{8}$/);
+    const me = await request(app).get('/api/business/me').set(owner.auth);
+    expect(me.body.business.locations.map((l) => l.name).sort()).toEqual(['Centro', 'Norte']);
+    expect(me.body.business.locations.find((l) => l.name === 'Norte').memberCount).toBe(2);
+    const lookup = await request(app).get(`/api/business/lookup?code=${norte.code}`).set(a.auth);
+    expect(lookup.body.business).toEqual({ name: 'Cafés Cadena', location: 'Norte' });
+    const ms = await request(app).get('/api/business/membership').set(a.auth);
+    expect(ms.body.business.location).toBe('Centro');
+  });
+
+  it('compares the teams side by side, adding up the exact numbers', async () => {
+    const { owner, wa, wb, wc } = await chain();
+    await addTip(wa, { rating: 5 });
+    await addTip(wb, { rating: 4, review: 'Bien' });
+    await addTip(wb, { rating: 2 });
+    await addTip(wc, { rating: 5 });
+    await Worker.findByIdAndUpdate(wa._id, { tipCount: 1, ratingSum: 5, ratingCount: 1 });
+    await Worker.findByIdAndUpdate(wb._id, { tipCount: 2, ratingSum: 6, ratingCount: 2 });
+    await Worker.findByIdAndUpdate(wc._id, { tipCount: 1, ratingSum: 5, ratingCount: 1 });
+
+    const res = await request(app).get('/api/business/overview?days=30').set(owner.auth);
+    const centro = res.body.locations.find((l) => l.name === 'Centro');
+    const norte = res.body.locations.find((l) => l.name === 'Norte');
+    expect(centro).toMatchObject({ members: 1, period: { tips: 1, rating: 5, reviews: 0 } });
+    expect(norte).toMatchObject({ members: 2, period: { tips: 3, rating: 3.7, reviews: 1 } }); // (4+2+5)/3
+    expect(res.body.totals.period.tips).toBe(4);
+    expect(res.body.totals.members).toBe(3);
+    expect(JSON.stringify(res.body)).not.toMatch(/netCents|amount|totalReceived|email/i);
+  });
+
+  it('can focus on one team, in the numbers and in the reviews', async () => {
+    const { owner, wa, wb, norte, centro } = await chain();
+    await addTip(wa, { rating: 5, review: 'Excelente' });
+    await addTip(wb, { rating: 3, review: 'Normal' });
+    const only = await request(app).get(`/api/business/overview?location=${norte.id}`).set(owner.auth);
+    expect(only.body.members.every((m) => m.location.name === 'Norte')).toBe(true);
+    expect(only.body.totals.period.tips).toBe(1);
+    expect(only.body.locations).toHaveLength(2); // the comparison still lists every team
+    const reviews = await request(app).get(`/api/business/reviews?location=${centro.id}`).set(owner.auth);
+    expect(reviews.body.reviews).toHaveLength(1);
+    expect(reviews.body.reviews[0].member.location).toBe('Centro');
+  });
+
+  it('moves people between teams, only inside the business', async () => {
+    const { owner, wa, norte } = await chain();
+    const other = await makeUser('Otro Dueño');
+    await request(app).post('/api/business').set(other.auth).send({ name: 'Otro' });
+    const otherLoc = (await request(app).get('/api/business/me').set(other.auth)).body.business.locations[0];
+    const bad = await request(app).patch(`/api/business/members/${wa._id}`).set(owner.auth).send({ locationId: otherLoc.id });
+    expect(bad.status).toBe(404);
+    const ok = await request(app).patch(`/api/business/members/${wa._id}`).set(owner.auth).send({ locationId: norte.id });
+    expect(ok.status).toBe(200);
+    expect(String((await Worker.findById(wa._id)).location)).toBe(String(norte.id));
+  });
+
+  it('renames, and only deletes an empty team while keeping at least one', async () => {
+    const { owner, centro, norte } = await chain();
+    const busy = await request(app).delete(`/api/business/locations/${norte.id}`).set(owner.auth);
+    expect(busy.status).toBe(409);
+    const extra = (await request(app).post('/api/business/locations').set(owner.auth).send({ name: 'Sur' })).body.location;
+    expect((await request(app).delete(`/api/business/locations/${extra.id}`).set(owner.auth)).status).toBe(200);
+    await request(app).delete(`/api/business/members/${(await Worker.findOne({ location: centro.id }))._id}`).set(owner.auth);
+    expect((await request(app).delete(`/api/business/locations/${centro.id}`).set(owner.auth)).status).toBe(200);
+    // Norte still has people and is the last one: it can never be deleted.
+    expect((await request(app).delete(`/api/business/locations/${norte.id}`).set(owner.auth)).status).toBe(409);
+  });
+
+  it('lets a person switch teams inside the same business but not join another business', async () => {
+    const { a, norte } = await chain();
+    const sw = await request(app).post('/api/business/join').set(a.auth).send({ code: norte.code, accept: true });
+    expect(sw.status).toBe(200);
+    expect(sw.body.business.location).toBe('Norte');
+    const stranger = await makeUser('Dueño Ajeno');
+    const biz = await request(app).post('/api/business').set(stranger.auth).send({ name: 'Ajeno' });
+    const blocked = await request(app)
+      .post('/api/business/join').set(a.auth).send({ code: biz.body.business.locations[0].code, accept: true });
+    expect(blocked.status).toBe(409);
+  });
+
+  it('keeps the owner routes private to the owner', async () => {
+    const { b, norte } = await chain();
+    expect((await request(app).post('/api/business/locations').set(b.auth).send({ name: 'Mío' })).status).toBe(404);
+    expect((await request(app).post(`/api/business/locations/${norte.id}/code/rotate`).set(b.auth)).status).toBe(404);
+  });
+
+  it('turns a business made before teams existed into one "Principal" team without losing anyone', async () => {
+    const owner = await makeUser('Dueño Antiguo');
+    const member = await makeUser('Persona Antigua', { worker: true });
+    const business = await Business.create({ name: 'Negocio viejo', owner: owner.user._id, code: 'ABCD2345' });
+    await User.findByIdAndUpdate(owner.user._id, { ownedBusiness: business._id });
+    await Worker.findByIdAndUpdate(member.user.worker, { business: business._id, businessJoinedAt: new Date() });
+
+    const me = await request(app).get('/api/business/me').set(owner.auth);
+    expect(me.body.business.locations).toHaveLength(1);
+    expect(me.body.business.locations[0]).toMatchObject({ name: 'Principal', code: 'ABCD2345', memberCount: 1 });
+    expect(await Location.countDocuments({})).toBe(1);
+    // the old code keeps working for new people
+    const newbie = await makeUser('Nueva Persona', { worker: true });
+    const joined = await request(app).post('/api/business/join').set(newbie.auth).send({ code: 'ABCD2345', accept: true });
+    expect(joined.status).toBe(200);
   });
 });

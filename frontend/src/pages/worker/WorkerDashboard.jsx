@@ -251,7 +251,7 @@ export default function WorkerDashboard() {
           <div className="flex-1">
             {membership ? (
               <>
-                <p className="font-display text-lg font-extrabold">Eres parte de {membership.name}</p>
+                <p className="font-display text-lg font-extrabold">Eres parte de {membership.name}{membership.location ? ` · ${membership.location}` : ''}</p>
                 <p className="mt-1 text-sm text-slate-500">
                   Quien administra el negocio ve cuántas propinas recibes, tus estrellas y tus reseñas. No ve cuánto dinero recibes: eso llega directo a tu banco.
                 </p>

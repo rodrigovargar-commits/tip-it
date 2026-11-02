@@ -47,6 +47,7 @@ const SECURITY_EVENTS = new Set([
   'payment.succeeded',
   'account.deleted',
   'business.created',
+  'business.location_created',
   'business.code_rotated',
   'business.member_joined',
   'business.member_removed',
