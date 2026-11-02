@@ -17,6 +17,33 @@ const PERIODS = [
   { days: 90, label: '90 días' },
 ];
 
+// An older server answers with one code on the business and no teams. Read both shapes,
+// so a deploy that reaches the page before the server (or the reverse) never blanks it.
+function normalizeBusiness(b) {
+  if (!b) return null;
+  if (Array.isArray(b.locations)) return b;
+  const main = b.code
+    ? [{ id: 'main', name: 'Principal', code: b.code, codeText: b.codeText || b.code, joinUrl: b.joinUrl || '', memberCount: b.memberCount || 0 }]
+    : [];
+  return { ...b, locations: main };
+}
+
+function normalizeOverview(d) {
+  if (!d) return d;
+  const withNumbers = (x = {}) => ({
+    ...x,
+    period: { tips: 0, rating: null, reviews: 0, ...(x.period || {}) },
+    total: { tips: 0, rating: null, ratingCount: 0, ...(x.total || {}) },
+  });
+  return {
+    ...d,
+    business: normalizeBusiness(d.business),
+    totals: { members: 0, pendingReviews: 0, ...withNumbers(d.totals) },
+    locations: Array.isArray(d.locations) ? d.locations.map(withNumbers) : [],
+    members: (d.members || []).map(withNumbers),
+  };
+}
+
 function Stars({ value }) {
   if (!value) return <span className="text-sm text-slate-500">Sin calificaciones</span>;
   return (
@@ -462,45 +489,53 @@ function Reviews({ members, locations }) {
 export default function BusinessPortal() {
   const { worker, refreshMe } = useAuth();
   const [business, setBusiness] = useState(undefined); // undefined = loading
+  const [failed, setFailed] = useState(false);
   const [overview, setOverview] = useState(null);
   const [days, setDays] = useState(30);
   const [tab, setTab] = useState('resumen');
   const [location, setLocation] = useState('');
 
-  const loadBusiness = useCallback(async () => {
-    try {
-      const { data } = await api.get('/business/me');
-      setBusiness(data.business);
-      await refreshMe();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-      setBusiness(null);
-    }
-  }, [refreshMe]);
-
+  // One request loads everything: the overview carries the business and its teams. A 404 just
+  // means "no business yet" and shows the create form. refreshMe only runs after creating one.
   const loadOverview = useCallback(async () => {
     try {
       const { data } = await api.get('/business/overview', { params: { days, ...(location ? { location } : {}) } });
-      setOverview(data);
+      if (!data.business) {
+        setBusiness(null);
+        setOverview(null);
+        setFailed(false);
+        return;
+      }
+      const next = normalizeOverview(data);
+      setOverview(next);
+      setBusiness(next.business);
+      setFailed(false);
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      if (err.response?.status === 404) {
+        setBusiness(null);
+        setOverview(null);
+      } else {
+        // A server problem must never look like "you have no business".
+        toast.error(getErrorMessage(err));
+        setFailed(true);
+      }
     }
   }, [days, location]);
 
   useEffect(() => {
-    loadBusiness();
-  }, [loadBusiness]);
+    loadOverview();
+  }, [loadOverview]);
 
-  useEffect(() => {
-    if (business) loadOverview();
-  }, [business, loadOverview]);
+  const created = async () => {
+    await refreshMe(); // the menu shows "Mi negocio" for owners
+    loadOverview();
+  };
 
   const rotate = async (loc) => {
     if (!window.confirm('Se creará un código nuevo y el anterior dejará de servir. Las personas que ya están se quedan. ¿Continuar?')) return;
     try {
       await api.post(`/business/locations/${loc.id}/code/rotate`);
       toast.success('Código nuevo listo');
-      await loadBusiness();
       loadOverview();
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -517,10 +552,7 @@ export default function BusinessPortal() {
     }
   };
 
-  const teamsChanged = async () => {
-    await loadBusiness();
-    loadOverview();
-  };
+  const teamsChanged = () => loadOverview();
 
   const remove = async (m) => {
     if (!window.confirm(`¿Quitar a ${m.name} de tu negocio? Dejarás de ver sus números. Puede volver a unirse con el código.`)) return;
@@ -533,10 +565,19 @@ export default function BusinessPortal() {
     }
   };
 
+  if (failed && !business) {
+    return (
+      <div className="page-shell items-center text-center">
+        <p className="mt-16 font-display text-2xl font-extrabold">No pudimos cargar tu negocio</p>
+        <p className="mt-2 text-sm text-slate-500">Revisa tu conexión e inténtalo de nuevo.</p>
+        <button type="button" onClick={() => { setFailed(false); loadOverview(); }} className="btn-primary mt-6">Reintentar</button>
+      </div>
+    );
+  }
   if (business === undefined) {
     return <div className="flex min-h-screen items-center justify-center"><Spinner /></div>;
   }
-  if (!business) return <CreateBusiness onCreated={loadBusiness} />;
+  if (!business) return <CreateBusiness onCreated={created} />;
 
   return (
     <div className="page-shell md:!max-w-4xl">
@@ -568,7 +609,7 @@ export default function BusinessPortal() {
       ) : tab === 'resenas' ? (
         <Reviews members={overview.members} locations={overview.locations} />
       ) : (
-        <Teams business={business} onChanged={teamsChanged} onRotate={rotate} />
+        <Teams business={overview?.business || business} onChanged={teamsChanged} onRotate={rotate} />
       )}
 
       {worker && <WalletButtons />}

@@ -129,8 +129,13 @@ const getMyBusiness = asyncHandler(async (req, res) => {
 
 // ----- teams / places ----------------------------------------------------
 
+const MAX_LOCATIONS = 50;
+
 const createLocation = asyncHandler(async (req, res) => {
   const business = await ownedBusinessOr404(req.user);
+  if ((await Location.countDocuments({ business: business._id })) >= MAX_LOCATIONS) {
+    throw new AppError(`Un negocio puede tener hasta ${MAX_LOCATIONS} equipos`, 409);
+  }
   const location = await Location.create({
     business: business._id,
     name: req.body.name.trim(),
@@ -190,7 +195,10 @@ const deleteLocation = asyncHandler(async (req, res) => {
 // and overall. Counts, stars and reviews only: the business never sees how
 // much money anyone received.
 const getOverview = asyncHandler(async (req, res) => {
-  const business = await ownedBusinessOr404(req.user);
+  // The portal opens with this single request. Someone with no business yet gets a plain
+  // "no business" answer (not an error), so opening the page never logs a failed request.
+  const business = req.user.ownedBusiness ? await Business.findById(req.user.ownedBusiness) : null;
+  if (!business) return res.json({ success: true, business: null });
   const locations = await ensureLocations(business);
   const days = PERIODS.includes(Number(req.query.days)) ? Number(req.query.days) : 30;
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
@@ -198,7 +206,7 @@ const getOverview = asyncHandler(async (req, res) => {
   const workers = await Worker.find({ business: business._id }).populate('user', 'name avatarUrl');
   const ids = workers.map((w) => w._id);
 
-  const [periodTx, periodRec] = ids.length
+  const [periodTx, periodRec, pendingCount] = ids.length
     ? await Promise.all([
         Transaction.aggregate([
           { $match: { worker: { $in: ids }, status: 'succeeded', createdAt: { $gte: since } } },
@@ -227,12 +235,9 @@ const getOverview = asyncHandler(async (req, res) => {
             },
           },
         ]),
+        Recognition.countDocuments({ worker: { $in: ids }, status: 'pending' }),
       ])
-    : [[], []];
-  const pendingCount = ids.length
-    ? await Recognition.countDocuments({ worker: { $in: ids }, status: 'pending' })
-    : 0;
-
+    : [[], [], 0];
   const txBy = new Map(periodTx.map((r) => [String(r._id), r]));
   const recBy = new Map(periodRec.map((r) => [String(r._id), r]));
   const nameOf = new Map(locations.map((l) => [String(l._id), l.name]));

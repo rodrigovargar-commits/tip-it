@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const compression = require('compression');
 const morgan = require('morgan');
 const mongoSanitize = require('express-mongo-sanitize');
 const rateLimit = require('express-rate-limit');
@@ -23,6 +24,8 @@ const app = express();
 
 app.set('trust proxy', 1);
 app.use(helmet());
+// Smaller responses (profiles carry a QR image): faster on mobile data.
+app.use(compression());
 // CLIENT_URL accepts a comma-separated list (e.g. the Vercel URL AND the custom
 // domain, with and without www). The native iOS/Android shells (Capacitor)
 // send their own fixed origins, so those are always allowed too.
@@ -55,7 +58,8 @@ app.use(mongoSanitize());
 // Registered before the limiter on purpose: the keep-warm ping and uptime
 // monitors call it every few minutes and must never be counted or blocked.
 app.get('/api/health', (req, res) => {
-  res.json({ success: true, status: 'ok', timestamp: new Date().toISOString() });
+  // `version` is the commit Render built (RENDER_GIT_COMMIT), so a deploy can be verified from outside.
+  res.json({ success: true, status: 'ok', version: (process.env.RENDER_GIT_COMMIT || 'dev').slice(0, 7), timestamp: new Date().toISOString() });
 });
 
 const apiLimiter = rateLimit({

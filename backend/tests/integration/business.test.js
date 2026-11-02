@@ -227,11 +227,12 @@ describe('owner portal', () => {
 
   it('keeps everything private: a non-owner gets 404 and sees nothing of the team', async () => {
     const { a } = await team();
-    for (const path of ['/api/business/overview', '/api/business/reviews']) {
-      // eslint-disable-next-line no-await-in-loop
-      const res = await request(app).get(path).set(a.auth);
-      expect(res.status).toBe(404);
-    }
+    const reviews = await request(app).get('/api/business/reviews').set(a.auth);
+    expect(reviews.status).toBe(404);
+    const overview = await request(app).get('/api/business/overview').set(a.auth);
+    expect(overview.status).toBe(200);
+    expect(overview.body.business).toBeNull(); // nothing about anyone else's team
+    expect(overview.body.members).toBeUndefined();
     const other = await makeUser('Otro Dueño');
     await request(app).post('/api/business').set(other.auth).send({ name: 'Otro negocio' });
     const res = await request(app).get('/api/business/overview').set(other.auth);
@@ -391,5 +392,24 @@ describe('several teams or places in one business', () => {
     const newbie = await makeUser('Nueva Persona', { worker: true });
     const joined = await request(app).post('/api/business/join').set(newbie.auth).send({ code: 'ABCD2345', accept: true });
     expect(joined.status).toBe(200);
+  });
+});
+
+describe('limits and health', () => {
+  it('caps the number of teams per business', async () => {
+    const owner = await makeUser('Dueño Muchos');
+    const created = await request(app).post('/api/business').set(owner.auth).send({ name: 'Muchos' });
+    const businessId = created.body.business.id;
+    const docs = Array.from({ length: 49 }, (_, i) => ({ business: businessId, name: `Equipo ${i + 2}`, code: `ZZ${String(i).padStart(2, '0')}2345`.slice(0, 8) }));
+    await Location.insertMany(docs);
+    const over = await request(app).post('/api/business/locations').set(owner.auth).send({ name: 'Uno más' });
+    expect(over.status).toBe(409);
+  });
+
+  it('reports the deployed version on /api/health', async () => {
+    process.env.RENDER_GIT_COMMIT = 'abcdef1234567890';
+    const res = await request(app).get('/api/health');
+    expect(res.body.version).toBe('abcdef1');
+    delete process.env.RENDER_GIT_COMMIT;
   });
 });
