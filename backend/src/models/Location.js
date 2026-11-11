@@ -8,6 +8,10 @@ const locationSchema = new mongoose.Schema(
     business: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', required: true, index: true },
     name: { type: String, required: true, trim: true, minlength: 2, maxlength: 60 },
     code: { type: String, required: true, unique: true, uppercase: true, trim: true },
+    // 'event' is a short activity (a weekend, a festival) with dates; its results stay visible after it ends.
+    kind: { type: String, enum: ['team', 'event'], default: 'team' },
+    startsAt: { type: Date, default: null },
+    endsAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

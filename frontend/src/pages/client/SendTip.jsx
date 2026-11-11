@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { currentQrCode, qrQuery } from '../../utils/qrParam.js';
 import toast from 'react-hot-toast';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, ExpressCheckoutElement, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -171,7 +172,7 @@ function Checkout({ worker, username, user, onPaid }) {
 
       let intent = intentRef.current && intentRef.current.key === quoteKey ? intentRef.current : null;
       if (!intent) {
-        const { data } = await api.post('/tips/create-intent', { username, amount: tipCents / 100, coverFee });
+        const { data } = await api.post('/tips/create-intent', { username, amount: tipCents / 100, coverFee, ...(currentQrCode() ? { qr: currentQrCode() } : {}) });
         // The server is the authority on the total. If it disagrees with the screen
         // (for example the rate changed), say so and ask again instead of charging.
         if (data.amount !== q.total) {
@@ -669,7 +670,7 @@ export default function SendTip() {
           <Identity worker={worker} />
         </div>
         <p className="mt-6 max-w-sm text-slate-400">Esta persona no puede recibir propinas por ahora. Puedes dejar un comentario sin pago.</p>
-        <Link to={`/p/${worker.username}/comentar`} className="btn-primary mt-6">
+        <Link to={`/p/${worker.username}/comentar${qrQuery()}`} className="btn-primary mt-6">
           Dejar un comentario
         </Link>
         <Link to={`/p/${worker.username}`} className="btn-secondary mt-3">
@@ -712,7 +713,7 @@ export default function SendTip() {
             <span aria-current="page" className="flex min-h-[44px] items-center justify-center rounded-full border-2 border-punch-ink bg-punch-yellow">
               Dejar propina
             </span>
-            <Link to={`/p/${worker.username}/comentar`} className="flex min-h-[44px] items-center justify-center rounded-full border-2 border-transparent text-punch-ink/80 hover:text-punch-ink">
+            <Link to={`/p/${worker.username}/comentar${qrQuery()}`} className="flex min-h-[44px] items-center justify-center rounded-full border-2 border-transparent text-punch-ink/80 hover:text-punch-ink">
               Comentar
             </Link>
           </div>

@@ -11,6 +11,8 @@ const recognitionSchema = new mongoose.Schema(
     comment: { type: String, maxlength: 200, default: '' },
     alias: { type: String, maxlength: 30, default: '' },
     status: { type: String, enum: ['pending', 'published', 'rejected'], default: 'pending' },
+    // Code of the extra QR this came through, if any.
+    qr: { type: String, default: null, lowercase: true },
     // Keyed hash of the sender's IP, only to stop the same person repeating
     // themselves; the IP itself is never stored.
     senderHash: { type: String, required: true },

@@ -28,7 +28,7 @@ export default function WorkerDashboard() {
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
   const [payingOut, setPayingOut] = useState(false);
-  const [membership, setMembership] = useState(undefined); // undefined = loading, null = none
+  const [memberships, setMemberships] = useState(undefined); // undefined = loading
   const pendingCode = (() => {
     try { return localStorage.getItem('tipit_join_code') || ''; } catch { return ''; }
   })();
@@ -36,17 +36,18 @@ export default function WorkerDashboard() {
   useEffect(() => {
     if (!worker) return;
     api
-      .get('/business/membership')
-      .then(({ data }) => setMembership(data.business))
-      .catch(() => setMembership(null));
+      .get('/business/memberships')
+      .then(({ data }) => setMemberships(data.memberships))
+      .catch(() => setMemberships([]));
   }, [worker]);
 
-  const leaveBusiness = async () => {
-    if (!window.confirm('¿Salir de este negocio? Dejará de ver tus propinas, estrellas y reseñas.')) return;
+  const leave = async (m) => {
+    const what = m.kind === 'event' ? 'este evento' : m.business;
+    if (!window.confirm(`¿Salir de ${what}? Dejará de ver tus propinas, estrellas y reseñas, y su QR se quita de tu lista.`)) return;
     try {
-      await api.post('/business/leave');
-      setMembership(null);
-      toast.success('Saliste del negocio');
+      await api.post('/business/leave', { membershipId: m.id });
+      setMemberships((list) => list.filter((x) => x.id !== m.id));
+      toast.success('Saliste');
     } catch (err) {
       toast.error(getErrorMessage(err));
     }
@@ -245,33 +246,43 @@ export default function WorkerDashboard() {
         </Link>
       </div>
 
-      {membership !== undefined && (
-        <div className="mt-6 card flex items-start gap-3">
-          <Store size={22} className="mt-0.5 shrink-0" />
-          <div className="flex-1">
-            {membership ? (
-              <>
-                <p className="font-display text-lg font-extrabold">Eres parte de {membership.name}{membership.location ? ` · ${membership.location}` : ''}</p>
-                <p className="mt-1 text-sm text-slate-500">
-                  Quien administra el negocio ve cuántas propinas recibes, tus estrellas y tus reseñas. No ve cuánto dinero recibes: eso llega directo a tu banco.
-                </p>
-                <button type="button" onClick={leaveBusiness} className="mt-2 text-sm font-bold underline underline-offset-2">
-                  Salir del negocio
-                </button>
-              </>
-            ) : (
-              <>
-                <p className="font-display text-lg font-extrabold">¿Trabajas en un negocio?</p>
-                <p className="mt-1 text-sm text-slate-500">Únete con el código que te dio quien lo administra.</p>
-                <Link
-                  to={pendingCode ? `/negocio/unirme?c=${pendingCode}` : '/negocio/unirme'}
-                  className="btn-secondary mt-2 !py-2 text-sm"
-                >
-                  {pendingCode ? 'Terminar de unirme' : 'Tengo un código'}
-                </Link>
-              </>
-            )}
-          </div>
+      {memberships !== undefined && (
+        <div className="mt-6 card">
+          <p className="flex items-center gap-2 font-display text-lg font-extrabold">
+            <Store size={20} className="shrink-0" /> {memberships.length ? 'Mis negocios y eventos' : '¿Trabajas en un negocio o en un evento?'}
+          </p>
+          {memberships.length > 0 && (
+            <ul className="mt-3 grid gap-3">
+              {memberships.map((m) => {
+                const since = new Date(m.joinedAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'long' });
+                const ended = m.state === 'ended';
+                return (
+                  <li key={m.id} className="rounded-2xl bg-punch-yellow/50 p-3">
+                    <p className="font-display font-extrabold">
+                      {m.business}{m.location && m.location !== 'Principal' ? ` · ${m.location}` : ''}
+                      {m.kind === 'event' && <span className="ml-2 rounded-full bg-white px-2 py-0.5 text-[11px] font-bold">{ended ? 'Evento terminado' : 'Evento'}</span>}
+                    </p>
+                    <p className="mt-0.5 text-sm font-medium text-slate-500">
+                      {m.scope === 'all'
+                        ? `Cuentan todas tus propinas y reseñas desde el ${since}.`
+                        : `Cuenta lo que llegue por tu QR de ${m.qr?.name || 'esta empresa'}, desde el ${since}.`}
+                      {' '}No ven cuánto dinero recibes.
+                    </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+                      <Link to="/worker/qr" className="text-sm font-bold underline underline-offset-2">Ver mi QR</Link>
+                      <button type="button" onClick={() => leave(m)} className="text-sm font-bold text-rose-700 underline underline-offset-2">Salir</button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          <p className="mt-3 text-sm text-slate-500">
+            {memberships.length ? 'Puedes unirte a más con otro código.' : 'Únete con el código que te dio quien lo administra. Recibes un QR de la empresa, además del tuyo.'}
+          </p>
+          <Link to={pendingCode ? `/negocio/unirme?c=${pendingCode}` : '/negocio/unirme'} className="btn-secondary mt-2 !py-2 text-sm">
+            {pendingCode ? 'Terminar de unirme' : 'Tengo un código'}
+          </Link>
         </div>
       )}
 

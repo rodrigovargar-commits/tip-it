@@ -18,6 +18,7 @@ router.post(
     body('amount').isFloat({ min: 1 }).withMessage('El monto mínimo es 1.00'),
     body('comment').optional().isLength({ max: 500 }),
     body('coverFee').optional().isBoolean(),
+    body('qr').optional({ nullable: true }).isString().isLength({ max: 16 }),
   ],
   validate,
   createIntent

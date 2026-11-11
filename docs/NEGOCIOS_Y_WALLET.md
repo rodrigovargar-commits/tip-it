@@ -31,6 +31,16 @@ Un negocio puede tener varios **equipos** (sucursal, turno, área). Cada uno tie
 - Los negocios creados antes de que existieran los equipos se convierten solos en un equipo "Principal" con el mismo código y las mismas personas (nadie tiene que hacer nada).
 API nueva: `POST /api/business/locations`, `PATCH /api/business/locations/:id`, `POST /api/business/locations/:id/code/rotate`, `DELETE /api/business/locations/:id`, `PATCH /api/business/members/:workerId {locationId}`, y `?location=` en `overview` y `reviews`. Se quitó `POST /api/business/code/rotate` (ahora es por equipo).
 
+## QR de la empresa, QR propios y eventos
+- **Cada persona tiene un QR personal** y puede hacer **más QR** (hasta 10), todos al mismo perfil y a la misma cuenta de pago. El código extra en la dirección (`/p/usuario?q=abcd2345`) solo sirve para saber por cuál QR llegó una propina o un comentario. Se hacen en **Mi QR > Hacer otro QR**.
+- **Al unirse a un negocio o evento se crea solo un QR de esa empresa** ("Nombre de la empresa") y aparece junto al personal. La persona elige:
+  - *Tiempo completo*: cuentan todas sus propinas y reseñas **desde el día que se unió** (también las de su QR personal).
+  - *A veces*: solo cuentan las que lleguen por el QR de la empresa.
+- **El negocio nunca ve nada de antes de que la persona se uniera**, ni dinero. Una persona puede estar en varios negocios a la vez (cada uno solo ve lo suyo).
+- **Eventos** (equipo con fechas, hasta 62 días): crean su propio código; quien se une recibe un QR solo del evento y solo cuenta lo que llegue por él mientras dura. Al terminar, el evento ya no acepta gente y **sus resultados se quedan** para revisarlos. Las personas de un evento no se mueven y el evento con participantes no se borra.
+- Si una persona sale (o el dueño la quita), su QR de esa empresa se archiva y deja de contarse; el enlace impreso sigue abriendo su perfil.
+- API: `GET/POST /api/qrs`, `PATCH/DELETE /api/qrs/:id`; `GET /api/business/memberships`; `POST /api/business/join {code, accept, mode: 'full'|'part'}`; `POST /api/business/leave {membershipId}`; `POST /api/business/locations {name, kind: 'team'|'event', startsAt, endsAt}`; `DELETE|PATCH /api/business/members/:membershipId`.
+
 ## Reglas
 - Un dueño tiene un negocio; una persona pertenece a un negocio a la vez y puede salir cuando quiera (desde su panel).
 - El dueño puede quitar a alguien y cambiar el código (el equipo que ya está se queda; el código viejo deja de servir).

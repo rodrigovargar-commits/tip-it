@@ -1,4 +1,8 @@
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { Plus, Building2 } from 'lucide-react';
+import api, { getErrorMessage } from '../../services/api.js';
+import { formatCents } from '../../utils/money.js';
 import PageHeader from '../../components/PageHeader.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import WalletButtons from '../../components/WalletButtons.jsx';
@@ -82,7 +86,7 @@ function drawWordmark(ctx, cx, baseline, fontPx) {
 // Builds a printable card (logo, "¡Escanéame!", QR, name) instead of just the
 // bare QR — meant to be downloaded, printed, and displayed as-is, so it
 // needs to look finished and trustworthy on its own with no extra context.
-async function buildPrintableQR(worker) {
+async function buildPrintableQR(worker, caption) {
   // Make sure the brand fonts are really loaded before drawing text, or the
   // canvas silently falls back to a system font on first load.
   if (document.fonts?.ready) {
@@ -163,7 +167,7 @@ async function buildPrintableQR(worker) {
   ctx.fillText(worker.name || `@${worker.username}`, W / 2, qrY + qrBox + 80);
   ctx.fillStyle = BRAND.muted;
   ctx.font = `500 32px ${FONT}`;
-  ctx.fillText(`@${worker.username}`, W / 2, qrY + qrBox + 125);
+  ctx.fillText(caption || `@${worker.username}`, W / 2, qrY + qrBox + 125);
 
   ctx.fillStyle = BRAND.muted;
   ctx.font = `500 26px ${FONT}`;
@@ -174,17 +178,39 @@ async function buildPrintableQR(worker) {
 
 export default function QRDisplay() {
   const { worker } = useAuth();
-  // The QR and the link open the profile first; from there people choose to tip or comment.
-  const tipUrl = `${window.location.origin}/p/${worker.username}`;
+  const [qrs, setQrs] = useState(null);
+  const [selected, setSelected] = useState('main');
+  const [newName, setNewName] = useState('');
+  const [creating, setCreating] = useState(false);
+
+  const load = () =>
+    api
+      .get('/qrs')
+      .then(({ data }) => setQrs(data.qrs))
+      .catch(() => setQrs([])); // the main QR below still works if this list does not load
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  // Every QR opens the same profile and pays into the same account; the extra code in the address
+  // only tells us which QR the tip or comment came through.
+  const current = (qrs || []).find((q) => q.id === selected) || (qrs || [])[0] || null;
+  const isMain = !current || current.kind === 'main';
+  const qrImage = current?.image || worker.qrCode;
+  const tipUrl = current?.url || `${window.location.origin}/p/${worker.username}`;
+  const caption = isMain ? `@${worker.username}` : current.name;
+  const profileUrl = `${window.location.origin}/p/${worker.username}`;
   // Only while developing: lets the card be previewed without downloading it.
-  if (import.meta.env.DEV) window.__buildQR = () => buildPrintableQR(worker);
+  if (import.meta.env.DEV) window.__buildQR = () => buildPrintableQR({ ...worker, qrCode: qrImage }, caption);
 
   const handleDownload = async () => {
+    const file = `tipit-qr-${worker.username}${isMain ? '' : `-${current.code}`}.png`;
     try {
-      const dataUrl = await buildPrintableQR(worker);
+      const dataUrl = await buildPrintableQR({ ...worker, qrCode: qrImage }, caption);
       const link = document.createElement('a');
       link.href = dataUrl;
-      link.download = `tipit-qr-${worker.username}.png`;
+      link.download = file;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -192,8 +218,8 @@ export default function QRDisplay() {
       // Fall back to the plain QR if anything about building the card fails
       // (e.g. the QR image itself doesn't load), so downloading never breaks.
       const link = document.createElement('a');
-      link.href = worker.qrCode;
-      link.download = `tipit-qr-${worker.username}.png`;
+      link.href = qrImage;
+      link.download = file;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -201,7 +227,32 @@ export default function QRDisplay() {
     }
   };
 
-  const profileUrl = `${window.location.origin}/p/${worker.username}`;
+  const createQr = async (e) => {
+    e.preventDefault();
+    setCreating(true);
+    try {
+      const { data } = await api.post('/qrs', { name: newName });
+      setNewName('');
+      await load();
+      setSelected(data.qr.id);
+      toast.success('QR creado');
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const archiveQr = async () => {
+    if (!window.confirm(`¿Quitar el QR "${current.name}" de tu lista? El que ya imprimiste seguirá abriendo tu perfil.`)) return;
+    try {
+      await api.delete(`/qrs/${current.id}`);
+      setSelected('main');
+      load();
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  };
 
   const handleShareProfile = async () => {
     try {
@@ -234,9 +285,33 @@ export default function QRDisplay() {
         <PageHeader back={{ to: '/worker/dashboard', label: 'Mi panel' }} title="Tu código QR" subtitle={`@${worker.username}`} />
       </div>
 
+      {qrs && qrs.length > 1 && (
+        <div className="mt-6 flex w-full flex-wrap justify-center gap-2" role="group" aria-label="Tus QR">
+          {qrs.map((q) => (
+            <button
+              key={q.id}
+              type="button"
+              onClick={() => setSelected(q.id)}
+              aria-pressed={current?.id === q.id}
+              className={`flex items-center gap-1.5 rounded-full border-2 border-punch-ink px-4 py-1.5 font-display text-sm font-extrabold transition ${current?.id === q.id ? 'bg-punch-ink text-white' : 'bg-white hover:bg-punch-yellow'}`}
+            >
+              {q.kind === 'business' && <Building2 size={14} />} {q.name}
+            </button>
+          ))}
+        </div>
+      )}
+      {current && !isMain && (
+        <p className="mx-auto mt-3 max-w-sm rounded-2xl bg-white p-3 text-sm font-medium">
+          {current.kind === 'business'
+            ? `Este es tu QR de ${current.business || 'la empresa'}. Lo que llegue por aquí lo ve esa empresa, solo desde el día que te uniste. Tu dinero sigue llegando a tu misma cuenta.`
+            : 'Es otro QR tuyo: lleva al mismo perfil y a la misma cuenta, pero te dice cuántas propinas llegan por él.'}
+          {current.eventEndsAt ? ` El evento termina el ${new Date(current.eventEndsAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })}.` : ''}
+        </p>
+      )}
+
       <div className="relative mt-8 -rotate-1 rounded-[2rem] border-2 border-punch-ink bg-punch-yellow p-5 shadow-[8px_8px_0_0_#0A2F2F]">
         <div className="rounded-3xl border-2 border-punch-ink bg-white p-4">
-          <img src={worker.qrCode} alt="Código QR" className="h-64 w-64 md:h-72 md:w-72" />
+          <img src={qrImage} alt={`Código QR: ${current?.name || 'personal'}`} className="h-64 w-64 md:h-72 md:w-72" />
         </div>
         <span className="absolute -right-4 -top-4 rotate-6 rounded-2xl border-2 border-punch-ink bg-punch-pink px-3 py-1.5 font-display text-sm font-extrabold shadow-[3px_3px_0_0_#0A2F2F]">
           ¡Escanéame!
@@ -262,7 +337,42 @@ export default function QRDisplay() {
         </button>
       </div>
 
+      {current && (
+        <p className="mt-4 text-sm font-semibold text-slate-500">
+          Por este QR: {current.tips} {current.tips === 1 ? 'propina' : 'propinas'}
+          {current.tips > 0 ? ` (${formatCents(current.netCents)})` : ''} · {current.comments} {current.comments === 1 ? 'comentario' : 'comentarios'}
+        </p>
+      )}
+      {current && current.kind === 'personal' && (
+        <button type="button" onClick={archiveQr} className="mt-2 text-xs font-bold underline underline-offset-2 text-slate-500">
+          Quitar este QR de mi lista
+        </button>
+      )}
+
       <WalletButtons />
+
+      <form onSubmit={createQr} className="mt-6 w-full rounded-2xl border-2 border-punch-ink/25 bg-white p-4 text-left">
+        <p className="flex items-center gap-1.5 font-display font-extrabold"><Plus size={16} /> Hacer otro QR</p>
+        <p className="mt-0.5 text-sm text-slate-400">
+          Todos tus QR llevan a tu mismo perfil y a tu misma cuenta. Haz uno para cada lugar donde trabajas a ratos, o para un evento, y verás cuántas propinas llegan por cada uno.
+        </p>
+        <div className="mt-3 flex gap-2">
+          <input
+            className="input-field flex-1"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="Por ejemplo: Terraza o Boda de Ana"
+            minLength={2}
+            maxLength={40}
+            aria-label="Nombre del nuevo QR"
+            required
+          />
+          <button type="submit" disabled={creating || newName.trim().length < 2} className="btn-primary !px-5">
+            {creating ? '...' : 'Crear'}
+          </button>
+        </div>
+        <p className="mt-2 text-xs text-slate-500">Si te unes a un negocio o a un evento con su código, su QR aparece aquí solo.</p>
+      </form>
 
       <div className="mt-6 w-full rounded-2xl border-2 border-punch-ink/25 bg-white p-4 text-left">
         <p className="font-display font-extrabold">Tu perfil público</p>

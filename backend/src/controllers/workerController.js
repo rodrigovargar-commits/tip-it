@@ -12,6 +12,7 @@ const Recognition = require('../models/Recognition');
 const { ACTIVITY_IDS } = require('../utils/activities');
 const { workerProfileUrl } = require('../utils/publicUrl');
 const { avatarPath } = require('../utils/avatar');
+const { resolveQrCode } = require('./qrController');
 
 // Explicit output DTO — never hand back the raw Mongo document. It carries
 // internal fields (stripeAccountId, ratingSum, __v) that the client has no
@@ -207,6 +208,7 @@ const createRecognition = asyncHandler(async (req, res) => {
     rating: rating ? Number(rating) : null,
     comment: text,
     alias: String(alias || '').trim().slice(0, 30),
+    qr: await resolveQrCode(worker, req.body.qr),
     senderHash,
   });
 

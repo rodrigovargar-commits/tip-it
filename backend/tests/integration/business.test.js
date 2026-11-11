@@ -8,9 +8,12 @@ const User = require('../../src/models/User');
 const Worker = require('../../src/models/Worker');
 const Business = require('../../src/models/Business');
 const Location = require('../../src/models/Location');
+const Membership = require('../../src/models/Membership');
 const Transaction = require('../../src/models/Transaction');
 const Recognition = require('../../src/models/Recognition');
 const { normalizeBusinessCode, generateBusinessCode } = require('../../src/utils/businessCode');
+
+const memId = async (worker) => (await Membership.findOne({ worker: worker._id }))._id;
 
 let counter = 0;
 async function makeUser(name, { worker = false } = {}) {
@@ -149,17 +152,21 @@ describe('joining with the code', () => {
     expect(noWorker.status).toBe(403);
   });
 
-  it('does not let a person be in two businesses at once, and lets them leave', async () => {
+  it('lets a person belong to two businesses (part time) and leave one at a time', async () => {
     const { member, code } = await setup();
-    await request(app).post('/api/business/join').set(member.auth).send({ code, accept: true });
+    await request(app).post('/api/business/join').set(member.auth).send({ code, accept: true, mode: 'part' });
     const owner2 = await makeUser('Dueño Dos');
     const second = await request(app).post('/api/business').set(owner2.auth).send({ name: 'Otro lugar' });
-    const blocked = await request(app).post('/api/business/join').set(member.auth).send({ code: second.body.business.locations[0].code, accept: true });
-    expect(blocked.status).toBe(409);
+    const also = await request(app).post('/api/business/join').set(member.auth).send({ code: second.body.business.locations[0].code, accept: true, mode: 'part' });
+    expect(also.status).toBe(200);
 
-    await request(app).post('/api/business/leave').set(member.auth);
-    const ok = await request(app).post('/api/business/join').set(member.auth).send({ code: second.body.business.locations[0].code, accept: true });
-    expect(ok.status).toBe(200);
+    const mine = await request(app).get('/api/business/memberships').set(member.auth);
+    expect(mine.body.memberships).toHaveLength(2);
+    // with two, leaving needs to say which one
+    expect((await request(app).post('/api/business/leave').set(member.auth).send({})).status).toBe(400);
+    const first = mine.body.memberships.find((m) => m.business === 'Clínica Sonrisa');
+    expect((await request(app).post('/api/business/leave').set(member.auth).send({ membershipId: first.id })).status).toBe(200);
+    expect((await request(app).get('/api/business/memberships').set(member.auth)).body.memberships).toHaveLength(1);
   });
 });
 
@@ -243,10 +250,10 @@ describe('owner portal', () => {
     const { owner, a, wa } = await team();
     const other = await makeUser('Otro Dueño');
     await request(app).post('/api/business').set(other.auth).send({ name: 'Otro negocio' });
-    const foreign = await request(app).delete(`/api/business/members/${wa._id}`).set(other.auth);
+    const foreign = await request(app).delete(`/api/business/members/${await memId(wa)}`).set(other.auth);
     expect(foreign.status).toBe(404);
 
-    const ok = await request(app).delete(`/api/business/members/${wa._id}`).set(owner.auth);
+    const ok = await request(app).delete(`/api/business/members/${await memId(wa)}`).set(owner.auth);
     expect(ok.status).toBe(200);
     const ms = await request(app).get('/api/business/membership').set(a.auth);
     expect(ms.body.business).toBeNull();
@@ -297,7 +304,7 @@ describe('several teams or places in one business', () => {
     expect(me.body.business.locations.map((l) => l.name).sort()).toEqual(['Centro', 'Norte']);
     expect(me.body.business.locations.find((l) => l.name === 'Norte').memberCount).toBe(2);
     const lookup = await request(app).get(`/api/business/lookup?code=${norte.code}`).set(a.auth);
-    expect(lookup.body.business).toEqual({ name: 'Cafés Cadena', location: 'Norte' });
+    expect(lookup.body.business).toMatchObject({ name: 'Cafés Cadena', location: 'Norte', kind: 'team' });
     const ms = await request(app).get('/api/business/membership').set(a.auth);
     expect(ms.body.business.location).toBe('Centro');
   });
@@ -340,11 +347,11 @@ describe('several teams or places in one business', () => {
     const other = await makeUser('Otro Dueño');
     await request(app).post('/api/business').set(other.auth).send({ name: 'Otro' });
     const otherLoc = (await request(app).get('/api/business/me').set(other.auth)).body.business.locations[0];
-    const bad = await request(app).patch(`/api/business/members/${wa._id}`).set(owner.auth).send({ locationId: otherLoc.id });
+    const bad = await request(app).patch(`/api/business/members/${await memId(wa)}`).set(owner.auth).send({ locationId: otherLoc.id });
     expect(bad.status).toBe(404);
-    const ok = await request(app).patch(`/api/business/members/${wa._id}`).set(owner.auth).send({ locationId: norte.id });
+    const ok = await request(app).patch(`/api/business/members/${await memId(wa)}`).set(owner.auth).send({ locationId: norte.id });
     expect(ok.status).toBe(200);
-    expect(String((await Worker.findById(wa._id)).location)).toBe(String(norte.id));
+    expect(String((await Membership.findOne({ worker: wa._id })).location)).toBe(String(norte.id));
   });
 
   it('renames, and only deletes an empty team while keeping at least one', async () => {
@@ -353,22 +360,20 @@ describe('several teams or places in one business', () => {
     expect(busy.status).toBe(409);
     const extra = (await request(app).post('/api/business/locations').set(owner.auth).send({ name: 'Sur' })).body.location;
     expect((await request(app).delete(`/api/business/locations/${extra.id}`).set(owner.auth)).status).toBe(200);
-    await request(app).delete(`/api/business/members/${(await Worker.findOne({ location: centro.id }))._id}`).set(owner.auth);
+    await request(app).delete(`/api/business/members/${(await Membership.findOne({ location: centro.id }))._id}`).set(owner.auth);
     expect((await request(app).delete(`/api/business/locations/${centro.id}`).set(owner.auth)).status).toBe(200);
     // Norte still has people and is the last one: it can never be deleted.
     expect((await request(app).delete(`/api/business/locations/${norte.id}`).set(owner.auth)).status).toBe(409);
   });
 
-  it('lets a person switch teams inside the same business but not join another business', async () => {
+  it('lets a person switch teams inside the same business (one place per business, not a second one)', async () => {
     const { a, norte } = await chain();
     const sw = await request(app).post('/api/business/join').set(a.auth).send({ code: norte.code, accept: true });
     expect(sw.status).toBe(200);
     expect(sw.body.business.location).toBe('Norte');
-    const stranger = await makeUser('Dueño Ajeno');
-    const biz = await request(app).post('/api/business').set(stranger.auth).send({ name: 'Ajeno' });
-    const blocked = await request(app)
-      .post('/api/business/join').set(a.auth).send({ code: biz.body.business.locations[0].code, accept: true });
-    expect(blocked.status).toBe(409);
+    const mine = await request(app).get('/api/business/memberships').set(a.auth);
+    expect(mine.body.memberships).toHaveLength(1);
+    expect(mine.body.memberships[0].location).toBe('Norte');
   });
 
   it('keeps the owner routes private to the owner', async () => {

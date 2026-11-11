@@ -51,6 +51,7 @@ const SECURITY_EVENTS = new Set([
   'business.code_rotated',
   'business.member_joined',
   'business.member_removed',
+  'qr.created',
   'wallet.apple_pass',
 ]);
 

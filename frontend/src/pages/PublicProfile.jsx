@@ -1,6 +1,6 @@
 import { photoSrc } from '../utils/avatar.js';
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { ArrowLeft, BadgeCheck, CalendarDays, HandCoins, Heart, MessageSquareText, Share2, Star, Users } from 'lucide-react';
 import api, { getErrorMessage } from '../services/api.js';
@@ -17,6 +17,10 @@ const roundBtn =
 // without paying.
 export default function PublicProfile() {
   const { username } = useParams();
+  // The QR this person scanned (an extra QR carries its own code); it travels on to the pay and comment pages.
+  const [searchParams] = useSearchParams();
+  const qrCode = /^[a-z0-9]{8}$/i.test(searchParams.get('q') || '') ? searchParams.get('q') : '';
+  const qs = qrCode ? `?q=${qrCode}` : '';
   const navigate = useNavigate();
   const [worker, setWorker] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -218,11 +222,11 @@ export default function PublicProfile() {
 
         <p className="mt-8 text-center text-sm font-bold text-slate-400">Un buen servicio merece ser reconocido.</p>
         <div className="mt-3 space-y-3 pb-4">
-          <Link to={`/p/${worker.username}/comentar`} className="btn-primary w-full gap-2.5 !py-4 text-lg">
+          <Link to={`/p/${worker.username}/comentar${qs}`} className="btn-primary w-full gap-2.5 !py-4 text-lg">
             <Star size={22} fill="#FCE883" stroke="#FCE883" /> Dejar un comentario
           </Link>
           {worker.readyForTips ? (
-            <Link to={`/pagar/${worker.username}`} className="btn-accent w-full gap-2.5 !py-4 text-xl">
+            <Link to={`/pagar/${worker.username}${qs}`} className="btn-accent w-full gap-2.5 !py-4 text-xl">
               <HandCoins size={24} /> Dejar propina
             </Link>
           ) : (

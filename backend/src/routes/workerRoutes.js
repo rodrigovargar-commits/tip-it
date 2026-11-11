@@ -67,6 +67,7 @@ router.post(
     body('rating').optional({ nullable: true, checkFalsy: true }).isInt({ min: 1, max: 5 }).withMessage('Las estrellas van de 1 a 5'),
     body('comment').optional({ nullable: true }).isString().isLength({ max: 200 }).withMessage('El comentario puede tener hasta 200 caracteres'),
     body('alias').optional({ nullable: true }).isString().isLength({ max: 30 }),
+    body('qr').optional({ nullable: true }).isString().isLength({ max: 16 }),
   ],
   validate,
   createRecognition

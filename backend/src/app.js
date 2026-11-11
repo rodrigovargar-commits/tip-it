@@ -19,6 +19,7 @@ const leadRoutes = require('./routes/leadRoutes');
 const trackRoutes = require('./routes/trackRoutes');
 const businessRoutes = require('./routes/businessRoutes');
 const walletRoutes = require('./routes/walletRoutes');
+const qrRoutes = require('./routes/qrRoutes');
 
 const app = express();
 
@@ -85,6 +86,7 @@ app.use('/api/leads', leadRoutes);
 app.use('/api/track', trackRoutes);
 app.use('/api/business', businessRoutes);
 app.use('/api/wallet', walletRoutes);
+app.use('/api/qrs', qrRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ success: false, message: 'Recurso no encontrado' });

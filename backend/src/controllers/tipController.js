@@ -4,6 +4,7 @@ const stripe = require('../config/stripe');
 const Worker = require('../models/Worker');
 const Transaction = require('../models/Transaction');
 const markTransactionSucceeded = require('../utils/markTransactionSucceeded');
+const { resolveQrCode } = require('./qrController');
 const { countRating } = markTransactionSucceeded;
 
 const FEE_PERCENT = Number(process.env.PLATFORM_FEE_PERCENT || 8);
@@ -26,7 +27,7 @@ const getFeeInfo = asyncHandler(async (req, res) => {
 });
 
 const createIntent = asyncHandler(async (req, res) => {
-  const { username, amount, comment, coverFee } = req.body;
+  const { username, amount, comment, coverFee, qr } = req.body;
 
   const worker = await Worker.findOne({ username: String(username).toLowerCase() });
   if (!worker) {
@@ -89,6 +90,7 @@ const createIntent = asyncHandler(async (req, res) => {
     coverFee: Boolean(coverFee),
     stripePaymentIntentId: paymentIntent.id,
     comment: comment || '',
+    qr: await resolveQrCode(worker, qr),
     status: 'pending',
   });
 

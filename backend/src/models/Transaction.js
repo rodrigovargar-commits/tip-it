@@ -82,6 +82,8 @@ const transactionSchema = new mongoose.Schema(
       maxlength: 30,
       default: '',
     },
+    // Code of the extra QR this payment came through (null = the main QR or a plain link).
+    qr: { type: String, default: null, lowercase: true },
     review: {
       // Written review left after the service, alongside the rating.
       // Shown publicly on the worker's profile as their track record.
@@ -95,5 +97,6 @@ const transactionSchema = new mongoose.Schema(
 
 transactionSchema.index({ worker: 1, createdAt: -1 });
 transactionSchema.index({ client: 1, createdAt: -1 });
+transactionSchema.index({ worker: 1, qr: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Transaction', transactionSchema);

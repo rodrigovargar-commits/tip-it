@@ -1,4 +1,4 @@
-const { releaseBusinessOf } = require('./businessController');
+const { releaseBusinessOf, releaseMembershipsOf } = require('./businessController');
 const { avatarPath, avatarBuffer, etagOf } = require('../utils/avatar');
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
@@ -69,6 +69,7 @@ const deleteMe = asyncHandler(async (req, res) => {
 
   // If they own a business, release their team and close it.
   await releaseBusinessOf(user);
+  if (user.worker) await releaseMembershipsOf(user.worker);
 
   user.name = 'Cuenta eliminada';
   user.email = user.isGuest ? undefined : `deleted-${id}@deleted.invalid`;

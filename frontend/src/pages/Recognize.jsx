@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { currentQrCode } from '../utils/qrParam.js';
 import toast from 'react-hot-toast';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import api, { getErrorMessage } from '../services/api.js';
@@ -42,6 +43,7 @@ export default function Recognize() {
         comment: comment.trim(),
         alias: alias.trim(),
         website,
+        ...(currentQrCode() ? { qr: currentQrCode() } : {}),
         ...(thanks ? { thanks: true } : {}),
       });
       trackEvent('recognition_submitted', { paid: false, rating: Boolean(rating), comment: Boolean(comment.trim()) });
