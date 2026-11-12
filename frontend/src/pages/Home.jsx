@@ -1,13 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   ArrowRight,
   Heart,
   LifeBuoy,
   CreditCard,
   Plus,
-  ScanLine,
-  Search,
   Star,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -232,64 +230,6 @@ function PhoneMock() {
   );
 }
 
-/* ----------------------------------------------------------- pay-a-tip box */
-
-// The "client" side of the app, right on the landing page: find someone by
-// username or open the scanner.
-function PayBox({ flat = false }) {
-  const navigate = useNavigate();
-  const [username, setUsername] = useState('');
-
-  const go = (e) => {
-    e.preventDefault();
-    const clean = username.trim().replace(/^@/, '');
-    if (!clean) return;
-    trackEvent('landing_find_worker');
-    navigate(`/p/${encodeURIComponent(clean)}`);
-  };
-
-  return (
-    <div className={`relative z-20 mx-auto max-w-4xl px-5 ${flat ? '' : '-mt-10 sm:-mt-12'}`}>
-      <div className="flex flex-col gap-5 rounded-[2rem] border border-punch-ink/15 bg-white p-5 shadow-[0_24px_60px_-24px_rgba(10,47,47,0.45)] sm:flex-row sm:items-center sm:p-6">
-        <div className="sm:w-2/5">
-          <p className="font-display text-2xl font-extrabold leading-tight">¿Quieres agradecer a alguien?</p>
-          <p className="mt-1 text-sm font-medium text-punch-ink/70">
-            Busca su perfil: ahí dejas un comentario o una propina. Sin cuenta, sin descargar nada.
-          </p>
-        </div>
-        <form onSubmit={go} className="flex flex-1 flex-col gap-3 sm:flex-row">
-          <div className="flex flex-1 items-center rounded-full border-2 border-punch-ink bg-punch-cream px-4 focus-within:ring-2 focus-within:ring-punch-yellow">
-            <Search size={18} className="shrink-0 text-punch-ink/70" />
-            <span className="pl-2 text-punch-ink/70">@</span>
-            <input
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="username"
-              aria-label="Username de quien quieres apoyar"
-              autoCapitalize="none"
-              autoCorrect="off"
-              className="w-full bg-transparent px-1.5 py-3 text-punch-ink outline-none placeholder:text-punch-ink/70"
-            />
-          </div>
-          <button
-            type="submit"
-            className="rounded-full border-2 border-punch-ink bg-punch-orange px-6 py-3 font-display font-extrabold shadow-[3px_3px_0_0_#0A2F2F] transition-all hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[1px_1px_0_0_#0A2F2F]"
-          >
-            Buscar
-          </button>
-          <Link
-            to="/scan"
-            onClick={() => trackEvent('landing_scan')}
-            className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-punch-ink bg-punch-yellow px-5 py-3 font-display font-extrabold transition hover:bg-punch-pink"
-          >
-            <ScanLine size={18} /> Escanear
-          </Link>
-        </form>
-      </div>
-    </div>
-  );
-}
-
 /* --------------------------------------------------------------- the page */
 
 export default function Home() {
@@ -461,11 +401,6 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section>
-
-      {/* ---------- ¿Quieres agradecer a alguien? ---------- */}
-      <section className="pb-6 pt-4">
-        <PayBox flat />
       </section>
 
       {/* ---------- FAQ ---------- */}
