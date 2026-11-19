@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Guía para crear tu QR de propinas — TIP-IT</title>
+<meta name="description" content="Paso a paso, sin complicaciones: qué datos juntar, cómo crear tu cuenta de TIP-IT y cómo poner tu QR. Con animación y enlaces para encontrar tu RFC y tu CLABE." />
+<meta name="theme-color" content="#FFF8EC" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<style>
+@font-face{font-family:'Bricolage Grotesque';font-weight:700 800;font-display:swap;src:url('/fonts/bricolage-latin.woff2') format('woff2')}
+@font-face{font-family:'DM Sans';font-weight:400 700;font-display:swap;src:url('/fonts/dmsans-latin.woff2') format('woff2')}
+:root{--ink:#0A2F2F;--cream:#FFF8EC;--yellow:#FCE883;--orange:#FF8243;--pink:#FFC0CB;--teal:#057A7A;--muted:#3f5d5d;--card:#fff;--ok:#0b7a4b}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ink:#FFF8EC;--cream:#0A2F2F;--card:#103d3d;--muted:#bcd3d0;--teal:#7fd6d3;--ok:#7fe0b0}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--cream);color:var(--ink);font:400 17px/1.5 'DM Sans',system-ui,sans-serif}
+h1,h2,h3{font-family:'Bricolage Grotesque','DM Sans',system-ui,sans-serif;font-weight:800;line-height:1.1;margin:0}
+a{color:var(--teal);font-weight:700}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px 96px}
+header.top{display:flex;align-items:center;gap:10px;padding:14px 0 6px}
+header.top img{width:38px;height:38px}
+header.top b{font:800 24px 'Bricolage Grotesque';letter-spacing:-.01em}
+.hero{padding:10px 0 18px}
+.hero h1{font-size:clamp(30px,6vw,52px);max-width:15ch}
+.hero p{font-size:18px;color:var(--muted);max-width:44ch;margin:10px 0 0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{background:var(--yellow);color:#0A2F2F;border:2px solid #0A2F2F;border-radius:99px;padding:5px 12px;font-weight:700;font-size:14px}
+/* tabs (phone) */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:var(--cream);border-top:2px solid var(--ink)}
+nav.tabs button{flex:1;min-height:56px;border:2px solid var(--ink);border-radius:16px;background:var(--card);color:var(--ink);font:700 15px/1.15 'DM Sans';cursor:pointer;padding:6px 4px}
+nav.tabs button b{display:block;font:800 18px 'Bricolage Grotesque'}
+nav.tabs button[aria-selected=true]{background:var(--yellow);color:#0A2F2F;box-shadow:3px 3px 0 var(--ink)}
+.panel{display:none}
+.panel.on{display:block}
+.card{background:var(--card);border:2px solid var(--ink);border-radius:22px;padding:16px;margin:0 0 14px;box-shadow:4px 4px 0 var(--ink)}
+.panel>h2{font-size:30px;margin:6px 0 4px}
+.panel>p.lead{margin:0 0 14px;color:var(--muted)}
+.num{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:var(--orange);color:#fff;font:800 18px 'Bricolage Grotesque';margin-right:8px;vertical-align:middle}
+/* checklist */
+.progress{display:flex;align-items:center;gap:10px;margin:0 0 12px;font-weight:700}
+.bar{flex:1;height:12px;border:2px solid var(--ink);border-radius:99px;overflow:hidden;background:var(--card)}
+.bar i{display:block;height:100%;width:0;background:var(--orange);transition:width .25s}
+.item{border:2px solid var(--ink);border-radius:18px;background:var(--card);margin:0 0 10px;overflow:hidden}
+.item label{display:flex;gap:12px;align-items:center;padding:12px 14px;cursor:pointer;min-height:56px}
+.item input[type=checkbox]{appearance:none;flex:none;width:30px;height:30px;border:2px solid var(--ink);border-radius:9px;background:var(--card);display:grid;place-content:center;cursor:pointer}
+.item input[type=checkbox]:checked{background:var(--yellow)}
+.item input[type=checkbox]:checked::after{content:'✓';color:#0A2F2F;font:800 20px/1 'DM Sans'}
+.item input[type=checkbox]:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible,input[type=text]:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+.item .t{font-weight:700;font-size:18px;line-height:1.2}
+.item .s{display:block;font-weight:400;font-size:14px;color:var(--muted);margin-top:2px}
+details.help{border-top:2px dashed var(--ink)}
+details.help summary{list-style:none;cursor:pointer;padding:11px 14px;font-weight:700;color:var(--teal);display:flex;justify-content:space-between;align-items:center;min-height:48px}
+details.help summary::-webkit-details-marker{display:none}
+details.help summary::after{content:'＋';font-size:20px}
+details.help[open] summary::after{content:'－'}
+.help .body{padding:0 14px 14px}
+.help ol{padding-left:22px;margin:8px 0}
+.help li{margin:6px 0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:10px 18px;border:2px solid var(--ink);border-radius:99px;background:var(--ink);color:var(--cream);font:700 17px 'DM Sans';text-decoration:none;cursor:pointer}
+.btn.alt{background:var(--card);color:var(--ink)}
+.btn.big{width:100%;min-height:58px;font-size:19px}
+.btn[disabled]{opacity:.45;cursor:default}
+.tool{background:rgba(252,232,131,.35);border:2px dashed var(--ink);border-radius:16px;padding:12px;margin-top:10px}
+.tool label{display:block;font-weight:700;margin-bottom:6px}
+.tool input[type=text]{width:100%;min-height:50px;border:2px solid var(--ink);border-radius:14px;padding:8px 12px;font:600 19px 'DM Sans';letter-spacing:.06em;background:var(--card);color:var(--ink);text-transform:uppercase}
+.tool small{display:block;color:var(--muted);margin-top:6px}
+.res{margin-top:8px;font-weight:700;min-height:26px}
+.res.ok{color:var(--ok)} .res.bad{color:#b3261e}
+@media (prefers-color-scheme: dark){.res.bad{color:#ff9d94}}
+.note{background:var(--pink);color:#0A2F2F;border:2px solid #0A2F2F;border-radius:16px;padding:12px 14px;font-size:15px;margin:12px 0}
+.note b{font-weight:800}
+/* viewer */
+video{width:100%;max-width:340px;display:block;margin:0 auto;border:2px solid var(--ink);border-radius:22px;background:#0A2F2F;box-shadow:4px 4px 0 var(--ink)}
+.viewer{display:grid;gap:12px;justify-items:center}
+.shot{position:relative;width:min(100%,330px);touch-action:pan-y}
+.shot img{display:block;width:100%;height:auto;border:2px solid var(--ink);border-radius:22px;background:#0A2F2F}
+.ctrl{display:flex;gap:10px;width:min(100%,330px)}
+.ctrl .btn{flex:1;min-height:54px}
+.dots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.dots button{width:14px;height:14px;border-radius:99px;border:2px solid var(--ink);background:var(--card);padding:0;cursor:pointer}
+.dots button[aria-current=true]{background:var(--orange);width:28px}
+.cap{text-align:center;max-width:340px}
+.cap b{display:block;font:800 21px/1.15 'Bricolage Grotesque'}
+.cap span{display:block;color:var(--muted);margin-top:4px}
+.seg{display:flex;gap:8px;margin:0 0 12px}
+.seg button{flex:1;min-height:48px;border:2px solid var(--ink);border-radius:99px;background:var(--card);color:var(--ink);font:700 16px 'DM Sans';cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--yellow);color:#0A2F2F}
+.hide{display:none!important}
+.steps3{counter-reset:s;list-style:none;padding:0;margin:0}
+.steps3 li{counter-increment:s;display:flex;gap:12px;margin:0 0 12px;align-items:flex-start}
+.steps3 li::before{content:counter(s);flex:none;width:34px;height:34px;border-radius:50%;background:var(--yellow);color:#0A2F2F;border:2px solid var(--ink);display:grid;place-items:center;font:800 18px 'Bricolage Grotesque'}
+.steps3 b{display:block;font-size:18px}
+.faq summary{cursor:pointer;font-weight:700;padding:12px 0;min-height:48px;border-top:2px dashed var(--ink)}
+.faq details:first-child summary{border-top:0}
+.faq p{margin:0 0 12px;color:var(--muted)}
+.sup{margin-top:10px}
+.printonly{display:none}
+/* desktop = the three panels side by side, like a leaflet */
+@media (min-width:980px){
+  nav.tabs{display:none}
+  .wrap{padding-bottom:40px}
+  .panels{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:start}
+  .panel{display:block}
+  .panel>h2{font-size:28px}
+}
+/* printed leaflet: A4 landscape, 3 columns, front side */
+@media print{
+  :root,:root:not([data-theme="light"]){--ink:#0A2F2F;--cream:#fff;--card:#fff;--muted:#3f5d5d;--teal:#057A7A;--ok:#0b7a4b}
+  @page{size:A4 landscape;margin:8mm}
+  body{background:#fff;color:#0A2F2F;font-size:10.5pt;line-height:1.35}
+  nav.tabs,.btn,.tool,.seg,.ctrl,.dots,video,.noprint,details.help summary::after{display:none!important}
+  .printonly{display:block}
+  .wrap{max-width:none;padding:0}
+  .hero{padding:0 0 6px}.hero h1{font-size:22pt}.hero p{font-size:10.5pt;margin-top:4px}
+  .panels{display:grid;grid-template-columns:repeat(3,1fr);gap:9mm}
+  .panel{display:block}
+  .card,.item{box-shadow:none;border-width:1.5px;padding:8px 10px;margin-bottom:6px;border-radius:12px}
+  .item{break-inside:avoid}
+  .panels{align-items:start}
+  .item label{padding:6px 8px;min-height:0}
+  .item .t{font-size:11pt}
+  details.help{border-top:1px dashed #0A2F2F}
+  details.help .body{display:block!important}
+  details:not([open])>.body{display:block}
+  .shot img{border-width:1.5px}
+  .viewer{display:none}
+  a{color:#0A2F2F;font-weight:700}
+  .printsteps li{margin:0 0 3px}
+  /* compact so the whole leaflet fits front and back */
+  body{font-size:8.6pt;line-height:1.28}
+  header.top{padding:0 0 2px}header.top img{width:24px;height:24px}header.top b{font-size:15pt}
+  .hero h1{font-size:17pt;max-width:none}.hero p{font-size:9pt}
+  .chips{margin-top:5px;gap:5px}.chip{font-size:8pt;padding:2px 8px}
+  .panel>h2{font-size:15pt;margin:2px 0 2px}.num{width:22px;height:22px;font-size:11pt}
+  .panel>p.lead{font-size:8.6pt;margin:0 0 5px}
+  .item{margin-bottom:4px}
+  .item .t{font-size:9.4pt}.item .s{font-size:8pt}
+  .item label{gap:8px}.item input[type=checkbox]{width:16px;height:16px;border-radius:4px}
+  details.help summary{padding:3px 8px;min-height:0;font-size:8.6pt}
+  .help .body{padding:0 8px 6px}.help ol{margin:3px 0;padding-left:16px}.help li{margin:2px 0}.help p{margin:3px 0}
+  .note{font-size:8pt;padding:5px 8px;margin:5px 0;border-width:1.5px;border-radius:9px}
+  .steps3 li{margin:0 0 6px;gap:8px}.steps3 li::before{width:22px;height:22px;font-size:10pt}.steps3 b{font-size:9.6pt}
+  .faq summary{padding:3px 0;min-height:0;font-size:8.8pt}.faq p{margin:0 0 4px;font-size:8.2pt}
+  .card h3{font-size:12pt!important}
+  .card{margin-bottom:6px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top"><img src="/favicon.svg" alt="" /><b>TIP-IT</b></header>
+  <section class="hero">
+    <h1>Crea tu QR de propinas en 10 minutos</h1>
+    <p>Tres pasos, en palabras simples. No necesitas saber de tecnología.</p>
+    <div class="chips"><span class="chip">Crear tu cuenta y tu QR es gratis</span><span class="chip">Sin efectivo</span><span class="chip">El dinero llega a tu banco</span></div>
+  </section>
+
+  <main class="panels" id="panels">
+    <!-- ============ PANEL 1 ============ -->
+    <section class="panel" id="datos" aria-labelledby="h1">
+      <h2 id="h1"><span class="num">1</span>Junta tus datos</h2>
+      <p class="lead">Toca cada cuadrito cuando lo tengas. Si te falta alguno, abre «¿No lo sé?».</p>
+      <div class="progress noprint"><span id="count">0 de 6</span><div class="bar"><i id="barfill"></i></div></div>
+
+      <div class="item"><label><input type="checkbox" data-k="cel" /><span class="t">Tu celular y tu correo<span class="s">Los que usas todos los días</span></span></label></div>
+
+      <div class="item"><label><input type="checkbox" data-k="nombre" /><span class="t">Tu nombre completo<span class="s">Escríbelo igual que en tu identificación o tu RFC</span></span></label></div>
+
+      <div class="item"><label><input type="checkbox" data-k="fecha" /><span class="t">Tu fecha de nacimiento y tu domicilio<span class="s">Calle, colonia, código postal, ciudad y estado</span></span></label></div>
+
+      <div class="item">
+        <label><input type="checkbox" data-k="rfc" /><span class="t">Tu RFC (13 letras y números)<span class="s">Ejemplo con forma: ABCD800101XY1</span></span></label>
+        <details class="help"><summary>¿No sé cuál es mi RFC?</summary>
+          <div class="body">
+            <p><b>Sin pagar nada y sin salir de casa:</b></p>
+            <ol>
+              <li>Primero busca tu <b>CURP</b>: entra a <a href="https://www.gob.mx/curp/" target="_blank" rel="noopener">gob.mx/curp</a>, escribe tu nombre, fecha de nacimiento, sexo y estado donde naciste, y te la da.</li>
+              <li>Con tu CURP entra a la página de trámites del RFC del SAT: <a href="https://wwwmat.sat.gob.mx/personas/tramites-del-rfc" target="_blank" rel="noopener">SAT · Trámites del RFC</a>. Busca la opción que dice <b>«Consulta tu clave de RFC»</b> o <b>«Obtén tu RFC con la CURP»</b>, pon tu CURP y te muestra tu RFC.</li>
+              <li><b>Si nunca te has inscrito</b>, ahí mismo está <a href="https://wwwmat.sat.gob.mx/tramites/82714/realiza-tu-inscripcion-en-el-rfc-persona-fisica" target="_blank" rel="noopener">Inscripción en el RFC (persona física)</a>. Es gratis.</li>
+            </ol>
+            <p>También sale en tu <b>constancia de situación fiscal</b>, en una factura tuya o en tu recibo de nómina.</p>
+            <div class="note"><b>Cuidado:</b> estas páginas son del gobierno y no cobran. Si alguien te cobra por «ayudarte», es fraude. Revisa que la dirección diga <b>gob.mx</b> o <b>sat.gob.mx</b>.</div>
+            <div class="tool"><label for="rfc">Revisa que tu RFC esté bien escrito</label>
+              <input id="rfc" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" maxlength="13" placeholder="13 caracteres" aria-describedby="rfcr" />
+              <div id="rfcr" class="res" role="status" aria-live="polite"></div>
+              <small>Esta revisión se hace en tu celular. No se envía ni se guarda en ningún lado. Solo checa la forma; el SAT es quien confirma que existe.</small></div>
+          </div>
+        </details>
+      </div>
+
+      <div class="item">
+        <label><input type="checkbox" data-k="clabe" /><span class="t">Tu CLABE (18 números)<span class="s">De una cuenta de banco en pesos, a tu nombre</span></span></label>
+        <details class="help"><summary>¿Dónde veo mi CLABE?</summary>
+          <div class="body">
+            <ol>
+              <li>Abre la <b>app de tu banco</b> y entra a tu cuenta.</li>
+              <li>Busca <b>«CLABE interbancaria»</b>, <b>«Datos de la cuenta»</b> o <b>«Depositar a mi cuenta»</b>. Cada banco le pone un nombre distinto.</li>
+              <li>Cópiala o anótala: son <b>18 números</b>.</li>
+            </ol>
+            <p>También viene en tu <b>estado de cuenta</b> y en el contrato de tu cuenta. Si no tienes app, pídela en la sucursal o llama al número de atrás de tu tarjeta.</p>
+            <div class="note"><b>No es</b> el número de tu tarjeta (esos son 16). Y nunca compartas tu NIP ni la contraseña de tu banco: nadie te los pide aquí.</div>
+            <div class="tool"><label for="clabe">Revisa tu CLABE</label>
+              <input id="clabe" type="text" inputmode="numeric" autocomplete="off" maxlength="22" placeholder="18 números" aria-describedby="clabes" />
+              <div id="clabes" class="res" role="status" aria-live="polite"></div>
+              <small>Se revisa en tu celular, no se envía a nadie. Detecta errores de dedo (un número de más o equivocado).</small></div>
+          </div>
+        </details>
+      </div>
+
+      <div class="item">
+        <label><input type="checkbox" data-k="ine" /><span class="t">Tu INE a la mano (por si te la piden)<span class="s">Solo si no pueden confirmar quién eres</span></span></label>
+        <details class="help"><summary>¿Cómo tomo la foto?</summary>
+          <div class="body"><ol><li>Pon la credencial sobre una mesa lisa, con buena luz.</li><li>Foto del <b>frente</b> y de la <b>parte de atrás</b>, completas y sin reflejos.</li><li>Que se lean bien todas las letras.</li></ol></div>
+        </details>
+      </div>
+
+      <div class="card noprint" id="ready" hidden style="background:var(--yellow);color:#0A2F2F"><b style="font:800 20px 'Bricolage Grotesque'">¡Ya juntaste todo! 🎉</b><p style="margin:6px 0 10px">Ahora sigue con el paso 2.</p><button class="btn" data-go="cuenta">Ir al paso 2</button></div>
+    </section>
+
+    <!-- ============ PANEL 2 ============ -->
+    <section class="panel" id="cuenta" aria-labelledby="h2">
+      <h2 id="h2"><span class="num">2</span>Crea tu cuenta</h2>
+      <p class="lead">Mira cómo se hace, o ve pantalla por pantalla a tu ritmo.</p>
+      <div class="seg noprint" role="group" aria-label="Cómo quieres verlo">
+        <button type="button" id="mVideo" aria-pressed="true">▶ Animación</button>
+        <button type="button" id="mSteps" aria-pressed="false">Paso por paso</button>
+      </div>
+      <div id="vVideo" class="viewer">
+        <video id="vid" controls playsinline preload="metadata" poster="/guia/img/01.jpg"><source src="/guia/tutorial.mp4" type="video/mp4" /></video>
+        <p class="cap"><span>Dura unos 35 segundos. Las pantallas son de la app real, con datos de ejemplo.</span></p>
+      </div>
+      <div id="vSteps" class="viewer hide">
+        <div class="shot" id="shot"><img id="img" src="/guia/img/01.jpg" alt="" width="520" height="1125" /></div>
+        <div class="cap" aria-live="polite"><b id="ct"></b><span id="ch"></span></div>
+        <div class="ctrl"><button class="btn alt" id="prev" type="button">← Atrás</button><button class="btn" id="next" type="button">Siguiente →</button></div>
+        <div class="dots" id="dots" aria-label="Pantallas"></div>
+        <p class="cap"><span id="pos"></span></p>
+      </div>
+      <div class="printonly">
+        <ol class="printsteps">
+          <li>Entra a tipit.com.mx y toca «Crear mi QR».</li>
+          <li>Elige «Recibir pagos».</li>
+          <li>Escribe nombre, correo y celular.</li>
+          <li>Elige contraseña y nombre de usuario.</li>
+          <li>Toca «Crear cuenta».</li>
+          <li>En tu panel toca «Conectar mi banco» y llena los datos del paso 1.</li>
+          <li>Descarga tu QR.</li>
+        </ol>
+      </div>
+      <div class="note"><b>Tu nombre de usuario</b> será tu enlace y tu QR. Ejemplo: <b>tipit.com.mx/p/ana.torres</b>. Elígelo corto y fácil.</div>
+      <a class="btn big noprint" href="https://www.tipit.com.mx/register?role=worker" target="_blank" rel="noopener">Crear mi QR ahora</a>
+      <p class="noprint" style="font-size:14px;color:var(--muted);text-align:center;margin:8px 0 0">Revisa que arriba diga <b>tipit.com.mx</b></p>
+    </section>
+
+    <!-- ============ PANEL 3 ============ -->
+    <section class="panel" id="despues" aria-labelledby="h3">
+      <h2 id="h3"><span class="num">3</span>Ponlo a trabajar</h2>
+      <p class="lead">Tu cuenta ya existe. Esto sigue:</p>
+      <div class="card">
+        <ol class="steps3">
+          <li><div><b>Conecta tu banco</b>En tu panel toca «Conectar mi banco» y llena los datos del paso 1. Se hace una sola vez. Sin esto, tu perfil se ve pero no te pueden pagar.</div></li>
+          <li><div><b>Descarga tu QR</b>Entra a «Mi QR» y toca «Descargar». Siempre es el mismo QR: en foto, impreso o en la pantalla.</div></li>
+          <li><div><b>Ponlo donde te vean</b>En el espejo, el mostrador, tu estuche o tu gafete. Mientras más a la vista, más propinas.</div></li>
+          <li><div><b>Pruébalo</b>Pídele a alguien que lo escanee con su celular. Debe abrir tu perfil con tu nombre.</div></li>
+        </ol>
+      </div>
+      <div class="card faq">
+        <h3 style="font-size:22px;margin-bottom:6px">Dudas frecuentes</h3>
+        <details><summary>¿Cuánto cuesta?</summary><p>Crear tu cuenta y tu QR no cuesta. Cada propina lleva una comisión pequeña, que se ve antes de pagar. Quien da la propina puede elegir cubrirla.</p></details>
+        <details><summary>¿Cuándo me llega el dinero?</summary><p>Los primeros pagos de una cuenta nueva tardan unos días: es una verificación normal, no un error. Después, tus pagos se liberan todos los días.</p></details>
+        <details><summary>¿Y si no me deja conectar el banco?</summary><p>Revisa que tu nombre, tu RFC y tu CLABE estén bien escritos (usa las revisiones del paso 1) y que la cuenta sea en pesos y esté a tu nombre. Si te piden tu INE, toma la foto con buena luz.</p></details>
+        <details><summary>La página tardó en abrir. ¿Qué hago?</summary><p>A veces tarda unos segundos en despertar. Espera y, si sale «Reintentar», tócalo. No pierdes nada.</p></details>
+        <details><summary>¿Es seguro?</summary><p>Tu dinero llega directo a tu cuenta; TIP-IT no lo toca. Nadie te va a pedir tu NIP ni la contraseña de tu banco.</p></details>
+        <div class="sup" id="sup" hidden>¿Dudas? Escríbenos: <a id="supl" href="#"></a></div>
+      </div>
+      <a class="btn big noprint" href="https://www.tipit.com.mx/register?role=worker" target="_blank" rel="noopener">Crear mi QR ahora</a>
+      <button class="btn alt big noprint" style="margin-top:10px" onclick="window.print()">Imprimir esta guía (tríptico)</button>
+    </section>
+  </main>
+</div>
+
+<nav class="tabs" role="tablist" aria-label="Pasos de la guía">
+  <button role="tab" data-tab="datos" aria-selected="true"><b>1</b>Datos</button>
+  <button role="tab" data-tab="cuenta" aria-selected="false"><b>2</b>Cuenta</button>
+  <button role="tab" data-tab="despues" aria-selected="false"><b>3</b>Después</button>
+</nav>
+
+<script>
+(function(){
+  var SOPORTE={tipo:'',valor:''}; // pon aquí tu contacto: {tipo:'whatsapp',valor:'5215512345678'} o {tipo:'correo',valor:'hola@...'}
+  var $=function(s,r){return (r||document).querySelector(s)}, $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+  function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+
+  /* tabs */
+  var tabs=$$('nav.tabs button'), panels=$$('.panel');
+  function show(id,init){
+    if(['datos','cuenta','despues'].indexOf(id)<0)id='datos';
+    panels.forEach(function(p){p.classList.toggle('on',p.id===id)});
+    tabs.forEach(function(t){t.setAttribute('aria-selected',t.dataset.tab===id)});
+    if(init)return;
+    if(history.replaceState)history.replaceState(null,'','#'+id);
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  tabs.forEach(function(t){t.addEventListener('click',function(){show(t.dataset.tab)})});
+  $$('[data-go]').forEach(function(b){b.addEventListener('click',function(){show(b.dataset.go)})});
+  try{history.scrollRestoration='manual'}catch(e){}
+  show((location.hash||'#datos').slice(1),true);
+  window.scrollTo(0,0);
+
+  /* checklist */
+  var boxes=$$('.item input[type=checkbox]');
+  function refresh(){
+    var n=boxes.filter(function(b){return b.checked}).length;
+    $('#count').textContent='Llevas '+n+' de '+boxes.length;
+    $('#barfill').style.width=(n/boxes.length*100)+'%';
+    $('#ready').hidden=n<boxes.length-1; // INE es solo por si acaso
+  }
+  boxes.forEach(function(b){
+    b.checked=store('tipit_guia_'+b.dataset.k)==='1';
+    b.addEventListener('change',function(){store('tipit_guia_'+b.dataset.k,b.checked?'1':'0');refresh()});
+  });
+  refresh();
+
+  /* RFC */
+  var rfc=$('#rfc'),rr=$('#rfcr');
+  rfc.addEventListener('input',function(){
+    var v=rfc.value.toUpperCase().replace(/[^A-ZÑ&0-9]/g,'');rfc.value=v;rr.className='res';
+    if(!v){rr.textContent='';return}
+    if(v.length<13){rr.textContent='Llevas '+v.length+' de 13';return}
+    var ok=/^[A-ZÑ&]{4}[0-9]{6}[A-Z0-9]{3}$/.test(v);
+    if(ok){var mm=+v.slice(6,8),dd=+v.slice(8,10);ok=mm>=1&&mm<=12&&dd>=1&&dd<=31}
+    if(ok){rr.className='res ok';rr.textContent='✓ Se ve bien escrito'}
+    else{rr.className='res bad';rr.textContent='Algo no cuadra. Son 4 letras, 6 números (tu fecha de nacimiento: año, mes, día) y 3 letras o números.'}
+  });
+
+  /* CLABE */
+  var BANKS={'002':'Banamex','012':'BBVA México','014':'Santander','021':'HSBC','030':'BanBajío','036':'Inbursa','044':'Scotiabank','058':'Banregio','062':'Afirme','072':'Banorte','127':'Banco Azteca','137':'BanCoppel','638':'Nu México','646':'STP','722':'Mercado Pago'};
+  var cl=$('#clabe'),cr=$('#clabes');
+  function clabeOk(d){var w=[3,7,1],s=0;for(var i=0;i<17;i++)s+=((+d[i])*w[i%3])%10;return ((10-(s%10))%10)===+d[17]}
+  cl.addEventListener('input',function(){
+    var v=cl.value.replace(/\D/g,'').slice(0,18);cl.value=v;cr.className='res';
+    if(!v){cr.textContent='';return}
+    if(v.length<18){cr.textContent='Llevas '+v.length+' de 18 números';return}
+    if(clabeOk(v)){cr.className='res ok';var b=BANKS[v.slice(0,3)];cr.textContent='✓ Se ve bien'+(b?' · Banco: '+b:'')}
+    else{cr.className='res bad';cr.textContent='Algún número está mal. Compárala con tu app o tu estado de cuenta.'}
+  });
+
+  /* viewer */
+  var STEPS=[
+{"t":"Entra a tipit.com.mx y toca «Crear mi QR»","h":"Es gratis crear tu cuenta y tu QR."},
+{"t":"Elige «Recibir pagos»","h":"Si solo vas a dar propinas, elige «Enviar pagos»; no necesitas cuenta."},
+{"t":"Escribe tu nombre, tu correo y tu celular","h":"Usa un correo que sí revises: ahí te llegan avisos."},
+{"t":"Elige tu contraseña y tu nombre de usuario","h":"Tu usuario será tu enlace y tu QR: tipit.com.mx/p/ana.torres"},
+{"t":"Toca «Crear cuenta»","h":"Al crearla aceptas los Términos y el Aviso de privacidad."},
+{"t":"Un recorrido corto: puedes tocar «Siguiente» o «Saltar»","h":"Pantalla 1 de 4"},
+{"t":"Aquí se explica cómo conectar tu banco","h":"Pantalla 2 de 4"},
+{"t":"Los primeros pagos tardan unos días: es normal","h":"Pantalla 3 de 4"},
+{"t":"Cada reseña buena construye tu perfil","h":"Pantalla 4 de 4"},
+{"t":"En tu panel, toca «Conectar mi banco»","h":"Solo se hace una vez. Tu perfil ya existe; esto activa los pagos."},
+{"t":"Se te pedirán estos datos, una sola vez","h":"Son los del paso 1. Esta pantalla es ilustrativa."},
+{"t":"Este es tu QR. Descárgalo o compártelo","h":"Siempre es el mismo: en foto, impreso o descargado."},
+{"t":"Pon tu QR donde te vean y listo","h":"Quien lo escanee te deja propina directo a tu banco."}];
+  var i=0,img=$('#img'),dots=$('#dots');
+  STEPS.forEach(function(_,k){var b=document.createElement('button');b.type='button';b.setAttribute('aria-label','Pantalla '+(k+1));b.addEventListener('click',function(){go(k)});dots.appendChild(b)});
+  function pad(n){return (n<10?'0':'')+n}
+  function go(k){
+    i=Math.max(0,Math.min(STEPS.length-1,k));
+    img.src='/guia/img/'+pad(i+1)+'.jpg';img.alt='Pantalla '+(i+1)+': '+STEPS[i].t;
+    $('#ct').textContent=STEPS[i].t;$('#ch').textContent=STEPS[i].h;
+    $('#pos').textContent='Pantalla '+(i+1)+' de '+STEPS.length;
+    $$('button',dots).forEach(function(b,k2){b.setAttribute('aria-current',k2===i)});
+    $('#prev').disabled=i===0;
+    var nx=$('#next');nx.textContent=i===STEPS.length-1?'¡Listo! →':'Siguiente →';
+    if(i<STEPS.length-1){var pre=new Image();pre.src='/guia/img/'+pad(i+2)+'.jpg'}
+  }
+  $('#prev').addEventListener('click',function(){go(i-1)});
+  $('#next').addEventListener('click',function(){if(i===STEPS.length-1){show('despues')}else go(i+1)});
+  var sx=null,shot=$('#shot');
+  shot.addEventListener('touchstart',function(e){sx=e.touches[0].clientX},{passive:true});
+  shot.addEventListener('touchend',function(e){if(sx===null)return;var dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>40)go(i+(dx<0?1:-1));sx=null});
+  document.addEventListener('keydown',function(e){if($('#vSteps').classList.contains('hide'))return;if(e.key==='ArrowRight')go(i+1);if(e.key==='ArrowLeft')go(i-1)});
+  go(0);
+  function mode(v){
+    $('#vVideo').classList.toggle('hide',!v);$('#vSteps').classList.toggle('hide',v);
+    $('#mVideo').setAttribute('aria-pressed',v);$('#mSteps').setAttribute('aria-pressed',!v);
+    if(!v){var vd=$('#vid');if(vd&&!vd.paused)vd.pause()}
+  }
+  $('#mVideo').addEventListener('click',function(){mode(true)});
+  $('#mSteps').addEventListener('click',function(){mode(false)});
+
+  /* al imprimir, todo abierto */
+  var wasOpen=[];
+  window.addEventListener('beforeprint',function(){wasOpen=$$('details').map(function(d){return d.open});$$('details').forEach(function(d){d.open=true})});
+  window.addEventListener('afterprint',function(){$$('details').forEach(function(d,k){d.open=wasOpen[k]})});
+
+  /* contacto de ayuda (solo si se configuró) */
+  if(SOPORTE.valor){
+    var a=$('#supl'),s=$('#sup');s.hidden=false;
+    if(SOPORTE.tipo==='whatsapp'){a.href='https://wa.me/'+SOPORTE.valor;a.textContent='WhatsApp'}
+    else{a.href='mailto:'+SOPORTE.valor;a.textContent=SOPORTE.valor}
+  }
+})();
+</script>
+</body>
+</html>

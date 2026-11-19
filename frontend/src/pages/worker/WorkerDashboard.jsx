@@ -153,6 +153,12 @@ export default function WorkerDashboard() {
             >
               {connecting ? 'Redirigiendo...' : 'Conectar mi banco'}
             </button>
+            <p className="mt-3 text-center text-sm font-medium">
+              ¿No sabes tu RFC o tu CLABE?{' '}
+              <a href="/guia/#datos" target="_blank" rel="noopener" className="font-bold underline underline-offset-2">
+                Mira la guía
+              </a>
+            </p>
           </div>
         </div>
       )}

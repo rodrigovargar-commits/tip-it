@@ -36,6 +36,12 @@ export default function Register() {
             <Link to="/login" className="font-semibold text-brand-400">
               Inicia sesión
             </Link>
+            <span className="mt-2 block text-xs text-slate-500">
+              ¿Primera vez?{' '}
+              <a href="/guia/" target="_blank" rel="noopener" className="font-semibold underline underline-offset-2">
+                Mira cómo crear tu QR paso a paso
+              </a>
+            </span>
           </>
         )
       }
