@@ -7,6 +7,7 @@ const Transaction = require('../models/Transaction');
 const stripe = require('../config/stripe');
 const { generateWorkerQR } = require('../utils/generateQR');
 const refreshStripeReadiness = require('../utils/refreshStripeReadiness');
+const profileCache = require('../utils/profileCache');
 const { logSecurityEvent } = require('../utils/logger');
 const Recognition = require('../models/Recognition');
 const { ACTIVITY_IDS } = require('../utils/activities');
@@ -87,7 +88,11 @@ const registerWorker = asyncHandler(async (req, res) => {
 });
 
 const getByUsername = asyncHandler(async (req, res) => {
-  const worker = await Worker.findOne({ username: req.params.username.toLowerCase() }).populate(
+  const cacheKey = req.params.username.toLowerCase();
+  const cached = profileCache.get(cacheKey);
+  if (cached) return res.json(cached);
+
+  const worker = await Worker.findOne({ username: cacheKey }).populate(
     'user',
     'name hasAvatar avatarVersion isWorker'
   );
@@ -122,7 +127,7 @@ const getByUsername = asyncHandler(async (req, res) => {
     Transaction.countDocuments({ ...succeeded, thanked: true }),
   ]);
 
-  res.json({
+  const body = {
     success: true,
     worker: {
       id: worker._id,
@@ -169,7 +174,9 @@ const getByUsername = asyncHandler(async (req, res) => {
         .sort((a, b) => b.createdAt - a.createdAt)
         .slice(0, 12),
     },
-  });
+  };
+  profileCache.set(cacheKey, body);
+  return res.json(body);
 });
 
 // Leaves a thank-you/rating for someone without paying. Needs no account.
@@ -261,6 +268,7 @@ const updateWorkerProfile = asyncHandler(async (req, res) => {
     worker.yearsExperience = req.body.yearsExperience === '' || req.body.yearsExperience === null ? null : Number(req.body.yearsExperience);
   }
   await worker.save();
+  profileCache.clear(worker.username);
 
   res.json({ success: true, worker: toWorkerDTO(worker) });
 });
