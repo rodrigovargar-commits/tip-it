@@ -67,7 +67,7 @@ const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   // Per IP, and a whole restaurant or phone network can share one: leave room for many people scanning.
   // Sign-in and money routes have their own, much tighter limits.
-  max: 600,
+  max: Number(process.env.API_LIMIT_PER_15MIN) || 1500,
   standardHeaders: true,
   legacyHeaders: false,
   // Photos are cached by the browser and served from memory; they should never use up someone's allowance.

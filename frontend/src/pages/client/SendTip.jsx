@@ -14,7 +14,8 @@ import FormField from '../../components/FormField.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { trackEvent } from '../../utils/analytics.js';
 import { activityLabel } from '../../utils/activities.js';
-import { takeWorkerPrefetch } from '../../utils/prefetch.js';
+import { loadWorker } from '../../utils/loadWorker.js';
+import LoadFailed from '../../components/LoadFailed.jsx';
 import { formatCents, parseAmountInput, quote } from '../../utils/money.js';
 
 // Stripe's script is only fetched when the payment form actually renders, not
@@ -592,33 +593,38 @@ export default function SendTip() {
   const [receipt, setReceipt] = useState(null);
   const [savingContact, setSavingContact] = useState(false);
 
+  const [failed, setFailed] = useState(false);
+  const [slow, setSlow] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+
   useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    setFailed(false);
+    setSlow(false);
+    const slowTimer = setTimeout(() => alive && setSlow(true), 4000);
     (async () => {
       try {
-        // The page's own <script> in index.html already started this request
-        // when the QR was opened; reuse it so we don't wait twice.
-        const pre = takeWorkerPrefetch(username);
-        if (pre) {
-          try {
-            const r = await pre;
-            if (r.ok && r.data?.worker) {
-              setWorker(r.data.worker);
-              return;
-            }
-          } catch {
-            // fall through to the normal request below
-          }
-        }
-        const { data } = await api.get(`/workers/${username}`);
-        setWorker(data.worker);
+        const w = await loadWorker(username, { isAlive: () => alive });
+        if (alive && w) setWorker(w);
+        else if (alive) setFailed(true);
       } catch (err) {
-        toast.error(getErrorMessage(err));
-        navigate('/scan');
+        if (!alive) return;
+        if (err.notFound) {
+          toast.error('No encontramos ese perfil. Revisa el QR.');
+          navigate('/scan');
+        } else {
+          setFailed(true);
+        }
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     })();
-  }, [username, navigate]);
+    return () => {
+      alive = false;
+      clearTimeout(slowTimer);
+    };
+  }, [username, navigate, attempt]);
 
   // Created once with a first amount; the checkout then keeps it in sync.
   const elementsOptions = useMemo(
@@ -656,12 +662,14 @@ export default function SendTip() {
           ))}
         </div>
         <div className="mt-6 h-12 animate-pulse rounded-full bg-punch-orange/40" />
-        <p className="mt-6 text-center text-sm font-medium text-slate-400">Abriendo el perfil…</p>
+        <p className="mt-6 text-center text-sm font-medium text-slate-400">
+          {slow ? 'Despertando el servidor… un momento, ya casi.' : 'Abriendo el perfil…'}
+        </p>
       </div>
     );
   }
 
-  if (!worker) return null;
+  if (failed || !worker) return <LoadFailed onRetry={() => setAttempt((n) => n + 1)} />;
 
   if (!worker.readyForTips && !receipt) {
     return (

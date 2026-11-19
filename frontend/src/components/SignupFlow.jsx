@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { profileLink } from '../utils/publicUrl.js';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { ArrowLeft, Camera, Check, Landmark, Share2, ShieldCheck } from 'lucide-react';
@@ -184,7 +185,7 @@ export default function SignupFlow({ channels, defaultRole = 'worker' }) {
   };
 
   const shareProfile = async () => {
-    const url = `${window.location.origin}/p/${worker?.username}`;
+    const url = profileLink(worker?.username);
     try {
       if (navigator.share) await navigator.share({ title: 'Mi perfil en TIP-IT', url });
       else {

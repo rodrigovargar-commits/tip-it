@@ -36,9 +36,14 @@
             username: u,
             p: fetch(api + '/workers/' + encodeURIComponent(u), { headers: { Accept: 'application/json' } }).then(
               function (r) {
-                return r.json().then(function (j) {
-                  return { ok: r.ok, data: j };
-                });
+                return r.json().then(
+                  function (j) {
+                    return { ok: r.ok, status: r.status, data: j };
+                  },
+                  function () {
+                    return { ok: false, status: r.status, data: null };
+                  }
+                );
               }
             ),
           };

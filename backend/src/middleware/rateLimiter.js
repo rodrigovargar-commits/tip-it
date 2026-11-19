@@ -16,9 +16,11 @@ const authLimiter = rateLimit({
   message: { success: false, message: 'Demasiados intentos, intenta más tarde.' },
 });
 
+// Many guests can share one IP (a venue's wifi, a phone carrier): 15 per 5 minutes cut real tips off
+// during a busy night. Still low enough to stop someone hammering the payment route.
 const tipLimiter = rateLimit({
   windowMs: 5 * 60 * 1000,
-  max: 15,
+  max: Number(process.env.TIP_LIMIT_PER_5MIN) || 60,
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipInTest,

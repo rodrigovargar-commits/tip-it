@@ -1,4 +1,5 @@
 import { photoSrc } from '../utils/avatar.js';
+import { profileLink } from '../utils/publicUrl.js';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -7,7 +8,8 @@ import api, { getErrorMessage } from '../services/api.js';
 import ReviewList from '../components/ReviewList.jsx';
 import Avatar from '../components/Avatar.jsx';
 import { activityLabel } from '../utils/activities.js';
-import { takeWorkerPrefetch } from '../utils/prefetch.js';
+import { loadWorker } from '../utils/loadWorker.js';
+import LoadFailed from '../components/LoadFailed.jsx';
 
 const roundBtn =
   'flex h-10 w-10 items-center justify-center rounded-full border-2 border-punch-ink bg-punch-cream/90 text-punch-ink backdrop-blur hover:bg-punch-yellow';
@@ -29,39 +31,41 @@ export default function PublicProfile() {
   // whole header they look blurry, so those are shown at their own size instead.
   const [smallPhoto, setSmallPhoto] = useState(false);
 
+  const [failed, setFailed] = useState(false);
+  const [slow, setSlow] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+
   useEffect(() => {
     let alive = true;
+    setLoading(true);
+    setFailed(false);
+    setSlow(false);
+    const slowTimer = setTimeout(() => alive && setSlow(true), 4000);
     (async () => {
       try {
-        // The page's own <script> already asked for this person when the link opened.
-        const pre = takeWorkerPrefetch(username);
-        if (pre) {
-          try {
-            const r = await pre;
-            if (r.ok && r.data?.worker) {
-              if (alive) setWorker(r.data.worker);
-              return;
-            }
-          } catch {
-            // fall through to the normal request
-          }
-        }
-        const { data } = await api.get(`/workers/${username}`);
-        if (alive) setWorker(data.worker);
+        const w = await loadWorker(username, { isAlive: () => alive });
+        if (alive && w) setWorker(w);
+        else if (alive) setFailed(true);
       } catch (err) {
-        toast.error(getErrorMessage(err));
-        navigate('/scan');
+        if (!alive) return;
+        if (err.notFound) {
+          toast.error('No encontramos ese perfil. Revisa el QR.');
+          navigate('/scan');
+        } else {
+          setFailed(true);
+        }
       } finally {
         if (alive) setLoading(false);
       }
     })();
     return () => {
       alive = false;
+      clearTimeout(slowTimer);
     };
-  }, [username, navigate]);
+  }, [username, navigate, attempt]);
 
   const share = async () => {
-    const url = `${window.location.origin}/p/${username}`;
+    const url = profileLink(username);
     try {
       if (navigator.share) await navigator.share({ title: `${worker.name} en TIP-IT`, url });
       else {
@@ -81,10 +85,11 @@ export default function PublicProfile() {
           <div className="h-6 w-44 animate-pulse rounded-full bg-punch-ink/10" />
           <div className="h-4 w-32 animate-pulse rounded-full bg-punch-ink/10" />
         </div>
+        {slow && <p className="mt-6 text-center text-sm font-semibold text-slate-500">Despertando el servidor… un momento, ya casi.</p>}
       </div>
     );
   }
-  if (!worker) return null;
+  if (failed || !worker) return <LoadFailed onRetry={() => setAttempt((n) => n + 1)} />;
 
   const name = worker.name || `@${worker.username}`;
   const firstName = name.split(' ')[0];

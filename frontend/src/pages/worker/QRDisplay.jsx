@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { profileLink } from '../../utils/publicUrl.js';
 import toast from 'react-hot-toast';
 import { Plus, Building2 } from 'lucide-react';
 import api, { getErrorMessage } from '../../services/api.js';
@@ -198,9 +199,9 @@ export default function QRDisplay() {
   const current = (qrs || []).find((q) => q.id === selected) || (qrs || [])[0] || null;
   const isMain = !current || current.kind === 'main';
   const qrImage = current?.image || worker.qrCode;
-  const tipUrl = current?.url || `${window.location.origin}/p/${worker.username}`;
+  const tipUrl = current?.url || profileLink(worker.username);
   const caption = isMain ? `@${worker.username}` : current.name;
-  const profileUrl = `${window.location.origin}/p/${worker.username}`;
+  const profileUrl = profileLink(worker.username);
   // Only while developing: lets the card be previewed without downloading it.
   if (import.meta.env.DEV) window.__buildQR = () => buildPrintableQR({ ...worker, qrCode: qrImage }, caption);
 
