@@ -304,7 +304,7 @@ video{width:100%;max-width:340px;display:block;margin:0 auto;border:2px solid va
   }
   tabs.forEach(function(t){t.addEventListener('click',function(){show(t.dataset.tab)})});
   $$('[data-go]').forEach(function(b){b.addEventListener('click',function(){show(b.dataset.go)})});
-  try{history.scrollRestoration='manual'}catch(e){}
+  try{history.scrollRestoration='manual';sessionStorage.removeItem('tipit_guia_try')}catch(e){}
   show((location.hash||'#datos').slice(1),true);
   window.scrollTo(0,0);
 
