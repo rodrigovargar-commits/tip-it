@@ -43,6 +43,20 @@ details summary{cursor:pointer;font-weight:700;min-height:40px;display:flex;alig
 details ol{margin:6px 0 0;padding-left:22px}
 details li{margin:6px 0}
 #lock{max-width:420px;margin:12vh auto 0}
+#recent{margin-bottom:18px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.filters button{min-height:42px;padding:6px 14px;border:2px solid var(--ink);border-radius:99px;background:var(--card);color:var(--ink);font:700 15px 'DM Sans';cursor:pointer}
+.filters button[aria-pressed=true]{background:var(--yellow);color:#0A2F2F}
+#list{display:grid;gap:8px;max-height:340px;overflow:auto;margin-top:8px;padding:2px 6px 2px 2px}
+.item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:2px solid var(--ink);border-radius:16px;background:var(--card);color:var(--ink);padding:10px 12px;min-height:60px;cursor:pointer;font:inherit}
+.item[aria-current=true]{background:var(--yellow);color:#0A2F2F}
+.item b{display:block;font-size:17px;line-height:1.15}
+.item small{display:block;font-size:13.5px;opacity:.85}
+.item .grow{flex:1;min-width:0}
+.item .grow b,.item .grow small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge{flex:none;font:700 12.5px 'DM Sans';border:2px solid currentColor;border-radius:99px;padding:2px 9px;white-space:nowrap}
+.badge.on{color:var(--ok)}.badge.off{color:var(--muted)}
+.item[aria-current=true] .badge{color:#0A2F2F}
 #app[hidden],#lock[hidden]{display:none}
 .preview img#shot{width:240px;height:384px;border:2px solid var(--ink);border-radius:10px;background:#fff;display:block;margin:0 auto}
 #printimg{display:none}
@@ -68,6 +82,20 @@ details li{margin:6px 0}
   <header><img src="/favicon.svg" alt="" /><b>TIP-IT</b></header>
   <h1>Etiqueta QR y chip NFC</h1>
   <p class="lead">Escribe el usuario del cliente. Te doy la etiqueta (solo el QR y su usuario) lista para tu Niimbot de 50 × 80 mm, y el enlace para su chip.</p>
+
+  <div id="recent" class="card">
+    <h2 style="font-size:24px">Recién registrados</h2>
+    <p style="margin:6px 0 0;color:var(--muted)">Toca a la persona y abajo sale su etiqueta lista.</p>
+    <div class="filters" role="group" aria-label="Filtrar">
+      <button type="button" data-f="all" aria-pressed="true">Todos</button>
+      <button type="button" data-f="on" aria-pressed="false">Cuenta activa (con banco)</button>
+      <button type="button" data-f="off" aria-pressed="false">Sin banco</button>
+    </div>
+    <input id="find" type="text" autocomplete="off" placeholder="Buscar por nombre o usuario" aria-label="Buscar" />
+    <div class="row"><button class="btn alt" id="reload" type="button">Actualizar lista</button></div>
+    <div id="rmsg" class="msg" role="status" aria-live="polite"></div>
+    <div id="list"></div>
+  </div>
 
   <div class="grid">
     <div>
@@ -274,7 +302,65 @@ details li{margin:6px 0}
   var KEYSTORE='tipit_etq_key';
   function getKey(){try{return localStorage.getItem(KEYSTORE)||''}catch(e){return ''}}
   function setKey(k){try{if(k)localStorage.setItem(KEYSTORE,k);else localStorage.removeItem(KEYSTORE)}catch(e){}}
-  function showApp(){$('lock').hidden=true;$('app').hidden=false;refresh();var u0=cleanUser($('user').value);if(u0.length>=3&&!LOCAL)lookup(u0);
+
+  /* ---- recien registrados (datos de tu panel de administrador) ---- */
+  var USERS=[], FILTER='all';
+  function ago(iso){
+    var m=Math.max(0,Math.round((Date.now()-new Date(iso).getTime())/60000));
+    if(m<2)return 'hace un momento'; if(m<60)return 'hace '+m+' min';
+    var h=Math.round(m/60); if(h<24)return 'hace '+h+' h';
+    var d=Math.round(h/24); return d===1?'ayer':'hace '+d+' días';
+  }
+  function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  function renderList(){
+    var q=($('find').value||'').trim().toLowerCase(), cur=cleanUser($('user').value);
+    var rows=USERS.filter(function(u){
+      if(FILTER==='on'&&!u.ready)return false; if(FILTER==='off'&&u.ready)return false;
+      return !q||(u.name||'').toLowerCase().indexOf(q)>-1||(u.username||'').toLowerCase().indexOf(q)>-1;
+    }).slice(0,60);
+    $('list').innerHTML=rows.length?rows.map(function(u){
+      return '<button type="button" class="item" data-u="'+esc(u.username)+'"'+(u.username===cur?' aria-current="true"':'')+'>'+
+        '<span class="grow"><b>'+esc(u.name||u.username)+'</b><small>@'+esc(u.username)+' · '+esc(ago(u.createdAt))+(u.tips?' · '+u.tips+' propinas':'')+'</small></span>'+
+        '<span class="badge '+(u.ready?'on':'off')+'">'+(u.ready?'✓ activa':'sin banco')+'</span></button>';
+    }).join(''):'<p style="margin:6px 0;color:var(--muted)">No hay nadie con ese filtro.</p>';
+  }
+  function loadUsers(){
+    if(LOCAL){$('recent').hidden=true;return}
+    var k=getKey(); if(!k)return;
+    setMsg($('rmsg'),'Cargando… (si el servidor estaba dormido puede tardar unos segundos)','');
+    var ctl=new AbortController(), to=setTimeout(function(){ctl.abort()},45000);
+    fetch(API+'/admin/users',{signal:ctl.signal,headers:{'x-admin-key':k,Accept:'application/json'}}).then(function(r){
+      clearTimeout(to);
+      if(r.status===401||r.status===403){setKey('');showLock('Tu clave ya no sirve. Escríbela otra vez.');return null}
+      if(!r.ok)throw new Error('http');
+      return r.json();
+    }).then(function(j){
+      if(!j)return;
+      USERS=(j.users||[]).map(function(u){return {username:u.username,name:u.name,ready:!!u.ready,tips:u.tips||0,createdAt:u.createdAt}});
+      setMsg($('rmsg'),USERS.length?USERS.length+' cuentas, las más nuevas primero.':'Todavía no hay cuentas.','ok');
+      renderList();
+    }).catch(function(){
+      clearTimeout(to);
+      setMsg($('rmsg'),'No pude cargar la lista. Toca «Actualizar lista» o escribe el usuario a mano.','bad');
+    });
+  }
+  $('list').addEventListener('click',function(e){
+    var b=e.target.closest('.item'); if(!b)return;
+    $('user').value=b.getAttribute('data-u'); refresh(); renderList();
+    var u=cleanUser($('user').value); if(u.length>=3&&!LOCAL){clearTimeout(timer);lookup(u)}
+    $('user').scrollIntoView({behavior:'smooth',block:'center'});
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.filters button'),function(btn){
+    btn.addEventListener('click',function(){
+      FILTER=btn.getAttribute('data-f');
+      Array.prototype.forEach.call(document.querySelectorAll('.filters button'),function(x){x.setAttribute('aria-pressed',x===btn)});
+      renderList();
+    });
+  });
+  $('find').addEventListener('input',renderList);
+  $('reload').addEventListener('click',loadUsers);
+
+  function showApp(){$('lock').hidden=true;$('app').hidden=false;refresh();loadUsers();var u0=cleanUser($('user').value);if(u0.length>=3&&!LOCAL)lookup(u0);
     if(!window.isSecureContext||!('NDEFReader' in window)){$('write').style.display='none';setMsg($('nfcmsg'),'Para escribir el chip usa la app NFC Tools (pasos abajo).','')}}
   function showLock(msg){$('app').hidden=true;$('lock').hidden=false;setMsg($('lockmsg'),msg||'','bad')}
   function verify(k){
