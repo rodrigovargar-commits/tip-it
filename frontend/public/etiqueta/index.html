@@ -61,12 +61,12 @@ details li{margin:6px 0}
 .preview img#shot{width:240px;height:384px;border:2px solid var(--ink);border-radius:10px;background:#fff;display:block;margin:0 auto}
 #printimg{display:none}
 @media print{
-  @page{size:50mm 80mm;margin:0}
   body{background:#fff}
   .wrap{display:none}
-  #printimg{display:block;width:50mm;height:80mm}
+  #printimg{display:block}
 }
 </style>
+<style id="pagecss"></style>
 </head>
 <body>
 <div class="wrap">
@@ -104,12 +104,17 @@ details li{margin:6px 0}
         <input id="user" type="text" inputmode="text" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="por ejemplo: ana.torres" />
         <div id="status" class="msg" role="status" aria-live="polite"></div>
 
+        <div class="filters" role="group" aria-label="Orientación de la etiqueta" style="margin-top:14px">
+          <button type="button" id="oh" aria-pressed="true">Horizontal (80 × 50)</button>
+          <button type="button" id="ov" aria-pressed="false">Vertical (50 × 80)</button>
+        </div>
         <div class="row">
-          <button class="btn" id="sh">Compartir o guardar etiqueta</button>
+          <button class="btn" id="sh">Guardar en Fotos</button>
           <button class="btn alt" id="dl">Descargar PNG</button>
           <button class="btn alt" id="pr">Imprimir</button>
           <a class="btn alt" id="view" href="#" target="_blank" rel="noopener" style="display:none">Ver su perfil</a>
         </div>
+        <div class="msg" style="font-weight:500;font-size:15px;color:var(--muted)">En el menú que sale toca <b>«Guardar imagen»</b>: se guarda directo en la app de Fotos.</div>
         <div class="note">Esta etiqueta lleva <b>el mismo QR</b> que su perfil en la app: es el mismo enlace, solo que dibujado nítido para impresión térmica.</div>
       </div>
 
@@ -154,9 +159,9 @@ details li{margin:6px 0}
     </div>
 
     <div class="card preview">
-      <canvas id="cv" width="400" height="640" style="display:none"></canvas>
+      <canvas id="cv" width="640" height="400" style="display:none"></canvas>
       <img id="shot" alt="Vista previa de la etiqueta" />
-      <small>Vista previa. Tamaño real: <b>50 × 80 mm</b> (400 × 640 puntos). En el celular, mantén presionada la imagen para guardarla.</small>
+      <small>Vista previa. Tamaño real: <b id="dim">80 × 50 mm</b>. En el celular, mantén presionada la imagen para guardarla.</small>
     </div>
   </div>
   </div>
@@ -167,7 +172,7 @@ details li{margin:6px 0}
 (function(){
   var PUBLIC='https://www.tipit.com.mx';
   var API='https://tip-it-backend-65q4.onrender.com/api';
-  var W=400,H=640;
+  var W=640,H=400,ORIENT='h';
   var $=function(id){return document.getElementById(id)};
   var cv=$('cv'), ctx=cv.getContext('2d');
   var ready=false, lastName='';
@@ -196,7 +201,7 @@ details li{margin:6px 0}
     return {lines:b?[a,b]:[a],size:fs};
   }
 
-  function draw(user){
+  function drawV(user){
     ctx.setTransform(1,0,0,1,0,0);
     ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
     ctx.fillStyle='#000'; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
@@ -224,6 +229,52 @@ details li{margin:6px 0}
 
   var timer=null;
   function setMsg(el,text,cls){el.textContent=text;el.className='msg'+(cls?' '+cls:'')}
+  function userLines(label,maxW){
+    var s1=fit(label,maxW,46,30,800);
+    if(ctx.measureText(label).width<=maxW) return {lines:[label],size:s1};
+    var parts=label.match(/[^._]+[._]?/g)||[label];
+    for(var fs=42;fs>=18;fs-=2){
+      ctx.font=800+' '+fs+"px 'Bricolage Grotesque','DM Sans',sans-serif";
+      var lines=[],cur='';
+      parts.forEach(function(pt){var t=cur+pt; if(!cur||ctx.measureText(t).width<=maxW)cur=t; else{lines.push(cur);cur=pt}});
+      if(cur)lines.push(cur);
+      var ok=lines.every(function(L){return ctx.measureText(L).width<=maxW});
+      if(ok&&lines.length<=4) return {lines:lines,size:fs};
+    }
+    return {lines:[label],size:18};
+  }
+  function drawH(user){
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#000'; ctx.textBaseline='alphabetic';
+    // QR a la izquierda (mismos datos que el QR de la app), lo mas grande que cabe a lo alto
+    var qr=TipQR.create(profileUrl(user),{errorCorrectionLevel:'M'});
+    var n=qr.modules.size, quiet=2, sc=Math.floor(340/(n+quiet*2)), total=sc*(n+quiet*2);
+    var qx=26+sc*quiet, qy=Math.round((H-total)/2)+sc*quiet;
+    for(var r=0;r<n;r++)for(var c=0;c<n;c++) if(qr.modules.get(r,c)) ctx.fillRect(qx+c*sc,qy+r*sc,sc,sc);
+    // usuario a la derecha
+    var left=26+total+6, right=W-26, maxW=right-left;
+    var L=userLines('@'+user,maxW);
+    ctx.font=800+' '+L.size+"px 'Bricolage Grotesque','DM Sans',sans-serif"; ctx.textAlign='center';
+    var lh=Math.round(L.size*1.1), y0=Math.round(H/2-(L.lines.length*lh)/2+L.size*0.82);
+    L.lines.forEach(function(t,i){ctx.fillText(t,(left+right)/2,y0+i*lh)});
+    var id=ctx.getImageData(0,0,W,H), d=id.data;
+    for(var i=0;i<d.length;i+=4){var lum=0.3*d[i]+0.59*d[i+1]+0.11*d[i+2]; var v=lum<165?0:255; d[i]=d[i+1]=d[i+2]=v; d[i+3]=255}
+    ctx.putImageData(id,0,0);
+  }
+  function draw(user){ return ORIENT==='h'?drawH(user):drawV(user) }
+  function setOrient(o){
+    ORIENT=(o==='v')?'v':'h';
+    W=(ORIENT==='h')?640:400; H=(ORIENT==='h')?400:640;
+    cv.width=W; cv.height=H;
+    var shot=$('shot'); shot.style.width=(ORIENT==='h'?'320px':'240px'); shot.style.height=(ORIENT==='h'?'200px':'384px');
+    $('dim').textContent=(ORIENT==='h')?'80 × 50 mm (640 × 400 puntos)':'50 × 80 mm (400 × 640 puntos)';
+    $('oh').setAttribute('aria-pressed',ORIENT==='h'); $('ov').setAttribute('aria-pressed',ORIENT==='v');
+    $('pagecss').textContent='@media print{@page{size:'+(ORIENT==='h'?'80mm 50mm':'50mm 80mm')+';margin:0}#printimg{width:'+(ORIENT==='h'?'80mm':'50mm')+';height:'+(ORIENT==='h'?'50mm':'80mm')+'}}';
+    try{localStorage.setItem('tipit_etq_orient',ORIENT)}catch(e){}
+    ready=false; drawnFor='';
+    refresh();
+  }
   var drawnFor='';
   function finish(u){
     draw(u); ready=true; drawnFor=u;
@@ -262,7 +313,7 @@ details li{margin:6px 0}
   function toFile(u){
     var bin=atob(cv.toDataURL('image/png').split(',')[1]), n=bin.length, arr=new Uint8Array(n);
     for(var i=0;i<n;i++)arr[i]=bin.charCodeAt(i);
-    return new File([arr],'etiqueta-tipit-'+u+'-50x80.png',{type:'image/png'});
+    return new File([arr],'etiqueta-tipit-'+u+(ORIENT==='h'?'-80x50.png':'-50x80.png'),{type:'image/png'});
   }
   function blank(){ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);ctx.fillStyle='#9aa';ctx.font="600 26px 'DM Sans',sans-serif";ctx.textAlign='center';ctx.fillText('Escribe el usuario',W/2,H/2);$('shot').src=cv.toDataURL('image/png')}
 
@@ -294,6 +345,10 @@ details li{margin:6px 0}
     timer=setTimeout(function(){lookup(u)},600);
   });
 
+  $('oh').addEventListener('click',function(){setOrient('h')});
+  $('ov').addEventListener('click',function(){setOrient('v')});
+  // en el celular no sirve "Descargar" (va a Archivos) ni "Imprimir": solo Fotos
+  if(('ontouchstart' in window)||navigator.maxTouchPoints>0){$('dl').style.display='none';$('pr').style.display='none'}
   $('sh').addEventListener('click',function(){
     var u=ensure(); if(!u)return;
     var file=toFile(u);
@@ -309,7 +364,7 @@ details li{margin:6px 0}
   $('dl').addEventListener('click',function(){
     var u=ensure(); if(!u)return;
     var url=URL.createObjectURL(toFile(u));
-    var a=document.createElement('a'); a.href=url; a.download='etiqueta-tipit-'+u+'-50x80.png';
+    var a=document.createElement('a'); a.href=url; a.download='etiqueta-tipit-'+u+(ORIENT==='h'?'-80x50.png':'-50x80.png');
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function(){URL.revokeObjectURL(url)},60000);
     setMsg($('status'),'Si se abrió la imagen en otra pantalla, mantenla presionada y elige «Guardar en Fotos».','');
@@ -415,6 +470,8 @@ details li{margin:6px 0}
   $('key').addEventListener('keydown',function(e){if(e.key==='Enter')$('enter').click()});
   var q=new URLSearchParams(location.search).get('u');
   if(q){$('user').value=cleanUser(q)}
+  var savedO='h'; try{savedO=localStorage.getItem('tipit_etq_orient')||'h'}catch(e){}
+  setOrient(savedO);
   blank();
   if(LOCAL){showApp()}
   else{
