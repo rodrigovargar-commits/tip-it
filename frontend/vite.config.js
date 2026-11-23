@@ -10,7 +10,7 @@ export default defineConfig({
       // main.jsx registers the service worker itself, so a new version reloads the page.
       injectRegister: false,
       // /guia is a separate static page (not part of the app): the service worker must not swallow it.
-      workbox: { cleanupOutdatedCaches: true, clientsClaim: true, skipWaiting: true, navigateFallbackDenylist: [/^\/guia/, /^\/api/], globIgnores: ['guia/**'] },
+      workbox: { cleanupOutdatedCaches: true, clientsClaim: true, skipWaiting: true, navigateFallbackDenylist: [/^\/guia/, /^\/etiqueta/, /^\/api/], globIgnores: ['guia/**', 'etiqueta/**'] },
       includeAssets: ['favicon.svg', 'og-image.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'],
       manifest: {
         name: 'TIP-IT',

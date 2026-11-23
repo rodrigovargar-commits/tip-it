@@ -69,6 +69,7 @@ export default function App() {
         <Route path="/terminos" element={<Terms />} />
         <Route path="/como-funciona" element={<HowItWorks />} />
         <Route path="/guia" element={<GuiaRedirect />} />
+        <Route path="/etiqueta" element={<GuiaRedirect />} />
         {/* Owner's private portal; gated by the admin key, not by an account. */}
         <Route path="/admin" element={<AdminPortal />} />
 

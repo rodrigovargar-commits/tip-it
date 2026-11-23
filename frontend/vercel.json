@@ -2,6 +2,8 @@
   "rewrites": [
     { "source": "/guia", "destination": "/guia/index.html" },
     { "source": "/guia/", "destination": "/guia/index.html" },
+    { "source": "/etiqueta", "destination": "/etiqueta/index.html" },
+    { "source": "/etiqueta/", "destination": "/etiqueta/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

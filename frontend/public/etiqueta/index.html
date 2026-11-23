@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>Etiqueta QR y chip NFC — TIP-IT</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<style>
+@font-face{font-family:'Bricolage Grotesque';font-weight:700 800;font-display:swap;src:url('../fonts/bricolage-latin.woff2') format('woff2')}
+@font-face{font-family:'DM Sans';font-weight:400 700;font-display:swap;src:url('../fonts/dmsans-latin.woff2') format('woff2')}
+:root{--ink:#0A2F2F;--cream:#FFF8EC;--yellow:#FCE883;--orange:#FF8243;--pink:#FFC0CB;--card:#fff;--muted:#3f5d5d;--ok:#0b7a4b;--bad:#b3261e}
+@media (prefers-color-scheme: dark){:root{--ink:#FFF8EC;--cream:#0A2F2F;--card:#103d3d;--muted:#bcd3d0;--ok:#7fe0b0;--bad:#ff9d94}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--ink);font:400 17px/1.45 'DM Sans',system-ui,sans-serif}
+h1,h2{font-family:'Bricolage Grotesque','DM Sans',sans-serif;font-weight:800;line-height:1.08;margin:0}
+.wrap{max-width:980px;margin:0 auto;padding:16px 16px 60px}
+header{display:flex;align-items:center;gap:10px;padding:6px 0 4px}
+header img{width:36px;height:36px}
+header b{font:800 22px 'Bricolage Grotesque'}
+h1{font-size:clamp(28px,5vw,42px);margin:8px 0 4px}
+.lead{color:var(--muted);margin:0 0 16px}
+.grid{display:grid;gap:18px}
+@media(min-width:820px){.grid{grid-template-columns:1fr 330px;align-items:start}}
+.card{background:var(--card);border:2px solid var(--ink);border-radius:22px;padding:16px;box-shadow:4px 4px 0 var(--ink)}
+label{display:block;font-weight:700;margin:12px 0 6px}
+input[type=text]{width:100%;min-height:52px;border:2px solid var(--ink);border-radius:14px;padding:8px 12px;font:600 19px 'DM Sans';background:var(--card);color:var(--ink)}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:10px 18px;border:2px solid var(--ink);border-radius:99px;background:var(--ink);color:var(--cream);font:700 17px 'DM Sans';cursor:pointer;text-decoration:none}
+.btn.alt{background:var(--card);color:var(--ink)}
+.btn[disabled]{opacity:.45;cursor:default}
+.chk{display:flex;gap:10px;align-items:center;font-weight:700;margin:14px 0 0}
+.chk input{width:24px;height:24px;accent-color:#FF8243}
+.msg{margin-top:10px;font-weight:700;min-height:24px}
+.msg.ok{color:var(--ok)}.msg.bad{color:var(--bad)}
+.note{background:var(--pink);color:#0A2F2F;border:2px solid #0A2F2F;border-radius:14px;padding:10px 12px;font-size:15px;margin-top:12px}
+.preview{text-align:center}
+.preview canvas{width:240px;height:384px;border:2px solid var(--ink);border-radius:10px;background:#fff;image-rendering:auto}
+.preview small{display:block;color:var(--muted);margin-top:8px}
+.url{font:600 15px/1.35 'DM Sans';word-break:break-all;background:var(--cream);border:2px dashed var(--ink);border-radius:12px;padding:8px 10px;margin:6px 0}
+details{border-top:2px dashed var(--ink);padding:10px 0}
+details summary{cursor:pointer;font-weight:700;min-height:40px;display:flex;align-items:center}
+details ol{margin:6px 0 0;padding-left:22px}
+details li{margin:6px 0}
+#lock{max-width:420px;margin:12vh auto 0}
+#app[hidden],#lock[hidden]{display:none}
+.preview img#shot{width:240px;height:384px;border:2px solid var(--ink);border-radius:10px;background:#fff;display:block;margin:0 auto}
+#printimg{display:none}
+@media print{
+  @page{size:50mm 80mm;margin:0}
+  body{background:#fff}
+  .wrap{display:none}
+  #printimg{display:block;width:50mm;height:80mm}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="lock" class="card" hidden>
+    <h1 style="font-size:30px">Solo para ti</h1>
+    <p class="lead" style="margin-top:6px">Escribe tu clave de administrador. Se queda guardada en este celular.</p>
+    <label for="key">Clave</label>
+    <input id="key" type="password" autocomplete="current-password" />
+    <div class="row"><button class="btn" id="enter">Entrar</button></div>
+    <div id="lockmsg" class="msg" role="status" aria-live="polite"></div>
+  </div>
+  <div id="app" hidden>
+  <header><img src="/favicon.svg" alt="" /><b>TIP-IT</b></header>
+  <h1>Etiqueta QR y chip NFC</h1>
+  <p class="lead">Escribe el usuario del cliente. Te doy la etiqueta (solo el QR y su usuario) lista para tu Niimbot de 50 × 80 mm, y el enlace para su chip.</p>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <label for="user">Usuario del cliente</label>
+        <input id="user" type="text" inputmode="text" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="por ejemplo: ana.torres" />
+        <div id="status" class="msg" role="status" aria-live="polite"></div>
+
+        <div class="row">
+          <button class="btn" id="sh">Compartir o guardar etiqueta</button>
+          <button class="btn alt" id="dl">Descargar PNG</button>
+          <button class="btn alt" id="pr">Imprimir</button>
+          <a class="btn alt" id="view" href="#" target="_blank" rel="noopener" style="display:none">Ver su perfil</a>
+        </div>
+        <div class="note">Esta etiqueta lleva <b>el mismo QR</b> que su perfil en la app: es el mismo enlace, solo que dibujado nítido para impresión térmica.</div>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <h2 style="font-size:24px">Chip NFC</h2>
+        <p style="margin:6px 0 0;color:var(--muted)">Este es el enlace que va dentro del chip. Lleva <b>?src=nfc</b> para que en el panel se vea cuántos entran por NFC.</p>
+        <div class="url" id="nfcurl">—</div>
+        <div class="row">
+          <button class="btn alt" id="copy">Copiar enlace</button>
+          <button class="btn" id="write">Escribir en el chip (Android)</button>
+        </div>
+        <div id="nfcmsg" class="msg" role="status" aria-live="polite"></div>
+        <details>
+          <summary>Cómo escribirlo desde un iPhone o cualquier celular</summary>
+          <ol>
+            <li>Baja la app gratis <b>NFC Tools</b>.</li>
+            <li>Entra a <b>Escribir</b> → <b>Añadir un registro</b> → <b>URL / URI</b>.</li>
+            <li>Pega el enlace de arriba y toca <b>Escribir</b>.</li>
+            <li>Acerca el chip a la parte de atrás del celular hasta que diga que terminó.</li>
+            <li>Prueba: acerca otro celular. Debe abrir el perfil del cliente.</li>
+          </ol>
+        </details>
+        <details>
+          <summary>Pasos para cada cliente (en 3 minutos)</summary>
+          <ol>
+            <li>El cliente se registra y elige su usuario.</li>
+            <li>Escribe ese usuario aquí. Debe salir su nombre en verde.</li>
+            <li>Descarga la etiqueta y mándala a tu Niimbot.</li>
+            <li>Escribe el chip con el enlace de arriba y pruébalo.</li>
+            <li>Pega el chip en el lugar donde el cliente lo vea y, <b>encima, la etiqueta</b>. Escanéala tú con tu cámara como prueba final.</li>
+          </ol>
+        </details>
+        <details>
+          <summary>Consejos para que dure y funcione</summary>
+          <ol>
+            <li>El chip no funciona bien pegado directo sobre metal: pégalo en vidrio, plástico, madera o cartón, o usa chips «para metal».</li>
+            <li>Bloquear el chip (solo lectura) es para siempre. Hazlo solo después de probar que abre bien.</li>
+            <li>Si el cliente cambia de usuario, el QR y el chip dejan de servir: avísale que no lo cambie.</li>
+          </ol>
+        </details>
+      </div>
+    </div>
+
+    <div class="card preview">
+      <canvas id="cv" width="400" height="640" style="display:none"></canvas>
+      <img id="shot" alt="Vista previa de la etiqueta" />
+      <small>Vista previa. Tamaño real: <b>50 × 80 mm</b> (400 × 640 puntos). En el celular, mantén presionada la imagen para guardarla.</small>
+    </div>
+  </div>
+  </div>
+</div>
+<img id="printimg" alt="" />
+<script src="./qrcode.js"></script>
+<script>
+(function(){
+  var PUBLIC='https://www.tipit.com.mx';
+  var API='https://tip-it-backend-65q4.onrender.com/api';
+  var W=400,H=640;
+  var $=function(id){return document.getElementById(id)};
+  var cv=$('cv'), ctx=cv.getContext('2d');
+  var ready=false, lastName='';
+  var LOCAL=(location.protocol==='file:');
+
+  function cleanUser(v){return String(v||'').trim().replace(/^@/,'').toLowerCase().replace(/[^a-z0-9._]/g,'')}
+  function profileUrl(u){return PUBLIC+'/p/'+encodeURIComponent(u)}
+  function nfcUrl(u){return profileUrl(u)+'?src=nfc'}
+
+  function fit(text,maxW,start,min,weight){
+    var s=start;
+    do{ctx.font=weight+' '+s+"px 'Bricolage Grotesque','DM Sans',sans-serif"; if(ctx.measureText(text).width<=maxW||s<=min)break; s-=2}while(s>=min);
+    return s;
+  }
+  function wrap2(text,maxW,start,min,weight){
+    // una linea si cabe; si no, dos
+    var s=fit(text,maxW,start,min,weight);
+    if(ctx.measureText(text).width<=maxW) return {lines:[text],size:s};
+    var words=text.split(/\s+/), a='', i=0;
+    for(;i<words.length;i++){var t=(a?a+' ':'')+words[i]; if(ctx.measureText(t).width>maxW&&a) break; a=t}
+    var b=words.slice(i).join(' ');
+    var s2=Math.min(s,start);
+    var fs=s2;
+    while(fs>min){ctx.font=weight+' '+fs+"px 'Bricolage Grotesque','DM Sans',sans-serif"; if(ctx.measureText(a).width<=maxW&&ctx.measureText(b).width<=maxW)break; fs-=2}
+    if(ctx.measureText(b).width>maxW){while(b.length>1&&ctx.measureText(b+'…').width>maxW)b=b.slice(0,-1);b=b+'…'}
+    return {lines:b?[a,b]:[a],size:fs};
+  }
+
+  function draw(user){
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.fillStyle='#fff'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#000'; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+    // QR: mismos datos que el QR de la app (misma libreria, correccion M), lo mas grande que cabe
+    var qr=TipQR.create(profileUrl(user),{errorCorrectionLevel:'M'});
+    var n=qr.modules.size, quiet=2, sc=Math.floor(350/(n+quiet*2)), px=sc*n;
+    var label='@'+user, fs=fit(label,340,46,18,800);
+    var blockH=px+sc*quiet+22+fs;           // QR + espacio + usuario
+    var top=Math.round((H-blockH)/2);
+    var qx=Math.round((W-px)/2), qy=top;
+    for(var r=0;r<n;r++)for(var c=0;c<n;c++) if(qr.modules.get(r,c)) ctx.fillRect(qx+c*sc,qy+r*sc,sc,sc);
+    ctx.font=800+' '+fs+"px 'Bricolage Grotesque','DM Sans',sans-serif";
+    ctx.fillText(label,W/2,qy+px+sc*quiet+22+Math.round(fs*0.8));
+    // blanco y negro puro (la impresora termica no imprime grises)
+    var id=ctx.getImageData(0,0,W,H), d=id.data;
+    for(var i=0;i<d.length;i+=4){var lum=0.3*d[i]+0.59*d[i+1]+0.11*d[i+2]; var v=lum<165?0:255; d[i]=d[i+1]=d[i+2]=v; d[i+3]=255}
+    ctx.putImageData(id,0,0);
+  }
+  function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+  function nfcIcon(cx,cy){
+    ctx.lineWidth=3.5; ctx.lineCap='round';
+    for(var i=0;i<3;i++){var r=7+i*7; ctx.beginPath(); ctx.arc(cx-12,cy,r,-0.9,0.9); ctx.stroke()}
+    ctx.beginPath(); ctx.arc(cx-12,cy,2.2,0,Math.PI*2); ctx.fill();
+  }
+
+  var timer=null;
+  function setMsg(el,text,cls){el.textContent=text;el.className='msg'+(cls?' '+cls:'')}
+  function refresh(){
+    var u=cleanUser($('user').value);
+    if($('user').value!==u && $('user').value.replace(/^@/,'')!==u){/* se limpia solo */}
+    if(!u){ready=false;$('nfcurl').textContent='—';$('view').style.display='none';blank();return}
+    $('nfcurl').textContent=nfcUrl(u);
+    $('view').href=profileUrl(u);$('view').style.display='inline-flex';
+    var go=function(){draw(u);ready=true;var d=cv.toDataURL('image/png');$('printimg').src=d;$('shot').src=d};
+    if(document.fonts&&document.fonts.load){Promise.all([document.fonts.load("800 40px 'Bricolage Grotesque'"),document.fonts.load("500 22px 'DM Sans'"),document.fonts.load("600 22px 'DM Sans'")]).then(go,go)}else go();
+  }
+  function blank(){ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);ctx.fillStyle='#9aa';ctx.font="600 26px 'DM Sans',sans-serif";ctx.textAlign='center';ctx.fillText('Escribe el usuario',W/2,H/2);$('shot').src=cv.toDataURL('image/png')}
+
+  function lookup(u){
+    setMsg($('status'),'Buscando…','');
+    var ctl=new AbortController(); var to=setTimeout(function(){ctl.abort()},35000);
+    fetch(API+'/workers/'+encodeURIComponent(u),{signal:ctl.signal,headers:{Accept:'application/json'}}).then(function(r){
+      clearTimeout(to);
+      if(r.status===404){setMsg($('status'),'No encontré ese usuario. Revisa cómo lo escribió el cliente.','bad');return null}
+      return r.json().then(function(j){return {ok:r.ok,j:j}});
+    }).then(function(res){
+      if(!res) return;
+      if(!res.ok||!res.j.worker){setMsg($('status'),'No pude verificarlo ahora. Puedes escribir el nombre a mano.','bad');return}
+      var w=res.j.worker;
+      if(cleanUser($('user').value)!==u) return;
+      setMsg($('status'),'✓ '+(w.name||u)+(w.readyForTips?' · ya puede recibir propinas':' · aún no conecta su banco: ayúdalo con la guía'),w.readyForTips?'ok':'');
+      refresh();
+    }).catch(function(){
+      clearTimeout(to);
+      setMsg($('status'),'No pude verificar el usuario (sin conexión o el servidor tarda). Escribe el nombre a mano y revisa que el usuario esté bien.','bad');
+    });
+  }
+
+  $('user').addEventListener('input',function(){
+    refresh(); clearTimeout(timer);
+    var u=cleanUser($('user').value);
+    if(u.length<3){setMsg($('status'),'','');return}
+    if(LOCAL){setMsg($('status'),'Revisa que sea el usuario correcto con el botón «Ver su perfil».','');return}
+    timer=setTimeout(function(){lookup(u)},600);
+  });
+
+  $('sh').addEventListener('click',function(){
+    var u=cleanUser($('user').value); if(!u||!ready){setMsg($('status'),'Primero escribe el usuario.','bad');return}
+    cv.toBlob(function(blob){
+      var file=new File([blob],'etiqueta-tipit-'+u+'-50x80.png',{type:'image/png'});
+      if(navigator.canShare&&navigator.canShare({files:[file]})){
+        navigator.share({files:[file]}).catch(function(){});
+      } else { $('dl').click(); }
+    },'image/png');
+  });
+  $('dl').addEventListener('click',function(){
+    var u=cleanUser($('user').value); if(!u||!ready){setMsg($('status'),'Primero escribe el usuario.','bad');return}
+    var a=document.createElement('a'); a.href=cv.toDataURL('image/png'); a.download='etiqueta-tipit-'+u+'-50x80.png';
+    document.body.appendChild(a); a.click(); a.remove();
+  });
+  $('pr').addEventListener('click',function(){
+    var u=cleanUser($('user').value); if(!u||!ready){setMsg($('status'),'Primero escribe el usuario.','bad');return}
+    window.print();
+  });
+  $('copy').addEventListener('click',function(){
+    var u=cleanUser($('user').value); if(!u){setMsg($('nfcmsg'),'Primero escribe el usuario.','bad');return}
+    var t=nfcUrl(u);
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){setMsg($('nfcmsg'),'Enlace copiado.','ok')},function(){setMsg($('nfcmsg'),'No pude copiar. Mantén presionado el enlace y cópialo.','bad')});
+  });
+  $('write').addEventListener('click',function(){
+    var u=cleanUser($('user').value); if(!u){setMsg($('nfcmsg'),'Primero escribe el usuario.','bad');return}
+    if(!('NDEFReader' in window)){setMsg($('nfcmsg'),'Este navegador no puede escribir NFC. Usa Chrome en un Android, o la app NFC Tools (instrucciones abajo).','bad');return}
+    setMsg($('nfcmsg'),'Acerca el chip a la parte de atrás del celular…','');
+    new NDEFReader().write({records:[{recordType:'url',data:nfcUrl(u)}]}).then(function(){
+      setMsg($('nfcmsg'),'✓ Chip escrito. Pruébalo acercando otro celular.','ok');
+    }).catch(function(e){
+      setMsg($('nfcmsg'),'No se pudo escribir ('+(e&&e.name||'error')+'). Revisa que el NFC esté activado y vuelve a intentar.','bad');
+    });
+  });
+
+
+  /* ---- candado: solo tu clave de administrador abre la herramienta ---- */
+  var KEYSTORE='tipit_etq_key';
+  function getKey(){try{return localStorage.getItem(KEYSTORE)||''}catch(e){return ''}}
+  function setKey(k){try{if(k)localStorage.setItem(KEYSTORE,k);else localStorage.removeItem(KEYSTORE)}catch(e){}}
+  function showApp(){$('lock').hidden=true;$('app').hidden=false;refresh();var u0=cleanUser($('user').value);if(u0.length>=3&&!LOCAL)lookup(u0);
+    if(!window.isSecureContext||!('NDEFReader' in window)){$('write').style.display='none';setMsg($('nfcmsg'),'Para escribir el chip usa la app NFC Tools (pasos abajo).','')}}
+  function showLock(msg){$('app').hidden=true;$('lock').hidden=false;setMsg($('lockmsg'),msg||'','bad')}
+  function verify(k){
+    return fetch(API+'/admin/otp-status',{headers:{'x-admin-key':k,Accept:'application/json'}}).then(function(r){return r.ok?'ok':(r.status===401||r.status===403?'bad':'err')},function(){return 'err'});
+  }
+  $('enter').addEventListener('click',function(){
+    var k=$('key').value.trim(); if(!k){setMsg($('lockmsg'),'Escribe tu clave.','bad');return}
+    setMsg($('lockmsg'),'Revisando…','');
+    verify(k).then(function(r){
+      if(r==='ok'){setKey(k);showApp()}
+      else if(r==='bad')showLock('Clave incorrecta.');
+      else showLock('No pude conectar con el servidor. Si estaba dormido, espera unos segundos y vuelve a intentar.');
+    });
+  });
+  $('key').addEventListener('keydown',function(e){if(e.key==='Enter')$('enter').click()});
+  var q=new URLSearchParams(location.search).get('u');
+  if(q){$('user').value=cleanUser(q)}
+  blank();
+  if(LOCAL){showApp()}
+  else{
+    var saved=getKey();
+    if(!saved)showLock('');
+    else verify(saved).then(function(r){
+      if(r==='ok')showApp();
+      else if(r==='bad'){setKey('');showLock('Tu clave ya no sirve. Escríbela otra vez.')}
+      else showApp(); // sin conexion con el servidor: deja usar la herramienta, que es solo dibujar
+    });
+  }
+})();
+</script>
+</body>
+</html>
