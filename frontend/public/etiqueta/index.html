@@ -105,8 +105,8 @@ details li{margin:6px 0}
         <div id="status" class="msg" role="status" aria-live="polite"></div>
 
         <div class="filters" role="group" aria-label="Orientación de la etiqueta" style="margin-top:14px">
-          <button type="button" id="oh" aria-pressed="true">Horizontal (80 × 50)</button>
-          <button type="button" id="ov" aria-pressed="false">Vertical (50 × 80)</button>
+          <button type="button" id="ov" aria-pressed="true">Vertical (50 × 80)</button>
+          <button type="button" id="oh" aria-pressed="false">Horizontal (80 × 50)</button>
         </div>
         <div class="row">
           <button class="btn" id="sh">Guardar en Fotos</button>
@@ -159,9 +159,9 @@ details li{margin:6px 0}
     </div>
 
     <div class="card preview">
-      <canvas id="cv" width="640" height="400" style="display:none"></canvas>
+      <canvas id="cv" width="400" height="640" style="display:none"></canvas>
       <img id="shot" alt="Vista previa de la etiqueta" />
-      <small>Vista previa. Tamaño real: <b id="dim">80 × 50 mm</b>. En el celular, mantén presionada la imagen para guardarla.</small>
+      <small>Vista previa. Tamaño real: <b id="dim">50 × 80 mm</b>. En el celular, mantén presionada la imagen para guardarla.</small>
     </div>
   </div>
   </div>
@@ -172,7 +172,7 @@ details li{margin:6px 0}
 (function(){
   var PUBLIC='https://www.tipit.com.mx';
   var API='https://tip-it-backend-65q4.onrender.com/api';
-  var W=640,H=400,ORIENT='h';
+  var W=400,H=640,ORIENT='v';
   var $=function(id){return document.getElementById(id)};
   var cv=$('cv'), ctx=cv.getContext('2d');
   var ready=false, lastName='';
@@ -271,7 +271,7 @@ details li{margin:6px 0}
     $('dim').textContent=(ORIENT==='h')?'80 × 50 mm (640 × 400 puntos)':'50 × 80 mm (400 × 640 puntos)';
     $('oh').setAttribute('aria-pressed',ORIENT==='h'); $('ov').setAttribute('aria-pressed',ORIENT==='v');
     $('pagecss').textContent='@media print{@page{size:'+(ORIENT==='h'?'80mm 50mm':'50mm 80mm')+';margin:0}#printimg{width:'+(ORIENT==='h'?'80mm':'50mm')+';height:'+(ORIENT==='h'?'50mm':'80mm')+'}}';
-    try{localStorage.setItem('tipit_etq_orient',ORIENT)}catch(e){}
+    try{localStorage.setItem('tipit_etq_orient2',ORIENT)}catch(e){}
     ready=false; drawnFor='';
     refresh();
   }
@@ -470,7 +470,7 @@ details li{margin:6px 0}
   $('key').addEventListener('keydown',function(e){if(e.key==='Enter')$('enter').click()});
   var q=new URLSearchParams(location.search).get('u');
   if(q){$('user').value=cleanUser(q)}
-  var savedO='h'; try{savedO=localStorage.getItem('tipit_etq_orient')||'h'}catch(e){}
+  var savedO='v'; try{savedO=localStorage.getItem('tipit_etq_orient2')||'v'}catch(e){}
   setOrient(savedO);
   blank();
   if(LOCAL){showApp()}
