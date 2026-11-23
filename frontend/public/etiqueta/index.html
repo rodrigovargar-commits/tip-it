@@ -224,14 +224,45 @@ details li{margin:6px 0}
 
   var timer=null;
   function setMsg(el,text,cls){el.textContent=text;el.className='msg'+(cls?' '+cls:'')}
+  var drawnFor='';
+  function finish(u){
+    draw(u); ready=true; drawnFor=u;
+    var d=cv.toDataURL('image/png'); $('printimg').src=d; $('shot').src=d;
+  }
+  function safeFinish(u){
+    try{finish(u);return true}
+    catch(e){ready=false;drawnFor='';setMsg($('status'),'No pude dibujar la etiqueta ('+((e&&e.message)||e)+'). Cierra y vuelve a abrir la página.','bad');return false}
+  }
   function refresh(){
     var u=cleanUser($('user').value);
-    if($('user').value!==u && $('user').value.replace(/^@/,'')!==u){/* se limpia solo */}
-    if(!u){ready=false;$('nfcurl').textContent='—';$('view').style.display='none';blank();return}
+    if(!u){ready=false;drawnFor='';$('nfcurl').textContent='—';$('view').style.display='none';blank();return}
     $('nfcurl').textContent=nfcUrl(u);
     $('view').href=profileUrl(u);$('view').style.display='inline-flex';
-    var go=function(){draw(u);ready=true;var d=cv.toDataURL('image/png');$('printimg').src=d;$('shot').src=d};
-    if(document.fonts&&document.fonts.load){Promise.all([document.fonts.load("800 40px 'Bricolage Grotesque'"),document.fonts.load("500 22px 'DM Sans'"),document.fonts.load("600 22px 'DM Sans'")]).then(go,go)}else go();
+    var done=false;
+    var go=function(){
+      if(done)return; done=true;
+      if(cleanUser($('user').value)!==u)return; // ya escribio otro usuario
+      safeFinish(u);
+    };
+    // dibuja de inmediato con las fuentes que haya y vuelve a dibujar cuando carguen (Safari a veces no avisa)
+    go();
+    if(document.fonts&&document.fonts.load){
+      Promise.all([document.fonts.load("800 40px 'Bricolage Grotesque'"),document.fonts.load("500 22px 'DM Sans'")]).then(function(){
+        if(cleanUser($('user').value)===u)safeFinish(u);
+      },function(){});
+    }
+  }
+  // garantiza que la etiqueta que se manda o descarga es la del usuario que esta escrito ahora
+  function ensure(){
+    var u=cleanUser($('user').value);
+    if(!u){setMsg($('status'),'Primero escribe el usuario o elígelo de la lista.','bad');return ''}
+    if(!ready||drawnFor!==u){if(!safeFinish(u))return ''}
+    return u;
+  }
+  function toFile(u){
+    var bin=atob(cv.toDataURL('image/png').split(',')[1]), n=bin.length, arr=new Uint8Array(n);
+    for(var i=0;i<n;i++)arr[i]=bin.charCodeAt(i);
+    return new File([arr],'etiqueta-tipit-'+u+'-50x80.png',{type:'image/png'});
   }
   function blank(){ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);ctx.fillStyle='#9aa';ctx.font="600 26px 'DM Sans',sans-serif";ctx.textAlign='center';ctx.fillText('Escribe el usuario',W/2,H/2);$('shot').src=cv.toDataURL('image/png')}
 
@@ -264,21 +295,27 @@ details li{margin:6px 0}
   });
 
   $('sh').addEventListener('click',function(){
-    var u=cleanUser($('user').value); if(!u||!ready){setMsg($('status'),'Primero escribe el usuario.','bad');return}
-    cv.toBlob(function(blob){
-      var file=new File([blob],'etiqueta-tipit-'+u+'-50x80.png',{type:'image/png'});
-      if(navigator.canShare&&navigator.canShare({files:[file]})){
-        navigator.share({files:[file]}).catch(function(){});
-      } else { $('dl').click(); }
-    },'image/png');
+    var u=ensure(); if(!u)return;
+    var file=toFile(u);
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      navigator.share({files:[file]}).then(function(){setMsg($('status'),'Listo.','ok')},function(e){
+        if(e&&e.name==='AbortError')return;
+        setMsg($('status'),'No se pudo abrir el menú de compartir. Mantén presionada la imagen de la etiqueta y elige «Guardar en Fotos».','bad');
+      });
+    } else {
+      setMsg($('status'),'Este navegador no puede compartir imágenes. Mantén presionada la imagen de la etiqueta y elige «Guardar en Fotos».','bad');
+    }
   });
   $('dl').addEventListener('click',function(){
-    var u=cleanUser($('user').value); if(!u||!ready){setMsg($('status'),'Primero escribe el usuario.','bad');return}
-    var a=document.createElement('a'); a.href=cv.toDataURL('image/png'); a.download='etiqueta-tipit-'+u+'-50x80.png';
+    var u=ensure(); if(!u)return;
+    var url=URL.createObjectURL(toFile(u));
+    var a=document.createElement('a'); a.href=url; a.download='etiqueta-tipit-'+u+'-50x80.png';
     document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){URL.revokeObjectURL(url)},60000);
+    setMsg($('status'),'Si se abrió la imagen en otra pantalla, mantenla presionada y elige «Guardar en Fotos».','');
   });
   $('pr').addEventListener('click',function(){
-    var u=cleanUser($('user').value); if(!u||!ready){setMsg($('status'),'Primero escribe el usuario.','bad');return}
+    var u=ensure(); if(!u)return;
     window.print();
   });
   $('copy').addEventListener('click',function(){
