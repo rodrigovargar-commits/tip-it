@@ -1,4 +1,7 @@
 {
+  "redirects": [
+    { "source": "/etiqueta", "destination": "/etiqueta/", "permanent": false }
+  ],
   "rewrites": [
     { "source": "/guia", "destination": "/guia/index.html" },
     { "source": "/guia/", "destination": "/guia/index.html" },

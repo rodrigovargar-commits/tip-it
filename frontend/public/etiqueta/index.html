@@ -7,8 +7,8 @@
 <title>Etiqueta QR y chip NFC — TIP-IT</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <style>
-@font-face{font-family:'Bricolage Grotesque';font-weight:700 800;font-display:swap;src:url('../fonts/bricolage-latin.woff2') format('woff2')}
-@font-face{font-family:'DM Sans';font-weight:400 700;font-display:swap;src:url('../fonts/dmsans-latin.woff2') format('woff2')}
+@font-face{font-family:'Bricolage Grotesque';font-weight:700 800;font-display:swap;src:url('/fonts/bricolage-latin.woff2') format('woff2')}
+@font-face{font-family:'DM Sans';font-weight:400 700;font-display:swap;src:url('/fonts/dmsans-latin.woff2') format('woff2')}
 :root{--ink:#0A2F2F;--cream:#FFF8EC;--yellow:#FCE883;--orange:#FF8243;--pink:#FFC0CB;--card:#fff;--muted:#3f5d5d;--ok:#0b7a4b;--bad:#b3261e}
 @media (prefers-color-scheme: dark){:root{--ink:#FFF8EC;--cream:#0A2F2F;--card:#103d3d;--muted:#bcd3d0;--ok:#7fe0b0;--bad:#ff9d94}}
 *{box-sizing:border-box}
@@ -162,7 +162,7 @@ details li{margin:6px 0}
   </div>
 </div>
 <img id="printimg" alt="" />
-<script src="./qrcode.js"></script>
+<script src="/etiqueta/qrcode.js"></script>
 <script>
 (function(){
   var PUBLIC='https://www.tipit.com.mx';
