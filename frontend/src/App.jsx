@@ -20,6 +20,7 @@ const Profile = lazy(() => import('./pages/Profile.jsx'));
 const Contacts = lazy(() => import('./pages/Contacts.jsx'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy.jsx'));
 const Terms = lazy(() => import('./pages/Terms.jsx'));
+const BusinessTerms = lazy(() => import('./pages/BusinessTerms.jsx'));
 const HowItWorks = lazy(() => import('./pages/HowItWorks.jsx'));
 const AdminPortal = lazy(() => import('./pages/AdminPortal.jsx'));
 const BusinessPortal = lazy(() => import('./pages/business/BusinessPortal.jsx'));
@@ -67,6 +68,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/privacidad" element={<PrivacyPolicy />} />
         <Route path="/terminos" element={<Terms />} />
+        <Route path="/terminos-negocios" element={<BusinessTerms />} />
         <Route path="/como-funciona" element={<HowItWorks />} />
         <Route path="/guia" element={<GuiaRedirect />} />
         <Route path="/etiqueta" element={<GuiaRedirect />} />

@@ -11,7 +11,9 @@ const User = require('../models/User');
 const Transaction = require('../models/Transaction');
 const Recognition = require('../models/Recognition');
 const { publicBaseUrl } = require('../utils/publicUrl');
-const { avatarPath } = require('../utils/avatar');
+const { avatarPath, etagOf } = require('../utils/avatar');
+const { typeLabel, BUSINESS_TERMS_VERSION } = require('../utils/businessTypes');
+const { logoPath, readLogo, logoBuffer } = require('../utils/businessLogo');
 const { generateBusinessCode, normalizeBusinessCode, formatBusinessCode } = require('../utils/businessCode');
 const { windowOf, mongoFilterFor } = require('../utils/membershipWindow');
 const { newQrCode, qrUrl, qrImage } = require('../utils/qrCodes');
@@ -60,6 +62,10 @@ async function toBusinessDTO(business, locations) {
   return {
     id: business._id,
     name: business.name,
+    type: business.type || 'otro',
+    typeLabel: typeLabel(business.type),
+    logoUrl: logoPath(business),
+    termsVersion: business.termsVersion || null,
     createdAt: business.createdAt,
     memberCount: sum(counts, (c) => c.n),
     locations: locations.map((l) => toLocationDTO(l, byLocation.get(String(l._id)) || 0)),
@@ -145,12 +151,31 @@ const createBusiness = asyncHandler(async (req, res) => {
     throw new AppError('Primero completa tu cuenta con contraseña para crear un negocio', 403);
   }
   if (req.user.ownedBusiness) throw new AppError('Ya tienes un negocio', 409);
+  if (req.body.acceptTerms !== true) {
+    throw new AppError('Para crear tu negocio acepta los términos y condiciones para negocios', 400);
+  }
+  let logo;
+  try {
+    logo = readLogo(req.body.logo);
+  } catch (e) {
+    throw new AppError(e.message, 400);
+  }
 
   let business;
   let location;
   try {
     const code = await uniqueCode();
-    business = await Business.create({ name: req.body.name.trim(), owner: req.user._id, code });
+    business = await Business.create({
+      name: req.body.name.trim(),
+      owner: req.user._id,
+      code,
+      type: req.body.type || 'otro',
+      logo,
+      hasLogo: Boolean(logo),
+      logoVersion: Date.now(),
+      termsVersion: BUSINESS_TERMS_VERSION,
+      termsAcceptedAt: new Date(),
+    });
     location = await Location.create({ business: business._id, name: DEFAULT_LOCATION, code });
   } catch (err) {
     // Two taps on "Crear" at once: the second one hits the one-business-per-owner rule.
@@ -169,6 +194,47 @@ const createBusiness = asyncHandler(async (req, res) => {
   });
 
   res.status(201).json({ success: true, business: await toBusinessDTO(business, [location]) });
+});
+
+// The owner changes the kind of business or its picture later (send logo: null to remove it).
+const updateBusiness = asyncHandler(async (req, res) => {
+  const business = await Business.findById(req.user.ownedBusiness).select('+logo');
+  if (!business) throw new AppError('Todavía no tienes un negocio', 404);
+  if (req.body.type !== undefined) business.type = req.body.type;
+  if (req.body.logo !== undefined) {
+    let logo;
+    try {
+      logo = readLogo(req.body.logo);
+    } catch (e) {
+      throw new AppError(e.message, 400);
+    }
+    business.logo = logo;
+    business.hasLogo = Boolean(logo);
+    business.logoVersion = Date.now();
+  }
+  await business.save();
+  const locations = await ensureLocations(business);
+  res.json({ success: true, business: await toBusinessDTO(business, locations) });
+});
+
+// Public: the picture of a business, resized and cacheable (its address carries the version).
+const getLogo = asyncHandler(async (req, res) => {
+  const business = mongoose.isValidObjectId(req.params.id)
+    ? await Business.findById(req.params.id).select('+logo hasLogo logoVersion')
+    : null;
+  if (!business || !business.hasLogo) throw new AppError('Sin imagen', 404);
+  const img = await logoBuffer(business);
+  if (!img) throw new AppError('Sin imagen', 404);
+  const etag = etagOf(img.buffer);
+  const current = String(req.query.v || '') === String(business.logoVersion || 0);
+  res.set({
+    'Content-Type': img.type,
+    ETag: etag,
+    'Cache-Control': current ? 'public, max-age=31536000, immutable' : 'public, max-age=300',
+    'Cross-Origin-Resource-Policy': 'cross-origin',
+  });
+  if (req.headers['if-none-match'] === etag) return res.status(304).end();
+  return res.send(img.buffer);
 });
 
 const getMyBusiness = asyncHandler(async (req, res) => {
@@ -554,6 +620,9 @@ const lookupCode = asyncHandler(async (req, res) => {
     success: true,
     business: {
       name: found.business.name,
+      type: found.business.type || 'otro',
+      typeLabel: typeLabel(found.business.type),
+      logoUrl: logoPath(found.business),
       location: placeName(found),
       kind: location.kind || 'team',
       startsAt: location.startsAt || null,
@@ -733,6 +802,8 @@ async function releaseMembershipsOf(workerId) {
 }
 
 module.exports = {
+  updateBusiness,
+  getLogo,
   createBusiness,
   getMyBusiness,
   createLocation,

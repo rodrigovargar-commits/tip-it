@@ -9,6 +9,7 @@ import ReviewList from '../components/ReviewList.jsx';
 import Avatar from '../components/Avatar.jsx';
 import { activityLabel } from '../utils/activities.js';
 import { loadWorker } from '../utils/loadWorker.js';
+import BusinessBadge from '../components/BusinessBadge.jsx';
 import LoadFailed from '../components/LoadFailed.jsx';
 
 const roundBtn =
@@ -150,6 +151,12 @@ export default function PublicProfile() {
             {worker.establishment && <p className="truncate text-xs text-slate-500">{worker.establishment}</p>}
           </div>
         </div>
+
+        {worker.business && (
+          <div className="mt-3">
+            <BusinessBadge business={worker.business} />
+          </div>
+        )}
 
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-base">
           {worker.ratingCount > 0 ? (

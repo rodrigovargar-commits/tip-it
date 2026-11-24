@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import FormField from '../../components/FormField.jsx';
 import Spinner from '../../components/Spinner.jsx';
+import { photoSrc } from '../../utils/avatar.js';
 
 const PENDING_KEY = 'tipit_join_code';
 const clean = (v) => String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
@@ -129,7 +130,15 @@ export default function JoinBusiness() {
           {found && (
             <>
               <div className="rounded-2xl bg-punch-yellow p-3">
-                <p className="font-display text-lg font-extrabold">{found.name}</p>
+                <div className="flex items-center gap-3">
+                  {found.logoUrl && (
+                    <img src={photoSrc(found.logoUrl)} alt="" className="h-12 w-12 shrink-0 rounded-full border-2 border-punch-ink bg-white object-cover" />
+                  )}
+                  <div className="min-w-0">
+                    <p className="font-display text-lg font-extrabold">{found.name}</p>
+                    {found.typeLabel && found.type !== 'otro' && <p className="text-xs font-bold text-punch-ink/70">{found.typeLabel}</p>}
+                  </div>
+                </div>
                 {found.location && <p className="text-sm font-bold">{found.location}</p>}
                 {isEvent && found.startsAt && (
                   <p className="mt-1 flex items-start gap-1.5 text-sm font-medium">

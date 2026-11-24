@@ -3,8 +3,11 @@ const { body } = require('express-validator');
 const validate = require('../middleware/validate');
 const { protect, requireWorker } = require('../middleware/auth');
 const { businessCodeLimiter } = require('../middleware/rateLimiter');
+const { BUSINESS_TYPE_IDS } = require('../utils/businessTypes');
 const {
   createBusiness,
+  updateBusiness,
+  getLogo,
   getMyBusiness,
   createLocation,
   renameLocation,
@@ -22,15 +25,23 @@ const {
 } = require('../controllers/businessController');
 
 const router = express.Router();
+
+// Public: the picture of a business, shown on the profile of its team.
+router.get('/:id/logo', getLogo);
+
 router.use(protect);
 
 // Owner: create the business, see the team and its reviews.
 router.post(
   '/',
-  [body('name').trim().isLength({ min: 2, max: 60 }).withMessage('El nombre del negocio debe tener de 2 a 60 caracteres')],
+  [
+    body('name').trim().isLength({ min: 2, max: 60 }).withMessage('El nombre del negocio debe tener de 2 a 60 caracteres'),
+    body('type').optional().isIn(BUSINESS_TYPE_IDS).withMessage('Elige un tipo de negocio de la lista'),
+  ],
   validate,
   createBusiness
 );
+router.patch('/me', [body('type').optional().isIn(BUSINESS_TYPE_IDS).withMessage('Elige un tipo de negocio de la lista')], validate, updateBusiness);
 router.get('/me', getMyBusiness);
 router.get('/overview', getOverview);
 router.get('/reviews', getReviews);
