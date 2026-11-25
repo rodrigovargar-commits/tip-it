@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
-  Copy, Share2, RefreshCw, Star, Users, HandCoins, MessageSquareText, UserMinus, MapPin, Plus, Trash2, Pencil, CalendarDays,
+  Copy, Share2, RefreshCw, Star, Users, HandCoins, MessageSquareText, UserMinus, MapPin, Plus, Trash2, Pencil, CalendarDays, BarChart3, Wallet, Check, BadgeCheck,
 } from 'lucide-react';
 import api, { getErrorMessage } from '../../services/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -12,6 +13,10 @@ import Avatar from '../../components/Avatar.jsx';
 import EmptyState from '../../components/EmptyState.jsx';
 import WalletButtons from '../../components/WalletButtons.jsx';
 import { timeAgo } from '../../utils/time.js';
+import ImageAdjuster from '../../components/ImageAdjuster.jsx';
+import BusinessBadge from '../../components/BusinessBadge.jsx';
+import { photoSrc } from '../../utils/avatar.js';
+import { BUSINESS_TYPES, businessTypeLabel, BUSINESS_TERMS_VERSION } from '../../utils/businessTypes.js';
 
 const PERIODS = [
   { days: 7, label: '7 días' },
@@ -66,14 +71,49 @@ function Badge({ children, tone = 'bg-punch-yellow' }) {
   return <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${tone}`}>{children}</span>;
 }
 
+// What the owner gets, in plain words: the first thing this screen has to answer is "why create this".
+const GAINS = [
+  { icon: BarChart3, title: 'Ves cómo le va a tu gente', text: 'Cuántas propinas recibe cada persona y cada equipo, sus estrellas y sus reseñas, en un solo lugar.' },
+  { icon: BadgeCheck, title: 'Tu negocio sale en cada perfil', text: 'Tu nombre y tu imagen aparecen en el perfil y en el QR de todos tus colaboradores. Tus clientes saben dónde están.' },
+  { icon: Users, title: 'Sumas a tu equipo en minutos', text: 'Les das un código y cada quien se une con su cuenta. También puedes armar equipos y eventos con fecha.' },
+  { icon: Wallet, title: 'Más propinas, menos efectivo', text: 'Tu gente cobra con tarjeta y celular, directo a su banco. Se siente reconocida y es más fácil que se quede.' },
+];
+
+function ProfilePreview({ name, typeId, logo }) {
+  const business = { name: name.trim() || 'Nombre de tu negocio', typeLabel: typeId ? businessTypeLabel(typeId) : '' };
+  return (
+    <div className="mx-auto w-full max-w-xs overflow-hidden rounded-3xl border-2 border-punch-ink bg-punch-cream shadow-[4px_4px_0_0_#0A2F2F]" aria-label="Ejemplo de perfil de un colaborador">
+      <div className="flex h-24 items-center justify-center bg-punch-yellow">
+        <span aria-hidden="true" className="font-display text-6xl font-extrabold text-punch-ink/80">A</span>
+      </div>
+      <div className="space-y-2.5 px-4 pb-4 pt-3">
+        <div>
+          <p className="font-display text-xl font-extrabold leading-tight">Ana, tu colaboradora</p>
+          <p className="text-sm font-semibold text-slate-500">Su perfil público</p>
+        </div>
+        <BusinessBadge business={business} logo={logo} />
+        <p className="flex items-center gap-1 text-sm">
+          <Star size={16} fill="#FF8243" stroke="#FF8243" /> <span className="font-display font-extrabold">4.9</span> <span className="text-slate-500">· ejemplo</span>
+        </p>
+        <div className="rounded-full bg-punch-ink py-2 text-center text-sm font-bold text-white">Dejar propina</div>
+      </div>
+    </div>
+  );
+}
+
 function CreateBusiness({ onCreated }) {
   const [name, setName] = useState('');
+  const [type, setType] = useState('');
+  const [logo, setLogo] = useState(null);
+  const [accepted, setAccepted] = useState(false);
   const [saving, setSaving] = useState(false);
+  const ready = name.trim().length >= 2 && Boolean(type) && accepted;
   const submit = async (e) => {
     e.preventDefault();
+    if (!ready) return;
     setSaving(true);
     try {
-      await api.post('/business', { name });
+      await api.post('/business', { name, type, logo, acceptTerms: true });
       toast.success('Tu negocio quedó creado');
       onCreated();
     } catch (err) {
@@ -86,34 +126,164 @@ function CreateBusiness({ onCreated }) {
     <div className="page-shell">
       <PageHeader
         eyebrow="Para negocios"
-        title="Crea tu negocio"
-        subtitle="Comparte un código con tu gente y conoce cómo les va: cuántas propinas reciben, sus estrellas y sus reseñas."
+        title="Crea el perfil de tu negocio"
+        subtitle="Junta a tu gente en un solo lugar y conoce cómo les va con las propinas."
       />
-      <ol className="mt-6 grid gap-3 text-sm font-medium">
-        {[
-          'Creas tu negocio y recibes un código.',
-          'Tu gente se une con ese código y recibe un QR de tu empresa, además del suyo.',
-          'Tú ves propinas, estrellas y reseñas, solo desde el día que cada persona se une. Nunca ves el dinero.',
-        ].map((t, i) => (
-          <li key={t} className="card flex items-center gap-3 !p-4">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-punch-ink bg-punch-yellow font-display font-extrabold">{i + 1}</span>
-            {t}
-          </li>
-        ))}
-      </ol>
-      <form onSubmit={submit} className="mt-6 card space-y-4">
+
+      <section className="mt-6" aria-labelledby="gains-title">
+        <h2 id="gains-title" className="font-display text-xl font-extrabold">¿Qué gana tu negocio?</h2>
+        <ul className="mt-3 grid gap-3">
+          {GAINS.map(({ icon: Icon, title, text }) => (
+            <li key={title} className="card flex items-start gap-3 !p-4">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-punch-ink bg-punch-yellow"><Icon size={19} aria-hidden="true" /></span>
+              <span>
+                <span className="block font-display text-base font-extrabold">{title}</span>
+                <span className="block text-sm font-medium text-slate-600">{text}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 rounded-2xl bg-punch-pink px-4 py-3 text-sm font-bold">
+          Crear tu perfil de negocio no te cuesta nada. Tu gente recibe su dinero directo en su banco y tú nunca lo ves ni lo manejas.
+        </p>
+      </section>
+
+      <section className="mt-6" aria-labelledby="how-title">
+        <h2 id="how-title" className="font-display text-xl font-extrabold">Cómo funciona</h2>
+        <ol className="mt-3 grid gap-3 text-sm font-medium">
+          {[
+            'Creas tu negocio y recibes un código.',
+            'Tu gente se une con ese código y recibe un QR de tu empresa, además del suyo.',
+            'Tú ves propinas, estrellas y reseñas, solo desde el día que cada persona se une. Nunca ves el dinero.',
+          ].map((t, i) => (
+            <li key={t} className="card flex items-center gap-3 !p-4">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-punch-ink bg-punch-yellow font-display font-extrabold">{i + 1}</span>
+              {t}
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <form onSubmit={submit} className="mt-6 card space-y-6">
+        <h2 className="font-display text-xl font-extrabold">Datos de tu negocio</h2>
+
         <FormField label="Nombre de tu negocio" hint="Es el nombre que verá tu gente al unirse y el de su QR.">
           {(p) => (
-            <input {...p} className="input-field" value={name} onChange={(e) => setName(e.target.value)} placeholder="Barbería La Navaja" minLength={2} maxLength={60} required />
+            <input {...p} className="input-field" value={name} onChange={(e) => setName(e.target.value)} placeholder="Club de Golf Las Lomas" minLength={2} maxLength={60} required />
           )}
         </FormField>
-        <button type="submit" disabled={saving || name.trim().length < 2} className="btn-primary w-full">
+
+        <fieldset>
+          <legend className="mb-1.5 text-base font-bold text-punch-ink">Tipo de negocio</legend>
+          <p className="mb-2 text-sm text-slate-500">Elige el que más se parezca al tuyo.</p>
+          <div className="grid grid-cols-2 gap-2">
+            {BUSINESS_TYPES.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                aria-pressed={type === t.id}
+                onClick={() => setType(t.id)}
+                className={`min-h-[3rem] rounded-2xl border-2 border-punch-ink px-3 py-2 text-left text-sm font-bold leading-tight transition ${type === t.id ? 'bg-punch-yellow shadow-[3px_3px_0_0_#0A2F2F]' : 'bg-white hover:bg-punch-yellow/50'}`}
+              >
+                {type === t.id && <Check size={14} className="mr-1 inline" aria-hidden="true" />}
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
+        <div>
+          <ImageAdjuster label="Imagen de tu negocio (opcional)" onChange={setLogo} onError={(m) => toast.error(m)} />
+          <p className="mt-2 text-sm text-slate-500">
+            Sube el logo o una foto del lugar para que tus clientes lo reconozcan. Aparecerá en el perfil de todas las personas que colaboran contigo. Puedes cambiarla cuando quieras.
+          </p>
+        </div>
+
+        <div>
+          <p className="mb-2 text-base font-bold text-punch-ink">Así se verá en el perfil de tu gente</p>
+          <ProfilePreview name={name} typeId={type} logo={logo} />
+          <p className="mt-2 text-center text-xs text-slate-500">Es un ejemplo. Mueve y acerca la imagen arriba hasta que te guste cómo queda.</p>
+        </div>
+
+        <label className="flex cursor-pointer items-start gap-3 rounded-2xl border-2 border-punch-ink bg-white p-3">
+          <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-[#FF8243]" required />
+          <span className="text-sm font-medium">
+            Acepto los{' '}
+            <Link to="/terminos-negocios" target="_blank" rel="noopener" className="font-bold underline underline-offset-2">términos y condiciones para negocios</Link>{' '}
+            <span className="text-slate-500">(versión del {BUSINESS_TERMS_VERSION})</span>.
+          </span>
+        </label>
+
+        <button type="submit" disabled={saving || !ready} className="btn-primary w-full">
           {saving ? 'Creando...' : 'Crear mi negocio'}
         </button>
+        {!ready && (
+          <p className="-mt-3 text-center text-xs text-slate-500">
+            Para crearlo falta: {[name.trim().length < 2 && 'el nombre', !type && 'el tipo de negocio', !accepted && 'aceptar los términos'].filter(Boolean).join(', ')}.
+          </p>
+        )}
         <p className="text-xs text-slate-500">
           Cada persona recibe su dinero directo en su banco y conserva sus reseñas. Tu negocio solo ve el número de propinas, las estrellas y las reseñas.
         </p>
       </form>
+    </div>
+  );
+}
+
+// Owner: the kind of business and its picture, shown on the profile of everyone on the team.
+function BusinessIdentity({ business, onSaved }) {
+  const [open, setOpen] = useState(false);
+  const [type, setType] = useState(business.type || 'otro');
+  const [logo, setLogo] = useState(undefined); // undefined = unchanged, null = remove
+  const [saving, setSaving] = useState(false);
+  const current = photoSrc(business.logoUrl);
+  const incomplete = !business.logoUrl || !business.type || business.type === 'otro';
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const body = { type };
+      if (logo !== undefined) body.logo = logo;
+      await api.patch('/business/me', body);
+      toast.success('Guardamos los cambios');
+      setOpen(false);
+      onSaved();
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="mt-4 card !p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <BusinessBadge business={{ name: business.name, logoUrl: business.logoUrl, typeLabel: business.typeLabel || businessTypeLabel(business.type) }} />
+        <button type="button" onClick={() => setOpen((v) => !v)} className="btn-secondary !px-4 !py-2 text-sm" aria-expanded={open}>
+          {open ? 'Cerrar' : incomplete ? 'Agregar imagen y tipo' : 'Editar imagen y tipo'}
+        </button>
+      </div>
+      {incomplete && !open && <p className="mt-2 text-sm text-slate-500">Con tu imagen, tus clientes reconocen el lugar en el perfil de cada colaborador.</p>}
+      {open && (
+        <div className="mt-4 space-y-5">
+          <fieldset>
+            <legend className="mb-1.5 text-sm font-bold">Tipo de negocio</legend>
+            <div className="grid grid-cols-2 gap-2">
+              {BUSINESS_TYPES.map((t) => (
+                <button key={t.id} type="button" aria-pressed={type === t.id} onClick={() => setType(t.id)} className={`min-h-[2.75rem] rounded-2xl border-2 border-punch-ink px-3 py-1.5 text-left text-sm font-bold leading-tight ${type === t.id ? 'bg-punch-yellow' : 'bg-white'}`}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+          <ImageAdjuster label="Imagen de tu negocio" currentUrl={current} onChange={setLogo} onError={(m) => toast.error(m)} />
+          {business.logoUrl && logo === undefined && (
+            <button type="button" onClick={() => setLogo(null)} className="text-sm font-semibold text-slate-500 underline underline-offset-2">Quitar la imagen actual</button>
+          )}
+          {logo === null && <p className="text-sm font-semibold text-slate-600">Se quitará la imagen al guardar.</p>}
+          <button type="button" onClick={save} disabled={saving} className="btn-primary w-full">{saving ? 'Guardando...' : 'Guardar'}</button>
+        </div>
+      )}
     </div>
   );
 }
@@ -715,6 +885,7 @@ export default function BusinessPortal() {
   return (
     <div className="page-shell md:!max-w-4xl">
       <PageHeader eyebrow="Mi negocio" title={business.name} subtitle="Cuántas propinas, estrellas y reseñas tiene tu gente, desde el día que cada quien se unió." />
+      <BusinessIdentity business={business} onSaved={() => loadOverview()} />
 
       <div className="mt-6 flex flex-wrap gap-2" role="tablist" aria-label="Secciones">
         {[

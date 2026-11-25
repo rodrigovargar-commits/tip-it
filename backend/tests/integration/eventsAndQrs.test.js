@@ -43,7 +43,7 @@ async function tip(workerId, { at = new Date(), qr = null, rating = null, review
 
 async function business(ownerName = 'Dueño') {
   const owner = await makeUser(ownerName);
-  const created = await request(app).post('/api/business').set(owner.auth).send({ name: 'Cafetería Luna' });
+  const created = await request(app).post('/api/business').set(owner.auth).send({ name: 'Cafetería Luna', acceptTerms: true });
   return { owner, loc: created.body.business.locations[0] };
 }
 

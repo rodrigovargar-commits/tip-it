@@ -63,7 +63,7 @@ describe('business code helpers', () => {
 describe('creating a business', () => {
   it('lets a signed-in person create one and returns the code and join link', async () => {
     const owner = await makeUser('Dueño Uno');
-    const res = await request(app).post('/api/business').set(owner.auth).send({ name: 'Barbería La Navaja' });
+    const res = await request(app).post('/api/business').set(owner.auth).send({ name: 'Barbería La Navaja', acceptTerms: true });
     expect(res.status).toBe(201);
     expect(res.body.business.name).toBe('Barbería La Navaja');
     const [main] = res.body.business.locations;
@@ -78,24 +78,24 @@ describe('creating a business', () => {
 
   it('allows only one business per owner and requires a name', async () => {
     const owner = await makeUser('Dueño Uno');
-    expect((await request(app).post('/api/business').set(owner.auth).send({ name: 'A' })).status).toBe(400);
-    await request(app).post('/api/business').set(owner.auth).send({ name: 'Mi negocio' });
-    const again = await request(app).post('/api/business').set(owner.auth).send({ name: 'Otro negocio' });
+    expect((await request(app).post('/api/business').set(owner.auth).send({ name: 'A', acceptTerms: true })).status).toBe(400);
+    await request(app).post('/api/business').set(owner.auth).send({ name: 'Mi negocio', acceptTerms: true });
+    const again = await request(app).post('/api/business').set(owner.auth).send({ name: 'Otro negocio', acceptTerms: true });
     expect(again.status).toBe(409);
   });
 
   it('answers 409, not a server error, when two creations arrive at the same time', async () => {
     const owner = await makeUser('Dueño Doble');
     const [a, b] = await Promise.all([
-      request(app).post('/api/business').set(owner.auth).send({ name: 'Mi negocio' }),
-      request(app).post('/api/business').set(owner.auth).send({ name: 'Mi negocio' }),
+      request(app).post('/api/business').set(owner.auth).send({ name: 'Mi negocio', acceptTerms: true }),
+      request(app).post('/api/business').set(owner.auth).send({ name: 'Mi negocio', acceptTerms: true }),
     ]);
     expect([a.status, b.status].sort()).toEqual([201, 409]);
     expect(await Business.countDocuments({})).toBe(1);
   });
 
   it('requires a login', async () => {
-    const res = await request(app).post('/api/business').send({ name: 'Mi negocio' });
+    const res = await request(app).post('/api/business').send({ name: 'Mi negocio', acceptTerms: true });
     expect(res.status).toBe(401);
   });
 
@@ -109,7 +109,7 @@ describe('creating a business', () => {
 describe('joining with the code', () => {
   async function setup() {
     const owner = await makeUser('Dueño Uno');
-    const created = await request(app).post('/api/business').set(owner.auth).send({ name: 'Clínica Sonrisa' });
+    const created = await request(app).post('/api/business').set(owner.auth).send({ name: 'Clínica Sonrisa', acceptTerms: true });
     const member = await makeUser('Persona Uno', { worker: true });
     return { owner, member, code: created.body.business.locations[0].code };
   }
@@ -156,7 +156,7 @@ describe('joining with the code', () => {
     const { member, code } = await setup();
     await request(app).post('/api/business/join').set(member.auth).send({ code, accept: true, mode: 'part' });
     const owner2 = await makeUser('Dueño Dos');
-    const second = await request(app).post('/api/business').set(owner2.auth).send({ name: 'Otro lugar' });
+    const second = await request(app).post('/api/business').set(owner2.auth).send({ name: 'Otro lugar', acceptTerms: true });
     const also = await request(app).post('/api/business/join').set(member.auth).send({ code: second.body.business.locations[0].code, accept: true, mode: 'part' });
     expect(also.status).toBe(200);
 
@@ -173,7 +173,7 @@ describe('joining with the code', () => {
 describe('owner portal', () => {
   async function team() {
     const owner = await makeUser('Dueño Uno');
-    const created = await request(app).post('/api/business').set(owner.auth).send({ name: 'Barbería La Navaja' });
+    const created = await request(app).post('/api/business').set(owner.auth).send({ name: 'Barbería La Navaja', acceptTerms: true });
     const a = await makeUser('Ana Barbera', { worker: true });
     const b = await makeUser('Beto Barbero', { worker: true });
     const code = created.body.business.locations[0].code;
@@ -241,7 +241,7 @@ describe('owner portal', () => {
     expect(overview.body.business).toBeNull(); // nothing about anyone else's team
     expect(overview.body.members).toBeUndefined();
     const other = await makeUser('Otro Dueño');
-    await request(app).post('/api/business').set(other.auth).send({ name: 'Otro negocio' });
+    await request(app).post('/api/business').set(other.auth).send({ name: 'Otro negocio', acceptTerms: true });
     const res = await request(app).get('/api/business/overview').set(other.auth);
     expect(res.body.members).toEqual([]);
   });
@@ -249,7 +249,7 @@ describe('owner portal', () => {
   it('lets the owner remove a person, and only from their own team', async () => {
     const { owner, a, wa } = await team();
     const other = await makeUser('Otro Dueño');
-    await request(app).post('/api/business').set(other.auth).send({ name: 'Otro negocio' });
+    await request(app).post('/api/business').set(other.auth).send({ name: 'Otro negocio', acceptTerms: true });
     const foreign = await request(app).delete(`/api/business/members/${await memId(wa)}`).set(other.auth);
     expect(foreign.status).toBe(404);
 
@@ -283,7 +283,7 @@ describe('owner portal', () => {
 describe('several teams or places in one business', () => {
   async function chain() {
     const owner = await makeUser('Dueña Cadena');
-    const created = await request(app).post('/api/business').set(owner.auth).send({ name: 'Cafés Cadena' });
+    const created = await request(app).post('/api/business').set(owner.auth).send({ name: 'Cafés Cadena', acceptTerms: true });
     const centro = created.body.business.locations[0];
     await request(app).patch(`/api/business/locations/${centro.id}`).set(owner.auth).send({ name: 'Centro' });
     const norte = (await request(app).post('/api/business/locations').set(owner.auth).send({ name: 'Norte' })).body.location;
@@ -345,7 +345,7 @@ describe('several teams or places in one business', () => {
   it('moves people between teams, only inside the business', async () => {
     const { owner, wa, norte } = await chain();
     const other = await makeUser('Otro Dueño');
-    await request(app).post('/api/business').set(other.auth).send({ name: 'Otro' });
+    await request(app).post('/api/business').set(other.auth).send({ name: 'Otro', acceptTerms: true });
     const otherLoc = (await request(app).get('/api/business/me').set(other.auth)).body.business.locations[0];
     const bad = await request(app).patch(`/api/business/members/${await memId(wa)}`).set(owner.auth).send({ locationId: otherLoc.id });
     expect(bad.status).toBe(404);
@@ -403,7 +403,7 @@ describe('several teams or places in one business', () => {
 describe('limits and health', () => {
   it('caps the number of teams per business', async () => {
     const owner = await makeUser('Dueño Muchos');
-    const created = await request(app).post('/api/business').set(owner.auth).send({ name: 'Muchos' });
+    const created = await request(app).post('/api/business').set(owner.auth).send({ name: 'Muchos', acceptTerms: true });
     const businessId = created.body.business.id;
     const docs = Array.from({ length: 49 }, (_, i) => ({ business: businessId, name: `Equipo ${i + 2}`, code: `ZZ${String(i).padStart(2, '0')}2345`.slice(0, 8) }));
     await Location.insertMany(docs);
@@ -416,5 +416,97 @@ describe('limits and health', () => {
     const res = await request(app).get('/api/health');
     expect(res.body.version).toBe('abcdef1');
     delete process.env.RENDER_GIT_COMMIT;
+  });
+});
+
+// ---------------------------------------------------------------------------
+describe('business profile: type, picture and terms', () => {
+  // 1x1 PNG
+  const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
+  it('requires accepting the business terms', async () => {
+    const owner = await makeUser('Dueña Terms');
+    const no = await request(app).post('/api/business').set(owner.auth).send({ name: 'Club de Golf Norte', type: 'club_golf' });
+    expect(no.status).toBe(400);
+    expect(no.body.message).toMatch(/términos/i);
+    const yes = await request(app).post('/api/business').set(owner.auth).send({ name: 'Club de Golf Norte', type: 'club_golf', acceptTerms: true });
+    expect(yes.status).toBe(201);
+    expect(yes.body.business.type).toBe('club_golf');
+    expect(yes.body.business.typeLabel).toBe('Club de golf');
+    expect(yes.body.business.termsVersion).toBeTruthy();
+    const saved = await Business.findById(yes.body.business.id);
+    expect(saved.termsAcceptedAt).toBeInstanceOf(Date);
+  });
+
+  it('rejects an unknown type and defaults to "otro"', async () => {
+    const owner = await makeUser('Dueño Tipo');
+    const bad = await request(app).post('/api/business').set(owner.auth).send({ name: 'Mi negocio', type: 'nave_espacial', acceptTerms: true });
+    expect(bad.status).toBe(400);
+    const ok = await request(app).post('/api/business').set(owner.auth).send({ name: 'Mi negocio', acceptTerms: true });
+    expect(ok.status).toBe(201);
+    expect(ok.body.business.type).toBe('otro');
+    expect(ok.body.business.logoUrl).toBeNull();
+  });
+
+  it('saves a picture, serves it publicly and never leaks the raw data in the answers', async () => {
+    const owner = await makeUser('Dueño Imagen');
+    const created = await request(app).post('/api/business').set(owner.auth).send({ name: 'Hotel Vista', type: 'hotel', acceptTerms: true, logo: PNG });
+    expect(created.status).toBe(201);
+    expect(created.body.business.logoUrl).toMatch(/^\/api\/business\/[a-f0-9]{24}\/logo\?v=\d+$/);
+    expect(JSON.stringify(created.body)).not.toContain('base64');
+
+    const me = await request(app).get('/api/business/me').set(owner.auth);
+    expect(JSON.stringify(me.body)).not.toContain('base64');
+
+    const img = await request(app).get(created.body.business.logoUrl); // public: no token
+    expect(img.status).toBe(200);
+    expect(img.headers['content-type']).toMatch(/image\//);
+    expect(img.headers['cache-control']).toMatch(/immutable/);
+
+    const none = await request(app).get('/api/business/000000000000000000000000/logo');
+    expect(none.status).toBe(404);
+    const badId = await request(app).get('/api/business/xyz/logo');
+    expect(badId.status).toBe(404);
+  });
+
+  it('rejects pictures that are not PNG/JPG/WebP or are too heavy', async () => {
+    const owner = await makeUser('Dueño Malo');
+    const svg = await request(app).post('/api/business').set(owner.auth).send({ name: 'Mi negocio', acceptTerms: true, logo: 'data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=' });
+    expect(svg.status).toBe(400);
+    const huge = await request(app).post('/api/business').set(owner.auth).send({ name: 'Mi negocio', acceptTerms: true, logo: `data:image/png;base64,${'A'.repeat(460000)}` });
+    expect(huge.status).toBe(400);
+  });
+
+  it('lets the owner change type and picture later, and remove the picture', async () => {
+    const owner = await makeUser('Dueño Cambio');
+    await request(app).post('/api/business').set(owner.auth).send({ name: 'Farmacia Central', acceptTerms: true });
+    const upd = await request(app).patch('/api/business/me').set(owner.auth).send({ type: 'farmacia', logo: PNG });
+    expect(upd.status).toBe(200);
+    expect(upd.body.business.type).toBe('farmacia');
+    expect(upd.body.business.logoUrl).toBeTruthy();
+    const rm = await request(app).patch('/api/business/me').set(owner.auth).send({ logo: null });
+    expect(rm.body.business.logoUrl).toBeNull();
+    const noOwner = await makeUser('Sin negocio');
+    expect((await request(app).patch('/api/business/me').set(noOwner.auth).send({ type: 'hotel' })).status).toBe(404);
+  });
+
+  it('shows the business (name, type, picture) on the public profile of its team', async () => {
+    const owner = await makeUser('Dueño Equipo');
+    const created = await request(app).post('/api/business').set(owner.auth).send({ name: 'Club Campestre', type: 'club_golf', acceptTerms: true, logo: PNG });
+    const member = await makeUser('Caddie', { worker: true });
+    const code = (await Location.findOne({ business: created.body.business.id })).code;
+    const join = await request(app).post('/api/business/join').set(member.auth).send({ code, accept: true });
+    expect(join.status).toBeLessThan(300);
+    const profile = await request(app).get(`/api/workers/${member.user && (await Worker.findOne({ user: member.user._id })).username}`);
+    expect(profile.status).toBe(200);
+    expect(profile.body.worker.business.name).toBe('Club Campestre');
+    expect(profile.body.worker.business.typeLabel).toBe('Club de golf');
+    expect(profile.body.worker.business.logoUrl).toMatch(/\/logo\?v=/);
+    const lookup = await request(app).get(`/api/business/lookup?code=${code}`).set(member.auth);
+    expect(lookup.body.business.logoUrl).toBeTruthy();
+    // someone who works nowhere has no business on the profile
+    const solo = await makeUser('Independiente', { worker: true });
+    const soloProfile = await request(app).get(`/api/workers/${(await Worker.findOne({ user: solo.user._id })).username}`);
+    expect(soloProfile.body.worker.business).toBeNull();
   });
 });

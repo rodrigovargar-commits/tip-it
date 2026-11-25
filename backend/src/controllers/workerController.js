@@ -8,6 +8,9 @@ const stripe = require('../config/stripe');
 const { generateWorkerQR } = require('../utils/generateQR');
 const refreshStripeReadiness = require('../utils/refreshStripeReadiness');
 const profileCache = require('../utils/profileCache');
+const Membership = require('../models/Membership');
+const { typeLabel } = require('../utils/businessTypes');
+const { logoPath } = require('../utils/businessLogo');
 const { logSecurityEvent } = require('../utils/logger');
 const Recognition = require('../models/Recognition');
 const { ACTIVITY_IDS } = require('../utils/activities');
@@ -127,9 +130,18 @@ const getByUsername = asyncHandler(async (req, res) => {
     Transaction.countDocuments({ ...succeeded, thanked: true }),
   ]);
 
+  // The place this person works at, if they joined a business (name, kind and picture).
+  const membership = await Membership.findOne({ worker: worker._id })
+    .sort({ joinedAt: -1 })
+    .populate('business', 'name type hasLogo logoVersion');
+  const place = membership && membership.business
+    ? { name: membership.business.name, type: membership.business.type || 'otro', typeLabel: typeLabel(membership.business.type), logoUrl: logoPath(membership.business) }
+    : null;
+
   const body = {
     success: true,
     worker: {
+      business: place,
       id: worker._id,
       username: worker.username,
       bio: worker.bio,
